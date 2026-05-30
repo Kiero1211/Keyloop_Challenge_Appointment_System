@@ -9,7 +9,8 @@ describe('tenantContextMiddleware', () => {
   beforeEach(() => {
     mockRequest = {
       header: jest.fn().mockReturnValue('tenant1'),
-      user: { userId: 'u1', role: 'admin', permissions: [], isSuperAdmin: false }
+      headers: {},
+      user: { userId: 'u1', role: 'admin', permissions: [], isSuperAdmin: false, tenantId: 'tenant-456' }
     } as any;
     mockResponse = {
       status: jest.fn().mockReturnThis(),

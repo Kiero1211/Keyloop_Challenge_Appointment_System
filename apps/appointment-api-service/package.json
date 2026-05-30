@@ -7,7 +7,7 @@
     "build": "tsc -p tsconfig.build.json",
     "start": "node dist/infrastructure/http/cluster.js",
     "test:unit": "jest tests/unit",
-    "test:integration": "jest tests/integration --runInBand",
+    "test:integration": "npx --yes ts-node tests/helpers/reset-db.ts && jest tests/integration --runInBand --forceExit",
     "lint": "eslint \"src/**/*.ts\""
   },
   "keywords": [],

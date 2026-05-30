@@ -23,7 +23,7 @@ describe('DeleteCustomerUseCase', () => {
     mockRepo.hasActiveAppointments.mockResolvedValue(false);
 
     await useCase.execute('t1', 'c1');
-    expect(mockRepo.softDelete).toHaveBeenCalledWith('c1'); // Assuming we adjust the port to take tenantId or just id
+    expect(mockRepo.softDelete).toHaveBeenCalledWith('t1', 'c1');
   });
 
   it('should throw ConflictException when customer has active appointments', async () => {

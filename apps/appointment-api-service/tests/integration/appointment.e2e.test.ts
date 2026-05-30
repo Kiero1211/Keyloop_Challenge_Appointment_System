@@ -8,6 +8,9 @@ describe('Appointment API E2E', () => {
   let redisContainer: StartedTestContainer;
   let redisClient: Redis;
 
+  let token: string;
+  let tenantId: string;
+
   beforeAll(async () => {
     redisContainer = await new GenericContainer('redis:7-alpine')
       .withExposedPorts(6379)
@@ -20,6 +23,20 @@ describe('Appointment API E2E', () => {
     
     // Override DI container with test redis client
     await container.initialize(redisClient);
+
+    const { factories } = await import('../helpers/factories');
+    const t1 = await factories.tenant();
+    tenantId = t1.id;
+    const u1 = await factories.user();
+    await factories.userTenant(u1.id, tenantId);
+
+    token = container.jwtService.generateAccessToken({
+      userId: u1.id,
+      tenantId: tenantId,
+      role: 'TenantUser',
+      permissions: [],
+      isSuperAdmin: false,
+    });
   }, 30000);
 
   afterAll(async () => {
@@ -45,20 +62,22 @@ describe('Appointment API E2E', () => {
 
       const response = await request(app)
         .post('/api/v1/appointments')
-        .set('x-tenant-id', 'tenant-1')
+        .set('Authorization', `Bearer ${token}`)
+        .set('x-tenant-id', tenantId)
         .send(payload);
 
       expect(response.status).toBe(202);
       expect(response.body).toHaveProperty('commandId');
       
       // Verify in redis
-      const keys = await redisClient.keys('tenant:tenant-1:appointment:veh-1:pending');
+      const keys = await redisClient.keys(`tenant:${tenantId}:appointment:veh-1:pending`);
       expect(keys.length).toBe(1);
     });
 
     it('should reject requests with missing tenant ID (400)', async () => {
       const response = await request(app)
         .post('/api/v1/appointments')
+        .set('Authorization', `Bearer ${token}`)
         .send({
           customerId: 'cust-1',
           vehicleId: 'veh-1'
@@ -79,14 +98,16 @@ describe('Appointment API E2E', () => {
       // First request
       await request(app)
         .post('/api/v1/appointments')
-        .set('x-tenant-id', 'tenant-1')
+        .set('Authorization', `Bearer ${token}`)
+        .set('x-tenant-id', tenantId)
         .send(payload)
         .expect(202);
 
       // Second request (duplicate)
       await request(app)
         .post('/api/v1/appointments')
-        .set('x-tenant-id', 'tenant-1')
+        .set('Authorization', `Bearer ${token}`)
+        .set('x-tenant-id', tenantId)
         .send(payload)
         .expect(409);
     });

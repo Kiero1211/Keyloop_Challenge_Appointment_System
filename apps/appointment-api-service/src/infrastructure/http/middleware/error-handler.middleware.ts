@@ -44,7 +44,7 @@ export const errorHandlerMiddleware = (err: Error, req: Request, res: Response) 
     return res.status(422).json({ error: 'Unprocessable Entity', message: err.message });
   }
 
-  console.error('Unhandled Exception:', err);
+  console.error('Unhandled Exception:', err.message);
 
   return res.status(500).json({
     error: 'Internal Server Error',

@@ -22,7 +22,7 @@ const app = express();
 app.use(express.json());
 
 // Swagger Docs
-const swaggerDocument = YAML.load(path.join(__dirname, '../../../../../../specs/003-multi-tenant-api/contracts/openapi.yaml'));
+const swaggerDocument = YAML.load(path.join(__dirname, '../../../../../specs/003-multi-tenant-api/contracts/openapi.yaml'));
 app.use('/api/docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument));
 
 // Global middlewares
