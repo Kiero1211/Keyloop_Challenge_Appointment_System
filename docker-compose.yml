@@ -18,3 +18,12 @@ services:
       - STREAM_PARTITION_COUNT=4
     depends_on:
       - redis
+
+  appointment-worker-service:
+    build:
+      context: ./apps/appointment-worker-service
+    environment:
+      - REDIS_CONNECTION=redis:6379
+      - DB_CONNECTION=Host=postgres;Database=appointments;Username=postgres;Password=postgres
+    depends_on:
+      - redis
