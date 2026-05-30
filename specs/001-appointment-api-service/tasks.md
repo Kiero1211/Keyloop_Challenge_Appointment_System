@@ -17,9 +17,9 @@
 
 **Purpose**: Project initialization and basic structure
 
-- [ ] T001 Create project structure, `package.json`, `tsconfig.json`, and `.env.example` in `apps/appointment-api-service/`
-- [ ] T002 Initialize `apps/appointment-api-service/` with `express`, `ioredis`, `zod`, `uuid`, and TypeScript testing dependencies
-- [ ] T003 [P] Configure Jest for unit and integration tests in `apps/appointment-api-service/jest.config.js`
+- [X] T001 Create project structure, `package.json`, `tsconfig.json`, and `.env.example` in `apps/appointment-api-service/`
+- [X] T002 Initialize `apps/appointment-api-service/` with `express`, `ioredis`, `zod`, `uuid`, and TypeScript testing dependencies
+- [X] T003 [P] Configure Jest for unit and integration tests in `apps/appointment-api-service/jest.config.js`
 
 ---
 
@@ -27,10 +27,10 @@
 
 **Purpose**: Core infrastructure that MUST be complete before ANY user story can be implemented
 
-- [ ] T004 Create `AsyncLocalStorage` store in `apps/appointment-api-service/src/domain/context/tenant-context.ts`
-- [ ] T005 [P] Create domain exceptions (`DomainValidationException`, `DuplicateAppointmentException`, `CacheUnavailableException`, `StreamPublishException`) in `apps/appointment-api-service/src/domain/exceptions/`
-- [ ] T006 Create Value Objects with invariant guards in `apps/appointment-api-service/src/domain/value-objects/`
-- [ ] T007 [P] Define Port interfaces (`ICacheProvider`, `IMessagePublisher`) in `apps/appointment-api-service/src/application/ports/`
+- [X] T004 Create `AsyncLocalStorage` store in `apps/appointment-api-service/src/domain/context/tenant-context.ts`
+- [X] T005 [P] Create domain exceptions (`DomainValidationException`, `DuplicateAppointmentException`, `CacheUnavailableException`, `StreamPublishException`) in `apps/appointment-api-service/src/domain/exceptions/`
+- [X] T006 Create Value Objects with invariant guards in `apps/appointment-api-service/src/domain/value-objects/`
+- [X] T007 [P] Define Port interfaces (`ICacheProvider`, `IMessagePublisher`) in `apps/appointment-api-service/src/application/ports/`
 
 **Checkpoint**: Foundation ready - user story implementation can now begin in parallel
 
@@ -44,20 +44,20 @@
 
 ### Tests for User Story 1 ⚠️
 
-- [ ] T008 [P] [US1] Write unit tests for `CreateAppointmentUseCase` and `HealthCheckUseCase` in `apps/appointment-api-service/tests/unit/application/`
-- [ ] T009 [P] [US1] Write unit tests for Value Object boundaries in `apps/appointment-api-service/tests/unit/domain/value-objects/desired-time.test.ts`
-- [ ] T010 [P] [US1] Write integration test for `RedisStreamPublisher` in `apps/appointment-api-service/tests/integration/redis-stream.publisher.test.ts`
-- [ ] T011 [P] [US1] Write E2E integration test for POST/GET endpoints in `apps/appointment-api-service/tests/integration/appointment.e2e.test.ts`
+- [X] T008 [P] [US1] Write unit tests for `CreateAppointmentUseCase` and `HealthCheckUseCase` in `apps/appointment-api-service/tests/unit/application/`
+- [X] T009 [P] [US1] Write unit tests for Value Object boundaries in `apps/appointment-api-service/tests/unit/domain/value-objects/desired-time.test.ts`
+- [X] T010 [P] [US1] Write integration test for `RedisStreamPublisher` in `apps/appointment-api-service/tests/integration/redis-stream.publisher.test.ts`
+- [X] T011 [P] [US1] Write E2E integration test for POST/GET endpoints in `apps/appointment-api-service/tests/integration/appointment.e2e.test.ts`
 
 ### Implementation for User Story 1
 
-- [ ] T012 [P] [US1] Create Zod schema in `apps/appointment-api-service/src/application/commands/create-appointment.command.ts`
-- [ ] T013 [US1] Implement `CreateAppointmentUseCase` and `HealthCheckUseCase` in `apps/appointment-api-service/src/application/use-cases/`
-- [ ] T014 [US1] Implement `RedisStreamPublisher` via `ioredis` in `apps/appointment-api-service/src/infrastructure/messaging/redis-stream.publisher.ts`
-- [ ] T015 [US1] Implement `TenantContextMiddleware` and `ErrorHandlerMiddleware` in `apps/appointment-api-service/src/infrastructure/http/middleware/`
-- [ ] T016 [US1] Implement Express routes and controllers in `apps/appointment-api-service/src/infrastructure/http/routes/`
-- [ ] T017 [US1] Implement `server.ts` and `cluster.ts` in `apps/appointment-api-service/src/infrastructure/http/`
-- [ ] T018 [US1] Implement DI `container.ts` linking components in `apps/appointment-api-service/src/infrastructure/di/container.ts`
+- [X] T012 [P] [US1] Create Zod schema in `apps/appointment-api-service/src/application/commands/create-appointment.command.ts`
+- [X] T013 [US1] Implement `CreateAppointmentUseCase` and `HealthCheckUseCase` in `apps/appointment-api-service/src/application/use-cases/`
+- [X] T014 [US1] Implement `RedisStreamPublisher` via `ioredis` in `apps/appointment-api-service/src/infrastructure/messaging/redis-stream.publisher.ts`
+- [X] T015 [US1] Implement `TenantContextMiddleware` and `ErrorHandlerMiddleware` in `apps/appointment-api-service/src/infrastructure/http/middleware/`
+- [X] T016 [US1] Implement Express routes and controllers in `apps/appointment-api-service/src/infrastructure/http/routes/`
+- [X] T017 [US1] Implement `server.ts` and `cluster.ts` in `apps/appointment-api-service/src/infrastructure/http/`
+- [X] T018 [US1] Implement DI `container.ts` linking components in `apps/appointment-api-service/src/infrastructure/di/container.ts`
 
 **Checkpoint**: At this point, User Story 1 should be fully functional (can receive payload and publish to stream).
 
@@ -71,12 +71,12 @@
 
 ### Tests for User Story 2 ⚠️
 
-- [ ] T019 [P] [US2] Write unit tests for deterministic partition distribution (1000 items <= 30%) in `apps/appointment-api-service/tests/unit/domain/partition-hasher.test.ts`
+- [X] T019 [P] [US2] Write unit tests for deterministic partition distribution (1000 items <= 30%) in `apps/appointment-api-service/tests/unit/domain/partition-hasher.test.ts`
 
 ### Implementation for User Story 2
 
-- [ ] T020 [US2] Implement FNV-1a 32-bit hasher in `apps/appointment-api-service/src/domain/utils/partition-hasher.ts`
-- [ ] T021 [US2] Integrate hasher into `CreateAppointmentUseCase` mapping logic
+- [X] T020 [US2] Implement FNV-1a 32-bit hasher in `apps/appointment-api-service/src/domain/utils/partition-hasher.ts`
+- [X] T021 [US2] Integrate hasher into `CreateAppointmentUseCase` mapping logic
 
 **Checkpoint**: User Story 2 adds deterministic scaling support.
 
@@ -90,12 +90,12 @@
 
 ### Tests for User Story 3 ⚠️
 
-- [ ] T022 [P] [US3] Write integration test for cache adapter in `apps/appointment-api-service/tests/integration/redis-cache.adapter.test.ts`
+- [X] T022 [P] [US3] Write integration test for cache adapter in `apps/appointment-api-service/tests/integration/redis-cache.adapter.test.ts`
 
 ### Implementation for User Story 3
 
-- [ ] T023 [US3] Implement `RedisCacheAdapter` (exists, hset, del, ping) in `apps/appointment-api-service/src/infrastructure/cache/redis-cache.adapter.ts`
-- [ ] T024 [US3] Update DI container to wire the real `RedisCacheAdapter` instead of a stub.
+- [X] T023 [US3] Implement `RedisCacheAdapter` (exists, hset, del, ping) in `apps/appointment-api-service/src/infrastructure/cache/redis-cache.adapter.ts`
+- [X] T024 [US3] Update DI container to wire the real `RedisCacheAdapter` instead of a stub.
 
 **Checkpoint**: User Story 3 adds idempotency protection to the ingestion API.
 
@@ -105,10 +105,10 @@
 
 **Purpose**: Improvements that affect multiple user stories
 
-- [ ] T025 [P] Implement multi-stage `Dockerfile` in `apps/appointment-api-service/Dockerfile`
-- [ ] T026 Update root `docker-compose.yml` to include `appointment-api-service`
-- [ ] T027 Code cleanup and refactoring
-- [ ] T028 Run `npm run lint` and ensure 0 errors
+- [X] T025 [P] Implement multi-stage `Dockerfile` in `apps/appointment-api-service/Dockerfile`
+- [X] T026 Update root `docker-compose.yml` to include `appointment-api-service`
+- [X] T027 Code cleanup and refactoring
+- [X] T028 Run `npm run lint` and ensure 0 errors
 
 ---
 

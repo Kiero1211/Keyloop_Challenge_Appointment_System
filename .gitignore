@@ -1,2 +1,7 @@
 /service-management-service
 .specify/memory/service-management-entity-analysis.md
+node_modules/
+dist/
+build/
+*.log
+.env*
