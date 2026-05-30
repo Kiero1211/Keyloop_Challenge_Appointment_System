@@ -19,3 +19,4 @@ obj/
 *.user
 *.suo
 packages/
+/auth-service

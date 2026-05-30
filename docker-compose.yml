@@ -6,6 +6,20 @@ services:
     ports:
       - "6379:6379"
 
+  postgres:
+    image: postgres:15-alpine
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_DB=appointments
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d appointments"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
   appointment-api-service:
     build:
       context: ./apps/appointment-api-service
@@ -16,8 +30,13 @@ services:
       - PORT=3000
       - REDIS_URL=redis://redis:6379
       - STREAM_PARTITION_COUNT=4
+      - DATABASE_URL=postgresql://postgres:postgres@postgres:5432/appointments?schema=public
+      - JWT_SECRET=supersecret123
+      - JWT_ACCESS_EXPIRES_IN=1h
+      - JWT_REFRESH_EXPIRES_IN=7d
     depends_on:
       - redis
+      - postgres
 
   appointment-worker-service:
     build:
