@@ -1,5 +1,5 @@
-import { HealthCheckUseCase } from '../../../../src/application/use-cases/health-check.use-case';
-import { ICacheProvider } from '../../../../src/application/ports/cache-provider.port';
+import { HealthCheckUseCase } from '@/application/use-cases/health-check.use-case';
+import { ICacheProvider } from '@/application/ports/cache-provider.port';
 
 describe('HealthCheckUseCase', () => {
   let useCase: HealthCheckUseCase;

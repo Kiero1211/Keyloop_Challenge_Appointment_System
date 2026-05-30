@@ -1,4 +1,4 @@
-import { RedisStreamPublisher } from '../../../../src/infrastructure/messaging/redis-stream.publisher';
+import { RedisStreamPublisher } from '@/infrastructure/messaging/redis-stream.publisher';
 import Redis from 'ioredis';
 import { GenericContainer, StartedTestContainer } from 'testcontainers';
 

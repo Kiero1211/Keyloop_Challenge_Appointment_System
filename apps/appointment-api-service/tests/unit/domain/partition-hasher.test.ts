@@ -1,4 +1,4 @@
-import { PartitionHasher } from '../../../../src/domain/utils/partition-hasher';
+import { PartitionHasher } from '@/domain/utils/partition-hasher';
 
 describe('PartitionHasher', () => {
   it('should be deterministic for the same inputs', () => {

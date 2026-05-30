@@ -1,8 +1,8 @@
 import request from 'supertest';
-import { app } from '../../../../src/infrastructure/http/app';
+import { app } from '@/infrastructure/http/app';
 import { GenericContainer, StartedTestContainer } from 'testcontainers';
 import Redis from 'ioredis';
-import { container } from '../../../../src/infrastructure/di/container';
+import { container } from '@/infrastructure/di/container';
 
 describe('Appointment API E2E', () => {
   let redisContainer: StartedTestContainer;
@@ -24,9 +24,7 @@ describe('Appointment API E2E', () => {
 
   afterAll(async () => {
     await container.destroy();
-    if (redisClient) {
-      await redisClient.quit();
-    }
+
     if (redisContainer) {
       await redisContainer.stop();
     }

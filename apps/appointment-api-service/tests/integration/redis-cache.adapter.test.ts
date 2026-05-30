@@ -1,4 +1,4 @@
-import { RedisCacheAdapter } from '../../../../src/infrastructure/cache/redis-cache.adapter';
+import { RedisCacheAdapter } from '@/infrastructure/cache/redis-cache.adapter';
 import Redis from 'ioredis';
 import { GenericContainer, StartedTestContainer } from 'testcontainers';
 

@@ -1,9 +1,9 @@
-import { CreateAppointmentUseCase } from '../../../../src/application/use-cases/create-appointment.use-case';
-import { ICacheProvider } from '../../../../src/application/ports/cache-provider.port';
-import { IMessagePublisher } from '../../../../src/application/ports/message-publisher.port';
-import { CreateAppointmentCommand } from '../../../../src/application/commands/create-appointment.command';
-import { tenantContext } from '../../../../src/domain/context/tenant-context';
-import { DuplicateAppointmentException } from '../../../../src/domain/exceptions';
+import { CreateAppointmentUseCase } from '@/application/use-cases/create-appointment.use-case';
+import { ICacheProvider } from '@/application/ports/cache-provider.port';
+import { IMessagePublisher } from '@/application/ports/message-publisher.port';
+import { CreateAppointmentCommand } from '@/application/commands/create-appointment.command';
+import { tenantContext } from '@/domain/context/tenant-context';
+import { DuplicateAppointmentException } from '@/domain/exceptions';
 
 describe('CreateAppointmentUseCase', () => {
   let useCase: CreateAppointmentUseCase;

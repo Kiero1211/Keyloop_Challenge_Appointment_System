@@ -4,7 +4,12 @@ export class HealthCheckUseCase {
   constructor(private readonly cacheProvider: ICacheProvider) {}
 
   async execute() {
-    const isCacheConnected = await this.cacheProvider.ping();
+    let isCacheConnected = false;
+    try {
+      isCacheConnected = await this.cacheProvider.ping();
+    } catch (error) {
+      isCacheConnected = false;
+    }
     
     return {
       status: isCacheConnected ? 'ok' : 'error',

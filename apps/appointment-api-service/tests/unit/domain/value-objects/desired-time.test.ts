@@ -1,5 +1,5 @@
-import { DesiredTime } from '../../../../src/domain/value-objects/desired-time';
-import { DomainValidationException } from '../../../../src/domain/exceptions';
+import { DesiredTime } from '@/domain/value-objects/desired-time';
+import { DomainValidationException } from '@/domain/exceptions';
 
 describe('DesiredTime Value Object', () => {
   it('should create valid desired time for future dates', () => {
