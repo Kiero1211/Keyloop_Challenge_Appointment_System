@@ -7,6 +7,11 @@ build/
 .env*
 /apps/appointment-api-service/coverage
 apps/appointment-api-service/package-lock.json
+apps/appointment-worker-service/src/.idea
+apps/appointment-worker-service/src/bin
+apps/appointment-worker-service/src/obj
+apps/appointment-worker-service/src/logs
+apps/appointment-worker-service/.vs
 
 # C# / .NET
 bin/
