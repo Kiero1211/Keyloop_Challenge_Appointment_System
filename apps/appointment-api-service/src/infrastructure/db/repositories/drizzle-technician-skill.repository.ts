@@ -1,8 +1,8 @@
 import { eq, and } from 'drizzle-orm';
 import { db } from '../client';
 import { technicianSkills } from '../schema';
-import { TechnicianSkill } from '../../../../domain/entities/technician-skill.entity';
-import { ITechnicianSkillRepository } from '../../../../application/ports/repositories/technician-skill.repository.port';
+import { TechnicianSkill } from '@/domain/entities/technician-skill.entity';
+import { ITechnicianSkillRepository } from '@/application/ports/repositories/technician-skill.repository.port';
 
 export class DrizzleTechnicianSkillRepository implements ITechnicianSkillRepository {
   async create(data: Partial<TechnicianSkill>): Promise<TechnicianSkill> {

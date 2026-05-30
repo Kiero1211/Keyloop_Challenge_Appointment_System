@@ -1,9 +1,9 @@
 import request from 'supertest';
-import { app } from '../../../src/infrastructure/http/app';
-import { db } from '../../../src/infrastructure/db/client';
-import { factories } from '../../helpers/factories';
-import { container } from '../../../src/infrastructure/di/container';
-import { technicians, technicianSkills, serviceTypes } from '../../../src/infrastructure/db/schema';
+import { app } from '../../src/infrastructure/http/app';
+import { db } from '../../src/infrastructure/db/client';
+import { factories } from '../helpers/factories';
+import { container } from '../../src/infrastructure/di/container';
+import { technicians, technicianSkills, serviceTypes } from '../../src/infrastructure/db/schema';
 
 describe('Technicians API Integration', () => {
   let tenantId1: string;

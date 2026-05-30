@@ -1,4 +1,4 @@
-import { ITenantRepository } from '../../../ports/repositories/tenant.repository.port';
+import { ITenantRepository } from '@/application/ports/repositories/tenant.repository.port';
 
 export class DeactivateTenantUseCase {
   constructor(private tenantRepository: ITenantRepository) {}

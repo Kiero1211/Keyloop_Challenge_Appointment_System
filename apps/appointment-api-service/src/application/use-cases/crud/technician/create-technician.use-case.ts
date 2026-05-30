@@ -1,6 +1,6 @@
-import { ITechnicianRepository } from '../../../ports/repositories/technician.repository.port';
-import { ConflictException } from '../../../../domain/exceptions';
-import { Technician } from '../../../../domain/entities/technician.entity';
+import { ITechnicianRepository } from '@/application/ports/repositories/technician.repository.port';
+import { ConflictException } from '@/domain/exceptions';
+import { Technician } from '@/domain/entities/technician.entity';
 
 export class CreateTechnicianUseCase {
   constructor(private readonly technicianRepo: ITechnicianRepository) {}

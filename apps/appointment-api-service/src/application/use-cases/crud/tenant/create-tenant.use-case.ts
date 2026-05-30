@@ -1,6 +1,6 @@
-import { ITenantRepository } from '../../../ports/repositories/tenant.repository.port';
-import { Tenant } from '../../../../domain/entities/tenant.entity';
-import { ConflictException } from '../../../../domain/exceptions';
+import { ITenantRepository } from '@/application/ports/repositories/tenant.repository.port';
+import { Tenant } from '@/domain/entities/tenant.entity';
+import { ConflictException } from '@/domain/exceptions';
 
 export class CreateTenantUseCase {
   constructor(private tenantRepository: ITenantRepository) {}

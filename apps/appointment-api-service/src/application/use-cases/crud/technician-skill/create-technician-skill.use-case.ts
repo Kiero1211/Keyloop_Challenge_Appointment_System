@@ -1,8 +1,8 @@
-import { ITechnicianSkillRepository } from '../../../ports/repositories/technician-skill.repository.port';
-import { ITechnicianRepository } from '../../../ports/repositories/technician.repository.port';
-import { IServiceTypeRepository } from '../../../ports/repositories/service-type.repository.port';
-import { ConflictException, UnprocessableException } from '../../../../domain/exceptions';
-import { TechnicianSkill } from '../../../../domain/entities/technician-skill.entity';
+import { ITechnicianSkillRepository } from '@/application/ports/repositories/technician-skill.repository.port';
+import { ITechnicianRepository } from '@/application/ports/repositories/technician.repository.port';
+import { IServiceTypeRepository } from '@/application/ports/repositories/service-type.repository.port';
+import { ConflictException, UnprocessableException } from '@/domain/exceptions';
+import { TechnicianSkill } from '@/domain/entities/technician-skill.entity';
 
 export class CreateTechnicianSkillUseCase {
   constructor(

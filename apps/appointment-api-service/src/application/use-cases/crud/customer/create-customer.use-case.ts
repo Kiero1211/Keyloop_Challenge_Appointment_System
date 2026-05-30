@@ -1,6 +1,6 @@
-import { ICustomerRepository } from '../../../ports/repositories/customer.repository.port';
-import { Customer } from '../../../../domain/entities/customer.entity';
-import { ConflictException } from '../../../../domain/exceptions';
+import { ICustomerRepository } from '@/application/ports/repositories/customer.repository.port';
+import { Customer } from '@/domain/entities/customer.entity';
+import { ConflictException } from '@/domain/exceptions';
 
 export class CreateCustomerUseCase {
   constructor(private customerRepository: ICustomerRepository) {}

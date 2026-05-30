@@ -1,6 +1,6 @@
-import { IVehicleRepository } from '../../../ports/repositories/vehicle.repository.port';
-import { Vehicle } from '../../../../domain/entities/vehicle.entity';
-import { NotFoundException } from '../../../../domain/exceptions';
+import { IVehicleRepository } from '@/application/ports/repositories/vehicle.repository.port';
+import { Vehicle } from '@/domain/entities/vehicle.entity';
+import { NotFoundException } from '@/domain/exceptions';
 
 export class GetVehicleUseCase {
   constructor(private vehicleRepository: IVehicleRepository) {}

@@ -1,7 +1,7 @@
-import { IVehicleRepository } from '../../../ports/repositories/vehicle.repository.port';
-import { ICustomerRepository } from '../../../ports/repositories/customer.repository.port';
-import { Vehicle } from '../../../../domain/entities/vehicle.entity';
-import { UnprocessableException } from '../../../../domain/exceptions';
+import { IVehicleRepository } from '@/application/ports/repositories/vehicle.repository.port';
+import { ICustomerRepository } from '@/application/ports/repositories/customer.repository.port';
+import { Vehicle } from '@/domain/entities/vehicle.entity';
+import { UnprocessableException } from '@/domain/exceptions';
 
 export class CreateVehicleUseCase {
   constructor(

@@ -1,4 +1,4 @@
-import { IRefreshTokenRepository } from '../../../ports/repositories/refresh-token.repository.port';
+import { IRefreshTokenRepository } from '@/application/ports/repositories/refresh-token.repository.port';
 
 export class LogoutUseCase {
   constructor(private refreshTokenRepository: IRefreshTokenRepository) {}

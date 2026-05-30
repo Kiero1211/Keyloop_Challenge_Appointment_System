@@ -6,7 +6,12 @@ describe('LogoutUseCase', () => {
   let mockRefreshTokenRepo: jest.Mocked<IRefreshTokenRepository>;
 
   beforeEach(() => {
-    mockRefreshTokenRepo = { create: jest.fn(), findByToken: jest.fn(), revoke: jest.fn() };
+    mockRefreshTokenRepo = {
+      create: jest.fn(),
+      findByToken: jest.fn(),
+      revoke: jest.fn(),
+      revokeAllForUser: jest.fn()
+    };
     useCase = new LogoutUseCase(mockRefreshTokenRepo);
   });
 

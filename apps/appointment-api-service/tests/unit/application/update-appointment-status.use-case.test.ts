@@ -12,9 +12,8 @@ describe('UpdateAppointmentStatusUseCase', () => {
       findById: jest.fn(),
       findAll: jest.fn(),
       updateStatus: jest.fn(),
-      softDelete: jest.fn(),
-      findOverlapping: jest.fn(),
-    };
+      softDelete: jest.fn()
+    } as any;
     useCase = new UpdateAppointmentStatusUseCase(mockRepo);
   });
 

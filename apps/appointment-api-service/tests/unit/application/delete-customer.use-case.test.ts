@@ -11,11 +11,11 @@ describe('DeleteCustomerUseCase', () => {
       create: jest.fn(),
       findById: jest.fn(),
       findAll: jest.fn(),
-      findByEmail: jest.fn(),
       update: jest.fn(),
       softDelete: jest.fn(),
+      findByEmail: jest.fn(),
       hasActiveAppointments: jest.fn(),
-    };
+    } as any;
     useCase = new DeleteCustomerUseCase(mockRepo);
   });
 

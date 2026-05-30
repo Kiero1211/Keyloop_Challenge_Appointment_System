@@ -1,5 +1,5 @@
-import { IVehicleRepository } from '../../../ports/repositories/vehicle.repository.port';
-import { ConflictException } from '../../../../domain/exceptions';
+import { IVehicleRepository } from '@/application/ports/repositories/vehicle.repository.port';
+import { ConflictException } from '@/domain/exceptions';
 
 export class DeleteVehicleUseCase {
   constructor(private vehicleRepository: IVehicleRepository) {}

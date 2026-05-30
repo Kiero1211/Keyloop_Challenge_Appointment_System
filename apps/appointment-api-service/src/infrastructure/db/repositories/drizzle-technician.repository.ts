@@ -1,8 +1,8 @@
 import { eq, and, isNull } from 'drizzle-orm';
 import { db } from '../client';
 import { technicians } from '../schema';
-import { Technician } from '../../../../domain/entities/technician.entity';
-import { ITechnicianRepository } from '../../../../application/ports/repositories/technician.repository.port';
+import { Technician } from '@/domain/entities/technician.entity';
+import { ITechnicianRepository } from '@/application/ports/repositories/technician.repository.port';
 
 export class DrizzleTechnicianRepository implements ITechnicianRepository {
   async create(data: Partial<Technician>): Promise<Technician> {

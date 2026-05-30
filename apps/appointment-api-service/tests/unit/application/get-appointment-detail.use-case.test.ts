@@ -22,13 +22,13 @@ describe('GetAppointmentDetailUseCase', () => {
 
   it('should throw NotFoundException if not found', async () => {
     (mockRepo as any).findDetailById.mockResolvedValue(null);
-    await expect(useCase.execute('app1')).rejects.toThrow(NotFoundException);
+    await expect(useCase.execute('tenant1', 'app1')).rejects.toThrow(NotFoundException);
   });
 
   it('should return enriched detail', async () => {
     const detail = { id: 'app1', customerName: 'John' };
     (mockRepo as any).findDetailById.mockResolvedValue(detail);
-    const result = await useCase.execute('app1');
+    const result = await useCase.execute('tenant1', 'app1');
     expect(result).toEqual(detail);
   });
 });

@@ -1,4 +1,4 @@
-import { IAppointmentCrudRepository } from '../../../ports/repositories/appointment-crud.repository.port';
+import { IAppointmentCrudRepository } from '@/application/ports/repositories/appointment-crud.repository.port';
 
 export class ListAppointmentsUseCase {
   constructor(private appointmentRepository: IAppointmentCrudRepository) {}

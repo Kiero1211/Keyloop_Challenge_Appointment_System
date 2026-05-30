@@ -1,5 +1,5 @@
-import { ICustomerRepository } from '../../../ports/repositories/customer.repository.port';
-import { ConflictException } from '../../../../domain/exceptions';
+import { ICustomerRepository } from '@/application/ports/repositories/customer.repository.port';
+import { ConflictException } from '@/domain/exceptions';
 
 export class DeleteCustomerUseCase {
   constructor(private customerRepository: ICustomerRepository) {}

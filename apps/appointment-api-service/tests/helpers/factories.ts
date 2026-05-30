@@ -7,7 +7,6 @@ export const factories = {
   tenant: async (overrides = {}) => {
     const [tenant] = await db.insert(tenants).values({
       name: `Tenant ${uuidv4()}`,
-      contactEmail: `contact-${uuidv4()}@tenant.com`,
       ...overrides,
     }).returning();
     return tenant;
@@ -91,8 +90,8 @@ export const factories = {
 
   appointment: async (tenantId: string, customerId: string, vehicleId: string, serviceTypeId: string, technicianId: string, serviceBayId: string, overrides = {}) => {
     const now = new Date();
-    const startTime = new Date(now.getTime() + 24 * 60 * 60 * 1000); // Tomorrow
-    const endTime = new Date(startTime.getTime() + 30 * 60 * 1000); // 30 mins later
+    const scheduledStartTime = new Date(now.getTime() + 24 * 60 * 60 * 1000); // Tomorrow
+    const scheduledEndTime = new Date(scheduledStartTime.getTime() + 30 * 60 * 1000); // 30 mins later
     
     const [app] = await db.insert(appointments).values({
       tenantId,
@@ -101,8 +100,8 @@ export const factories = {
       serviceTypeId,
       technicianId,
       serviceBayId,
-      startTime,
-      endTime,
+      scheduledStartTime,
+      scheduledEndTime,
       status: 'PENDING',
       ...overrides,
     }).returning();

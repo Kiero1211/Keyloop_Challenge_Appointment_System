@@ -1,7 +1,7 @@
-import { IUserTenantRepository } from '../../../ports/repositories/user-tenant.repository.port';
-import { IRefreshTokenRepository } from '../../../ports/repositories/refresh-token.repository.port';
-import { JwtService } from '../../../../infrastructure/auth/jwt.service';
-import { UnauthorizedException } from '../../../../domain/exceptions';
+import { IUserTenantRepository } from '@/application/ports/repositories/user-tenant.repository.port';
+import { IRefreshTokenRepository } from '@/application/ports/repositories/refresh-token.repository.port';
+import { JwtService } from '@/infrastructure/auth/jwt.service';
+import { UnauthorizedException } from '@/domain/exceptions';
 
 export class SwitchTenantUseCase {
   constructor(

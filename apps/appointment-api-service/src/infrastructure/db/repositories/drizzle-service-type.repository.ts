@@ -1,8 +1,8 @@
 import { eq, and, isNull } from 'drizzle-orm';
 import { db } from '../client';
 import { serviceTypes } from '../schema';
-import { ServiceType } from '../../../../domain/entities/service-type.entity';
-import { IServiceTypeRepository } from '../../../../application/ports/repositories/service-type.repository.port';
+import { ServiceType } from '@/domain/entities/service-type.entity';
+import { IServiceTypeRepository } from '@/application/ports/repositories/service-type.repository.port';
 
 export class DrizzleServiceTypeRepository implements IServiceTypeRepository {
   async create(data: Partial<ServiceType>): Promise<ServiceType> {

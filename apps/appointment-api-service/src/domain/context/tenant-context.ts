@@ -5,3 +5,6 @@ export interface TenantContext {
   permissions: string[];
   isSuperAdmin: boolean;
 }
+
+import { AsyncLocalStorage } from 'async_hooks';
+export const tenantContext = new AsyncLocalStorage<TenantContext>();

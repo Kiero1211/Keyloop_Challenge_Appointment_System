@@ -1,8 +1,8 @@
 import { eq, and, isNull, sql } from 'drizzle-orm';
 import { db } from '../client';
 import { appointments } from '../schema';
-import { Appointment } from '../../../../domain/entities/appointment.entity';
-import { IAppointmentCrudRepository } from '../../../../application/ports/repositories/appointment-crud.repository.port';
+import { Appointment } from '@/domain/entities/appointment.entity';
+import { IAppointmentCrudRepository } from '@/application/ports/repositories/appointment-crud.repository.port';
 import { customers, vehicles, serviceTypes, technicians, serviceBays } from '../schema';
 
 export class DrizzleAppointmentCrudRepository implements IAppointmentCrudRepository {
@@ -60,7 +60,7 @@ export class DrizzleAppointmentCrudRepository implements IAppointmentCrudReposit
     if (filters.date) {
       const startOfDay = new Date(`${filters.date}T00:00:00.000Z`);
       const endOfDay = new Date(`${filters.date}T23:59:59.999Z`);
-      conditions.push(sql`${appointments.startTime} >= ${startOfDay.toISOString()} AND ${appointments.startTime} <= ${endOfDay.toISOString()}`);
+      conditions.push(sql`${appointments.scheduledStartTime} >= ${startOfDay.toISOString()} AND ${appointments.scheduledStartTime} <= ${endOfDay.toISOString()}`);
     }
 
     const limit = pageSize;

@@ -1,6 +1,6 @@
-import { IAppointmentCrudRepository } from '../../../ports/repositories/appointment-crud.repository.port';
-import { Appointment } from '../../../../domain/entities/appointment.entity';
-import { UnprocessableException, NotFoundException } from '../../../../domain/exceptions';
+import { IAppointmentCrudRepository } from '@/application/ports/repositories/appointment-crud.repository.port';
+import { Appointment } from '@/domain/entities/appointment.entity';
+import { UnprocessableException, NotFoundException } from '@/domain/exceptions';
 
 export class UpdateAppointmentStatusUseCase {
   constructor(private appointmentRepository: IAppointmentCrudRepository) {}
@@ -28,6 +28,10 @@ export class UpdateAppointmentStatusUseCase {
       throw new UnprocessableException(`Invalid status transition from ${currentStatus} to ${newStatus}`);
     }
 
-    return await this.appointmentRepository.updateStatus(tenantId, id, newStatus as any);
+    const updated = await this.appointmentRepository.updateStatus(tenantId, id, newStatus as any);
+    if (!updated) {
+      throw new NotFoundException('Appointment not found during update');
+    }
+    return updated;
   }
 }

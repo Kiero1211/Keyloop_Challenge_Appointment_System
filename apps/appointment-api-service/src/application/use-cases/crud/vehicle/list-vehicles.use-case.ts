@@ -1,5 +1,5 @@
-import { IVehicleRepository } from '../../../ports/repositories/vehicle.repository.port';
-import { Vehicle } from '../../../../domain/entities/vehicle.entity';
+import { IVehicleRepository } from '@/application/ports/repositories/vehicle.repository.port';
+import { Vehicle } from '@/domain/entities/vehicle.entity';
 
 export class ListVehiclesUseCase {
   constructor(private vehicleRepository: IVehicleRepository) {}

@@ -14,9 +14,8 @@ describe('CreateVehicleUseCase', () => {
       findById: jest.fn(),
       findByCustomer: jest.fn(),
       update: jest.fn(),
-      softDelete: jest.fn(),
-      hasActiveAppointments: jest.fn(),
-    };
+      softDelete: jest.fn()
+    } as any;
     mockCustomerRepo = {
       create: jest.fn(),
       findById: jest.fn(),

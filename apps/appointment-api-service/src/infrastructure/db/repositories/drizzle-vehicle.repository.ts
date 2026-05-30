@@ -1,8 +1,8 @@
 import { eq, and, isNull } from 'drizzle-orm';
 import { db } from '../client';
 import { vehicles } from '../schema';
-import { Vehicle } from '../../../../domain/entities/vehicle.entity';
-import { IVehicleRepository } from '../../../../application/ports/repositories/vehicle.repository.port';
+import { Vehicle } from '@/domain/entities/vehicle.entity';
+import { IVehicleRepository } from '@/application/ports/repositories/vehicle.repository.port';
 
 export class DrizzleVehicleRepository implements IVehicleRepository {
   async create(data: Partial<Vehicle>): Promise<Vehicle> {
@@ -46,5 +46,9 @@ export class DrizzleVehicleRepository implements IVehicleRepository {
       .where(and(eq(vehicles.id, id), eq(vehicles.tenantId, tenantId), isNull(vehicles.deletedAt)))
       .returning();
     return !!result;
+  }
+
+  async hasActiveAppointments(tenantId: string, id: string): Promise<boolean> {
+    return false; // placeholder implementation
   }
 }

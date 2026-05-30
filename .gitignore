@@ -20,3 +20,4 @@ obj/
 *.suo
 packages/
 /auth-service
+package-lock.json

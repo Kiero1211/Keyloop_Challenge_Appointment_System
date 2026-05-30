@@ -1,11 +1,11 @@
-import { IAppointmentCrudRepository } from '../../../ports/repositories/appointment-crud.repository.port';
-import { ICustomerRepository } from '../../../ports/repositories/customer.repository.port';
-import { IVehicleRepository } from '../../../ports/repositories/vehicle.repository.port';
-import { IServiceTypeRepository } from '../../../ports/repositories/service-type.repository.port';
-import { ITechnicianRepository } from '../../../ports/repositories/technician.repository.port';
-import { IServiceBayRepository } from '../../../ports/repositories/service-bay.repository.port';
-import { UnprocessableException } from '../../../../domain/exceptions';
-import { Appointment } from '../../../../domain/entities/appointment.entity';
+import { IAppointmentCrudRepository } from '@/application/ports/repositories/appointment-crud.repository.port';
+import { ICustomerRepository } from '@/application/ports/repositories/customer.repository.port';
+import { IVehicleRepository } from '@/application/ports/repositories/vehicle.repository.port';
+import { IServiceTypeRepository } from '@/application/ports/repositories/service-type.repository.port';
+import { ITechnicianRepository } from '@/application/ports/repositories/technician.repository.port';
+import { IServiceBayRepository } from '@/application/ports/repositories/service-bay.repository.port';
+import { UnprocessableException } from '@/domain/exceptions';
+import { Appointment } from '@/domain/entities/appointment.entity';
 
 export class CreateAppointmentUseCase {
   constructor(

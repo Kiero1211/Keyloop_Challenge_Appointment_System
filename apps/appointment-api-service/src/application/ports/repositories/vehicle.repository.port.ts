@@ -6,4 +6,5 @@ export interface IVehicleRepository {
   findByCustomer(tenantId: string, customerId: string): Promise<Vehicle[]>;
   update(tenantId: string, id: string, data: Partial<Vehicle>): Promise<Vehicle | null>;
   softDelete(tenantId: string, id: string): Promise<boolean>;
+  hasActiveAppointments(tenantId: string, id: string): Promise<boolean>;
 }

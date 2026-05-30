@@ -1,9 +1,9 @@
 import request from 'supertest';
-import { app } from '../../../src/infrastructure/http/app';
-import { db } from '../../../src/infrastructure/db/client';
-import { container } from '../../../src/infrastructure/di/container';
-import { factories } from '../../helpers/factories';
-import { appointments } from '../../../src/infrastructure/db/schema';
+import { app } from '../../src/infrastructure/http/app';
+import { db } from '../../src/infrastructure/db/client';
+import { container } from '../../src/infrastructure/di/container';
+import { factories } from '../helpers/factories';
+import { appointments } from '../../src/infrastructure/db/schema';
 import { eq } from 'drizzle-orm';
 
 describe('Appointments List API E2E', () => {

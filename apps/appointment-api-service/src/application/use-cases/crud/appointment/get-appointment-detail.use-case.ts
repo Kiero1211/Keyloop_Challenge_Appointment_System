@@ -1,5 +1,5 @@
-import { IAppointmentCrudRepository } from '../../../ports/repositories/appointment-crud.repository.port';
-import { NotFoundException } from '../../../../domain/exceptions';
+import { IAppointmentCrudRepository } from '@/application/ports/repositories/appointment-crud.repository.port';
+import { NotFoundException } from '@/domain/exceptions';
 
 export class GetAppointmentDetailUseCase {
   constructor(private appointmentRepository: IAppointmentCrudRepository) {}

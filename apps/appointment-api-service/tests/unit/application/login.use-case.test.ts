@@ -15,9 +15,20 @@ describe('LoginUseCase', () => {
   let mockJwtService: any;
 
   beforeEach(() => {
-    mockUserRepo = { create: jest.fn(), findByEmail: jest.fn(), findById: jest.fn(), update: jest.fn() };
+    mockUserRepo = {
+      create: jest.fn(),
+      findByEmail: jest.fn(),
+      findById: jest.fn(),
+      update: jest.fn(),
+      updateLastLogin: jest.fn()
+    };
     mockUserTenantRepo = { create: jest.fn(), findByUserId: jest.fn(), findByUserAndTenant: jest.fn() };
-    mockRefreshTokenRepo = { create: jest.fn(), findByToken: jest.fn(), revoke: jest.fn() };
+    mockRefreshTokenRepo = {
+      create: jest.fn(),
+      findByToken: jest.fn(),
+      revoke: jest.fn(),
+      revokeAllForUser: jest.fn()
+    };
     mockJwtService = { generateAccessToken: jest.fn(), generateRefreshToken: jest.fn() };
     
     useCase = new LoginUseCase(mockUserRepo, mockUserTenantRepo, mockRefreshTokenRepo, mockJwtService);

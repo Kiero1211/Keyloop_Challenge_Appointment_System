@@ -14,10 +14,21 @@ describe('RegisterUseCase', () => {
   let mockJwtService: any;
 
   beforeEach(() => {
-    mockUserRepo = { create: jest.fn(), findByEmail: jest.fn(), findById: jest.fn(), update: jest.fn() };
+    mockUserRepo = {
+      create: jest.fn(),
+      findByEmail: jest.fn(),
+      findById: jest.fn(),
+      update: jest.fn(),
+      updateLastLogin: jest.fn()
+    };
     mockUserTenantRepo = { create: jest.fn(), findByUserId: jest.fn(), findByUserAndTenant: jest.fn() };
     mockTenantRepo = { create: jest.fn(), findById: jest.fn(), findByName: jest.fn(), findAll: jest.fn(), update: jest.fn(), deactivate: jest.fn() };
-    mockRefreshTokenRepo = { create: jest.fn(), findByToken: jest.fn(), revoke: jest.fn() };
+    mockRefreshTokenRepo = {
+      create: jest.fn(),
+      findByToken: jest.fn(),
+      revoke: jest.fn(),
+      revokeAllForUser: jest.fn()
+    };
     mockJwtService = { generateAccessToken: jest.fn(), generateRefreshToken: jest.fn() };
     
     useCase = new RegisterUseCase(mockUserRepo, mockUserTenantRepo, mockTenantRepo, mockRefreshTokenRepo, mockJwtService);

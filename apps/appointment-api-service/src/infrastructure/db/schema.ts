@@ -52,7 +52,6 @@ export const userTenants = pgTable('user_tenants', {
 export const tenants = pgTable('tenants', {
   id: uuid('id').defaultRandom().primaryKey(),
   name: text('name').notNull().unique(),
-  contactEmail: text('contact_email').notNull(),
   isActive: boolean('is_active').default(true),
   deletedAt: timestamp('deleted_at', { withTimezone: true }),
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
@@ -79,7 +78,8 @@ export const vehicles = pgTable('vehicles', {
   id: uuid('id').defaultRandom().primaryKey(),
   tenantId: uuid('tenant_id').notNull().references(() => tenants.id),
   customerId: uuid('customer_id').notNull().references(() => customers.id),
-  licensePlate: text('license_plate').notNull(),
+  vin: text('vin'),
+  licensePlate: text('license_plate'),
   make: text('make').notNull(),
   model: text('model').notNull(),
   year: integer('year').notNull(),
@@ -150,8 +150,8 @@ export const appointments = pgTable('appointments', {
   serviceTypeId: uuid('service_type_id').notNull().references(() => serviceTypes.id),
   technicianId: uuid('technician_id').notNull().references(() => technicians.id),
   serviceBayId: uuid('service_bay_id').notNull().references(() => serviceBays.id),
-  startTime: timestamp('start_time', { withTimezone: true }).notNull(),
-  endTime: timestamp('end_time', { withTimezone: true }).notNull(),
+  scheduledStartTime: timestamp('start_time', { withTimezone: true }).notNull(),
+  scheduledEndTime: timestamp('end_time', { withTimezone: true }).notNull(),
   status: text('status').notNull().default('PENDING'),
   notes: text('notes'),
   deletedAt: timestamp('deleted_at', { withTimezone: true }),
@@ -159,10 +159,10 @@ export const appointments = pgTable('appointments', {
   updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
 }, (table) => ({
   tenantIdIdx: index('idx_appointments_tenant_id').on(table.tenantId, table.id),
-  tenantTechnicianTimeIdx: index('idx_appointments_tenant_tech_time').on(table.tenantId, table.technicianId, table.startTime, table.endTime),
-  tenantBayTimeIdx: index('idx_appointments_tenant_bay_time').on(table.tenantId, table.serviceBayId, table.startTime, table.endTime),
+  tenantTechnicianTimeIdx: index('idx_appointments_tenant_tech_time').on(table.tenantId, table.technicianId, table.scheduledStartTime, table.scheduledEndTime),
+  tenantBayTimeIdx: index('idx_appointments_tenant_bay_time').on(table.tenantId, table.serviceBayId, table.scheduledStartTime, table.scheduledEndTime),
   tenantStatusIdx: index('idx_appointments_tenant_status').on(table.tenantId, table.status),
-  tenantStartTimeIdx: index('idx_appointments_tenant_start_time').on(table.tenantId, table.startTime),
+  tenantStartTimeIdx: index('idx_appointments_tenant_start_time').on(table.tenantId, table.scheduledStartTime),
 }));
 
 export const usersRelations = relations(users, ({ many }) => ({

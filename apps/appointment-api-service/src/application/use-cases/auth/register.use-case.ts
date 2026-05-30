@@ -1,9 +1,9 @@
-import { IUserRepository } from '../../../ports/repositories/user.repository.port';
-import { IUserTenantRepository } from '../../../ports/repositories/user-tenant.repository.port';
-import { ITenantRepository } from '../../../ports/repositories/tenant.repository.port';
-import { IRefreshTokenRepository } from '../../../ports/repositories/refresh-token.repository.port';
-import { JwtService } from '../../../../infrastructure/auth/jwt.service';
-import { ConflictException, NotFoundException } from '../../../../domain/exceptions';
+import { IUserRepository } from '@/application/ports/repositories/user.repository.port';
+import { IUserTenantRepository } from '@/application/ports/repositories/user-tenant.repository.port';
+import { ITenantRepository } from '@/application/ports/repositories/tenant.repository.port';
+import { IRefreshTokenRepository } from '@/application/ports/repositories/refresh-token.repository.port';
+import { JwtService } from '@/infrastructure/auth/jwt.service';
+import { ConflictException, NotFoundException } from '@/domain/exceptions';
 import * as bcrypt from 'bcryptjs';
 
 export class RegisterUseCase {

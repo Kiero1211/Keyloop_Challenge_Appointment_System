@@ -1,8 +1,8 @@
 import { eq, and, isNull } from 'drizzle-orm';
 import { db } from '../client';
 import { customers } from '../schema';
-import { Customer } from '../../../../domain/entities/customer.entity';
-import { ICustomerRepository } from '../../../../application/ports/repositories/customer.repository.port';
+import { Customer } from '@/domain/entities/customer.entity';
+import { ICustomerRepository } from '@/application/ports/repositories/customer.repository.port';
 
 export class DrizzleCustomerRepository implements ICustomerRepository {
   async create(data: Partial<Customer>): Promise<Customer> {
@@ -38,11 +38,20 @@ export class DrizzleCustomerRepository implements ICustomerRepository {
     return (result as Customer) || null;
   }
 
-  async softDelete(tenantId: string, id: string): Promise<boolean> {
-    const [result] = await db.update(customers)
+  async softDelete(tenantId: string, id: string): Promise<void> {
+    await db.update(customers)
       .set({ deletedAt: new Date() })
-      .where(and(eq(customers.id, id), eq(customers.tenantId, tenantId), isNull(customers.deletedAt)))
-      .returning();
-    return !!result;
+      .where(and(eq(customers.id, id), eq(customers.tenantId, tenantId), isNull(customers.deletedAt)));
+  }
+
+  async findByEmail(tenantId: string, email: string): Promise<Customer | null> {
+    const result = await db.query.customers.findFirst({
+      where: and(eq(customers.email, email), eq(customers.tenantId, tenantId), isNull(customers.deletedAt)),
+    });
+    return (result as Customer) || null;
+  }
+
+  async hasActiveAppointments(tenantId: string, id: string): Promise<boolean> {
+    return false; // placeholder implementation
   }
 }

@@ -30,7 +30,7 @@ export class JwtService {
       isSuperAdmin: payload.isSuperAdmin,
     };
 
-    return jwt.sign(jwtPayload, this.secret, { expiresIn: this.accessExpiresIn });
+    return jwt.sign(jwtPayload, this.secret, { expiresIn: this.accessExpiresIn as any });
   }
 
   verifyAccessToken(token: string): JwtPayload {
@@ -40,7 +40,7 @@ export class JwtService {
     return jwt.sign(
       { sub: payload.userId, tenant_id: payload.tenantId, isRefresh: true },
       this.secret,
-      { expiresIn: this.refreshExpiresIn }
+      { expiresIn: this.refreshExpiresIn as any }
     );
   }
 

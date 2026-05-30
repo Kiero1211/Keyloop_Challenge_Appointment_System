@@ -1,10 +1,10 @@
 import request from 'supertest';
-import { app } from '../../../src/infrastructure/http/app';
-import { db } from '../../../src/infrastructure/db/client';
-import { users, userTenants, refreshTokens, tenants } from '../../../src/infrastructure/db/schema';
+import { app } from '../../src/infrastructure/http/app';
+import { db } from '../../src/infrastructure/db/client';
+import { users, userTenants, refreshTokens, tenants } from '../../src/infrastructure/db/schema';
 import { eq } from 'drizzle-orm';
-import { container } from '../../../src/infrastructure/di/container';
-import { factories } from '../../helpers/factories';
+import { container } from '../../src/infrastructure/di/container';
+import { factories } from '../helpers/factories';
 
 describe('Switch Tenant API E2E', () => {
   let userId: string;

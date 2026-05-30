@@ -13,6 +13,6 @@ export interface RefreshToken {
 export interface IRefreshTokenRepository {
   create(token: Partial<RefreshToken>): Promise<RefreshToken>;
   findByToken(token: string): Promise<RefreshToken | null>;
-  revoke(token: string): Promise<boolean>;
-  revokeAllForUser(userId: string): Promise<void>;
+  revoke(token: string): Promise<void>;
+  revokeAllForUser(userId: string, excludeTokenId?: string): Promise<void>;
 }

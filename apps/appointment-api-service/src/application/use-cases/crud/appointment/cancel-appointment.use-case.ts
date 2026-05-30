@@ -1,6 +1,6 @@
-import { IAppointmentCrudRepository } from '../../../ports/repositories/appointment-crud.repository.port';
-import { NotFoundException, UnprocessableException } from '../../../../domain/exceptions';
-import { Appointment } from '../../../../domain/entities/appointment.entity';
+import { IAppointmentCrudRepository } from '@/application/ports/repositories/appointment-crud.repository.port';
+import { NotFoundException, UnprocessableException } from '@/domain/exceptions';
+import { Appointment } from '@/domain/entities/appointment.entity';
 
 export class CancelAppointmentUseCase {
   constructor(private readonly appointmentRepo: IAppointmentCrudRepository) {}

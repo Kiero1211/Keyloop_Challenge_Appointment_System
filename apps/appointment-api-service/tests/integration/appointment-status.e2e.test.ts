@@ -1,9 +1,9 @@
 import request from 'supertest';
-import { app } from '../../../src/infrastructure/http/app';
-import { db } from '../../../src/infrastructure/db/client';
-import { factories } from '../../helpers/factories';
-import { container } from '../../../src/infrastructure/di/container';
-import { appointments, customers, vehicles, serviceTypes, technicians, serviceBays } from '../../../src/infrastructure/db/schema';
+import { app } from '../../src/infrastructure/http/app';
+import { db } from '../../src/infrastructure/db/client';
+import { factories } from '../helpers/factories';
+import { container } from '../../src/infrastructure/di/container';
+import { appointments, customers, vehicles, serviceTypes, technicians, serviceBays } from '../../src/infrastructure/db/schema';
 
 describe('Appointment Status E2E', () => {
   let tenantId1: string;
@@ -38,8 +38,8 @@ describe('Appointment Status E2E', () => {
       serviceTypeId: st.id,
       technicianId: t.id,
       serviceBayId: sb.id,
-      startTime: new Date(),
-      endTime: new Date(Date.now() + 3600000),
+      scheduledStartTime: new Date(),
+      scheduledEndTime: new Date(Date.now() + 3600000),
       status: 'PENDING'
     }).returning();
     appointmentId = appt[0].id;

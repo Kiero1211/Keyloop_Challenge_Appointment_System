@@ -14,12 +14,10 @@ export class DrizzleRefreshTokenRepository implements IRefreshTokenRepository {
     return result[0] ? (result[0] as RefreshToken) : null;
   }
 
-  async revoke(tokenStr: string): Promise<boolean> {
-    const result = await db.update(refreshTokens)
+  async revoke(tokenStr: string): Promise<void> {
+    await db.update(refreshTokens)
       .set({ isRevoked: true })
-      .where(eq(refreshTokens.token, tokenStr))
-      .returning();
-    return result.length > 0;
+      .where(eq(refreshTokens.token, tokenStr));
   }
 
   async revokeAllForUser(userId: string): Promise<void> {

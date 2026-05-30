@@ -1,6 +1,6 @@
-import { IServiceBayRepository } from '../../../ports/repositories/service-bay.repository.port';
-import { ConflictException } from '../../../../domain/exceptions';
-import { ServiceBay } from '../../../../domain/entities/service-bay.entity';
+import { IServiceBayRepository } from '@/application/ports/repositories/service-bay.repository.port';
+import { ConflictException } from '@/domain/exceptions';
+import { ServiceBay } from '@/domain/entities/service-bay.entity';
 
 export class CreateServiceBayUseCase {
   constructor(private readonly serviceBayRepo: IServiceBayRepository) {}

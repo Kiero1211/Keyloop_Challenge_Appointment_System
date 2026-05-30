@@ -1,10 +1,10 @@
 import request from 'supertest';
-import { app } from '../../../src/infrastructure/http/app';
-import { db } from '../../../src/infrastructure/db/client';
-import { factories } from '../../helpers/factories';
-import { JwtService } from '../../../src/infrastructure/auth/jwt.service';
-import { container } from '../../../src/infrastructure/di/container';
-import { serviceTypes } from '../../../src/infrastructure/db/schema';
+import { app } from '../../src/infrastructure/http/app';
+import { db } from '../../src/infrastructure/db/client';
+import { factories } from '../helpers/factories';
+import { JwtService } from '../../src/infrastructure/auth/jwt.service';
+import { container } from '../../src/infrastructure/di/container';
+import { serviceTypes } from '../../src/infrastructure/db/schema';
 import { eq } from 'drizzle-orm';
 
 describe('Service Types API Integration', () => {

@@ -1,6 +1,6 @@
-import { IServiceTypeRepository } from '../../../ports/repositories/service-type.repository.port';
-import { ConflictException } from '../../../../domain/exceptions';
-import { ServiceType } from '../../../../domain/entities/service-type.entity';
+import { IServiceTypeRepository } from '@/application/ports/repositories/service-type.repository.port';
+import { ConflictException } from '@/domain/exceptions';
+import { ServiceType } from '@/domain/entities/service-type.entity';
 
 export class CreateServiceTypeUseCase {
   constructor(private readonly serviceTypeRepo: IServiceTypeRepository) {}

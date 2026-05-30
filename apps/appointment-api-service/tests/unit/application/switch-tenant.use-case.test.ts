@@ -11,7 +11,12 @@ describe('SwitchTenantUseCase', () => {
 
   beforeEach(() => {
     mockUserTenantRepo = { create: jest.fn(), findByUserId: jest.fn(), findByUserAndTenant: jest.fn() };
-    mockRefreshTokenRepo = { create: jest.fn(), findByToken: jest.fn(), revoke: jest.fn() };
+    mockRefreshTokenRepo = {
+      create: jest.fn(),
+      findByToken: jest.fn(),
+      revoke: jest.fn(),
+      revokeAllForUser: jest.fn()
+    };
     mockJwtService = { generateAccessToken: jest.fn(), generateRefreshToken: jest.fn() };
     
     useCase = new SwitchTenantUseCase(mockUserTenantRepo, mockRefreshTokenRepo, mockJwtService);

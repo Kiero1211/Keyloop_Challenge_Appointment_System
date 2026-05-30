@@ -8,7 +8,12 @@ describe('RefreshTokenUseCase', () => {
   let mockJwtService: any;
 
   beforeEach(() => {
-    mockRefreshTokenRepo = { create: jest.fn(), findByToken: jest.fn(), revoke: jest.fn() };
+    mockRefreshTokenRepo = {
+      create: jest.fn(),
+      findByToken: jest.fn(),
+      revoke: jest.fn(),
+      revokeAllForUser: jest.fn()
+    };
     mockJwtService = { generateAccessToken: jest.fn(), generateRefreshToken: jest.fn(), verifyRefreshToken: jest.fn() };
     
     useCase = new RefreshTokenUseCase(mockRefreshTokenRepo, mockJwtService);

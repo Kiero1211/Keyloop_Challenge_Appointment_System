@@ -1,5 +1,5 @@
-import { ITenantRepository } from '../../../ports/repositories/tenant.repository.port';
-import { Tenant } from '../../../../domain/entities/tenant.entity';
+import { ITenantRepository } from '@/application/ports/repositories/tenant.repository.port';
+import { Tenant } from '@/domain/entities/tenant.entity';
 
 export class ListTenantsUseCase {
   constructor(private tenantRepository: ITenantRepository) {}
