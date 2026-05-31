@@ -5,6 +5,8 @@ COPY package*.json ./
 RUN npm ci
 
 COPY tsconfig.json ./
+COPY tsconfig.build.json ./
+COPY openapi.yaml ./
 COPY src ./src
 RUN npm run build
 
@@ -15,6 +17,7 @@ COPY package*.json ./
 RUN npm ci --only=production
 
 COPY --from=builder /app/dist ./dist
+COPY --from=builder /app/openapi.yaml ./openapi.yaml
 
 ENV NODE_ENV=production
 ENV PORT=3000

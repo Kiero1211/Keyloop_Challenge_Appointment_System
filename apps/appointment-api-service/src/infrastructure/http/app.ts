@@ -23,8 +23,14 @@ const app = express();
 app.use(express.json());
 
 // Swagger Docs
-const swaggerDocument = YAML.load(path.join(__dirname, '../../../../../specs/003-multi-tenant-api/contracts/openapi.yaml'));
-app.use('/api/docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument));
+const swaggerPath = path.join(__dirname, '../../../openapi.yaml');
+let swaggerDocument;
+try {
+  swaggerDocument = YAML.load(swaggerPath);
+  app.use('/api/docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument));
+} catch (err) {
+  console.warn(`[Swagger] Could not load API documentation from ${swaggerPath}`);
+}
 
 // Global middlewares
 app.use(requestLoggerMiddleware);
