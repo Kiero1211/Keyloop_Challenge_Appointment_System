@@ -55,36 +55,51 @@ public class StreamPartitionWorker
         _logger.LogInformation("Partition worker started: stream={Stream} group={Group} consumer={Consumer}",
             _streamName, _groupName, _consumerId);
 
-        while (!ct.IsCancellationRequested)
+        try
+        {
+            while (!ct.IsCancellationRequested)
+            {
+                try
+                {
+                    var entries = await _db.StreamReadGroupAsync(
+                        _streamName,
+                        _groupName,
+                        _consumerId,
+                        count: 10,
+                        noAck: false); // We will ack manually
+
+                    if (entries == null || entries.Length == 0)
+                    {
+                        await Task.Delay(100, ct);
+                        continue;
+                    }
+
+                    foreach (var entry in entries)
+                    {
+                        await ProcessEntryAsync(entry, ct);
+                    }
+                }
+                catch (TaskCanceledException)
+                {
+                    break;
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "Error reading from stream {StreamName}", _streamName);
+                    await Task.Delay(1000, ct); // backoff on error
+                }
+            }
+        }
+        finally
         {
             try
             {
-                var entries = await _db.StreamReadGroupAsync(
-                    _streamName,
-                    _groupName,
-                    _consumerId,
-                    count: 10,
-                    noAck: false); // We will ack manually
-
-                if (entries == null || entries.Length == 0)
-                {
-                    await Task.Delay(100, ct);
-                    continue;
-                }
-
-                foreach (var entry in entries)
-                {
-                    await ProcessEntryAsync(entry, ct);
-                }
-            }
-            catch (TaskCanceledException)
-            {
-                break;
+                await _db.StreamDeleteConsumerAsync(_streamName, _groupName, _consumerId);
+                _logger.LogInformation("Successfully deleted consumer {ConsumerId} from group {GroupName} on stream {StreamName}.", _consumerId, _groupName, _streamName);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error reading from stream {StreamName}", _streamName);
-                await Task.Delay(1000, ct); // backoff on error
+                _logger.LogWarning(ex, "Failed to delete consumer {ConsumerId} from group {GroupName} on stream {StreamName}.", _consumerId, _groupName, _streamName);
             }
         }
     }

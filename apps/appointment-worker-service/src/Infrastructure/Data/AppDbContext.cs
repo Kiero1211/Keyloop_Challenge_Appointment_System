@@ -21,7 +21,12 @@ public class AppDbContext : DbContext
     {
         base.OnModelCreating(modelBuilder);
 
-        // Apply global query filter for multi-tenancy on all entities implementing IMustHaveTenant
+        var stringToGuidConverter = new Microsoft.EntityFrameworkCore.Storage.ValueConversion.ValueConverter<string, Guid>(
+            v => Guid.Parse(v),
+            v => v.ToString()
+        );
+
+        // Apply global query filter for multi-tenancy and string-to-uuid conversions
         foreach (var entityType in modelBuilder.Model.GetEntityTypes())
         {
             if (typeof(IMustHaveTenant).IsAssignableFrom(entityType.ClrType))
@@ -29,11 +34,21 @@ public class AppDbContext : DbContext
                 modelBuilder.Entity(entityType.ClrType)
                     .HasQueryFilter(CreateTenantFilter(entityType.ClrType));
             }
+
+            foreach (var property in entityType.GetProperties())
+            {
+                if (property.ClrType == typeof(string) && (property.Name.EndsWith("Id") || property.Name == "Id"))
+                {
+                    property.SetValueConverter(stringToGuidConverter);
+                }
+            }
         }
 
         // Configure concurrency token and timestamptz
         modelBuilder.Entity<TrackingRecord>(entity =>
         {
+            entity.ToTable("appointments");
+
             entity.Property(t => t.Version)
                 .IsRowVersion()
                 .HasColumnName("xmin")
@@ -44,11 +59,14 @@ public class AppDbContext : DbContext
 
             entity.Property(t => t.EndTime)
                 .HasColumnType("timestamp with time zone");
+
+            entity.Property(t => t.Status)
+                .HasConversion<string>();
         });
 
-        // Configure TechnicianSkill composite key
+        // Configure TechnicianSkill primary key
         modelBuilder.Entity<TechnicianSkill>()
-            .HasKey(ts => new { ts.TechnicianId, ts.ServiceTypeId, ts.TenantId });
+            .HasKey(ts => ts.Id);
     }
 
     private System.Linq.Expressions.LambdaExpression CreateTenantFilter(Type type)

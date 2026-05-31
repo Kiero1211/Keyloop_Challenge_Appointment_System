@@ -29,7 +29,8 @@ public class Program
                 var redisConnection = hostContext.Configuration["REDIS_CONNECTION"] ?? "localhost:6379";
 
                 services.AddDbContext<AppDbContext>(options =>
-                    options.UseNpgsql(connectionString));
+                    options.UseNpgsql(connectionString)
+                           .UseSnakeCaseNamingConvention());
 
                 services.AddSingleton(new RedisConnectionProvider(redisConnection));
                 services.AddSingleton<ICacheProvider, CacheProvider>();
