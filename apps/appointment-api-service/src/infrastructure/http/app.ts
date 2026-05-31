@@ -4,7 +4,7 @@ import { healthRouter } from '@/infrastructure/http/routes/health.routes';
 import { serviceTypesRouter } from '@/infrastructure/http/routes/service-types.routes';
 import { techniciansRouter } from '@/infrastructure/http/routes/technicians.routes';
 import { serviceBaysRouter } from '@/infrastructure/http/routes/service-bays.routes';
-import { appointmentsCrudRouter } from '@/infrastructure/http/routes/appointments-crud.routes';
+
 import { customersRouter } from '@/infrastructure/http/routes/customers.routes';
 import { vehiclesRouter } from '@/infrastructure/http/routes/vehicles.routes';
 import { tenantRouter } from '@/infrastructure/http/routes/tenant.routes';
@@ -66,12 +66,7 @@ app.use(
   serviceBaysRouter
 );
 
-app.use(
-  '/api/v1/crud-appointments',
-  (req, res, next) => jwtAuthMiddleware(container.jwtService)(req, res, next),
-  tenantContextMiddleware,
-  appointmentsCrudRouter
-);
+
 
 app.use(
   '/api/v1/customers',

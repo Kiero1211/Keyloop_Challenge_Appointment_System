@@ -9,6 +9,10 @@ export class RedisCacheAdapter implements ICacheProvider {
     return result > 0;
   }
 
+  async get(key: string): Promise<string | null> {
+    return this.redisClient.get(key);
+  }
+
   async hset(key: string, fields: Record<string, string>): Promise<void> {
     await this.redisClient.hset(key, fields);
   }
@@ -24,6 +28,39 @@ export class RedisCacheAdapter implements ICacheProvider {
   async del(key: string): Promise<void> {
     await this.redisClient.del(key);
   }
+
+  async deleteMultiple(keys: string[]): Promise<void> {
+    if (keys.length === 0) return;
+    await this.redisClient.del(...keys);
+  }
+
+  async setMultipleIfNotExists(items: { key: string; value: string }[], ttlSeconds: number): Promise<boolean> {
+    if (items.length === 0) return true;
+    
+    const keys = items.map(item => item.key);
+    const values = items.map(item => item.value);
+    
+    const luaScript = `
+      local ttl = tonumber(ARGV[1])
+      local args_offset = 1
+
+      for i, key in ipairs(KEYS) do
+        if redis.call("EXISTS", key) == 1 then
+          return 0
+        end
+      end
+
+      for i, key in ipairs(KEYS) do
+        redis.call("SET", key, ARGV[i + args_offset], "EX", ttl)
+      end
+
+      return 1
+    `;
+
+    const result = await this.redisClient.eval(luaScript, keys.length, ...keys, ttlSeconds, ...values);
+    return result === 1;
+  }
+
 
   async ping(): Promise<boolean> {
     try {

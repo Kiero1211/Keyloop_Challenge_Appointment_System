@@ -52,8 +52,20 @@ describe("Appointment API E2E", () => {
   });
 
   describe("POST /api/v1/appointments", () => {
-    it("should accept a valid appointment and return 202", async () => {
+    it("should accept a valid appointment with a valid hold and return 202", async () => {
+      // First create a hold
+      const holdPayload = {
+        technicianId: "tech-1",
+        serviceBayId: "bay-1",
+      };
+      const holdResponse = await request(app)
+        .post("/api/v1/appointments/hold")
+        .set("Authorization", `Bearer ${token}`)
+        .set("x-tenant-id", tenantId)
+        .send(holdPayload);
+
       const payload = {
+        holdId: holdResponse.body.holdId,
         customerId: "cust-1",
         vehicleId: "veh-1",
         serviceTypeId: "srv-1",
@@ -76,6 +88,10 @@ describe("Appointment API E2E", () => {
         `tenant:${tenantId}:appointment:veh-1:pending`,
       );
       expect(keys.length).toBe(1);
+
+      // Verify hold was deleted
+      const holdKeys = await redisClient.keys(`tenant:${tenantId}:hold:technician:tech-1`);
+      expect(holdKeys.length).toBe(0);
     });
 
     it("should reject requests with missing tenant ID (400)", async () => {
@@ -91,8 +107,9 @@ describe("Appointment API E2E", () => {
       expect(response.body.message).toContain("x-tenant-id");
     });
 
-    it("should reject duplicate submissions (409)", async () => {
+    it("should reject booking (409 Conflict) if hold is missing or expired", async () => {
       const payload = {
+        holdId: "00000000-0000-0000-0000-000000000000",
         customerId: "cust-1",
         vehicleId: "veh-1",
         serviceTypeId: "srv-1",
@@ -101,21 +118,104 @@ describe("Appointment API E2E", () => {
         desiredStartTime: new Date(Date.now() + 86400000).toISOString(),
       };
 
-      // First request
+      const response = await request(app)
+        .post("/api/v1/appointments")
+        .set("Authorization", `Bearer ${token}`)
+        .set("x-tenant-id", tenantId)
+        .send(payload);
+
+      expect(response.status).toBe(409);
+      expect(response.body.message).toBe("The booking session has expired. Please re-create the booking session.");
+    });
+
+    it("should allow booking same vehicle twice without idempotency conflict", async () => {
+      const hold1Response = await request(app)
+        .post("/api/v1/appointments/hold")
+        .set("Authorization", `Bearer ${token}`)
+        .set("x-tenant-id", tenantId)
+        .send({ technicianId: "tech-1", serviceBayId: "bay-1" });
+
+      const payload1 = {
+        holdId: hold1Response.body.holdId,
+        customerId: "cust-1",
+        vehicleId: "veh-1",
+        serviceTypeId: "srv-1",
+        technicianId: "tech-1",
+        serviceBayId: "bay-1",
+        desiredStartTime: new Date(Date.now() + 86400000).toISOString(),
+      };
+
       await request(app)
         .post("/api/v1/appointments")
         .set("Authorization", `Bearer ${token}`)
         .set("x-tenant-id", tenantId)
-        .send(payload)
+        .send(payload1)
         .expect(202);
 
-      // Second request (duplicate)
+      const hold2Response = await request(app)
+        .post("/api/v1/appointments/hold")
+        .set("Authorization", `Bearer ${token}`)
+        .set("x-tenant-id", tenantId)
+        .send({ technicianId: "tech-2", serviceBayId: "bay-2" });
+
+      const payload2 = {
+        holdId: hold2Response.body.holdId,
+        customerId: "cust-1",
+        vehicleId: "veh-1",
+        serviceTypeId: "srv-1",
+        technicianId: "tech-2",
+        serviceBayId: "bay-2",
+        desiredStartTime: new Date(Date.now() + 86400000).toISOString(),
+      };
+
       await request(app)
         .post("/api/v1/appointments")
         .set("Authorization", `Bearer ${token}`)
         .set("x-tenant-id", tenantId)
+        .send(payload2)
+        .expect(202);
+    });
+  });
+
+  describe("POST /api/v1/appointments/hold", () => {
+    it("should create a temporary hold and return 201", async () => {
+      const payload = {
+        technicianId: "tech-1",
+        serviceBayId: "bay-1",
+      };
+
+      const response = await request(app)
+        .post("/api/v1/appointments/hold")
+        .set("Authorization", `Bearer ${token}`)
+        .set("x-tenant-id", tenantId)
+        .send(payload);
+
+      expect(response.status).toBe(201);
+      expect(response.body).toHaveProperty("holdId");
+      expect(response.body).toHaveProperty("expiresAt");
+    });
+
+    it("should reject concurrent hold for same technician/bay (409)", async () => {
+      const payload = {
+        technicianId: "tech-1",
+        serviceBayId: "bay-1",
+      };
+
+      await request(app)
+        .post("/api/v1/appointments/hold")
+        .set("Authorization", `Bearer ${token}`)
+        .set("x-tenant-id", tenantId)
         .send(payload)
-        .expect(409);
+        .expect(201);
+
+      const response = await request(app)
+        .post("/api/v1/appointments/hold")
+        .set("Authorization", `Bearer ${token}`)
+        .set("x-tenant-id", tenantId)
+        .send(payload);
+
+      expect(response.status).toBe(409);
+      expect(response.body.message).toContain("held by another user");
     });
   });
 

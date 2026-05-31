@@ -16,67 +16,72 @@ servers:
 paths:
   /api/v1/appointments:
     post:
-      operationId: createAppointment
-      summary: Submit a new appointment booking command
+      tags: [Appointments]
+      summary: Create an appointment via async CQRS ingestion
       description: |
-        Validates the payload, checks for an existing appointment hash for the
-        given vehicle under the tenant, writes the full appointment snapshot to
-        Redis Cache, and publishes the command to the correct Redis Stream partition.
-        Returns 202 Accepted on success, 409 Conflict if a hash already exists,
-        400 Bad Request on validation failure.
+        Asynchronously creates an appointment. Returns 202 Accepted.
+        Uses Redis streams for high-throughput ingestion.
+      security:
+        - BearerAuth: []
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/CreateAppointmentRequest'
-            examples:
-              valid:
-                summary: Valid admin appointment request
-                value:
-                  tenant_id: "d290f1ee-6c54-4b01-90e6-d701748f0851"
-                  customer_id: "a17c9aaa-bbb0-4c3d-b5b3-80f0a5e2e2a1"
-                  vehicle_id: "f47ac10b-58cc-4372-a567-0e02b2c3d479"
-                  service_type_id: "c1e9e2a0-1234-4567-89ab-cdef01234567"
-                  desired_start_time: "2026-06-15T09:00:00.000Z"
+              $ref: '#/components/schemas/AppointmentCreateRequest'
       responses:
         "202":
-          description: Command accepted and enqueued
+          description: Accepted
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/CreateAppointmentResponse'
-              example:
-                commandId: "550e8400-e29b-41d4-a716-446655440000"
-                partitionId: 2
-        "400":
-          description: Validation failure — missing or invalid field
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ValidationErrorResponse'
-              example:
-                status: 400
-                error: "Validation failed"
-                details:
-                  - field: "desired_start_time"
-                    message: "desired_start_time must be in the future"
+                type: object
+                properties:
+                  commandId:
+                    type: string
+                    format: uuid
+                  partition:
+                    type: integer
         "409":
-          description: Duplicate — appointment hash already exists for this vehicle
+          description: Conflict (e.g. invalid or missing hold)
+        "400":
+          description: Validation error
+
+  /appointments/hold:
+    parameters:
+      - $ref: '#/components/parameters/XTenantId'
+    post:
+      tags: [Appointments]
+      summary: Create a temporary hold for a technician and service bay
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                technicianId:
+                  type: string
+                serviceBayId:
+                  type: string
+      responses:
+        "201":
+          description: Hold created successfully
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ConflictErrorResponse'
-              example:
-                status: 409
-                error: "Appointment already pending"
-                vehicleId: "f47ac10b-58cc-4372-a567-0e02b2c3d479"
-        "503":
-          description: Service unavailable — Redis unreachable
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ServiceErrorResponse'
+                type: object
+                properties:
+                  holdId:
+                    type: string
+                    format: uuid
+                  expiresAt:
+                    type: string
+                    format: date-time
+        "409":
+          description: The selected technician or service bay is currently held by another user
 
   /health:
     get:
@@ -102,59 +107,43 @@ paths:
                 reason: "redis_unavailable"
 
 components:
+  parameters:
+    XTenantId:
+      name: X-Tenant-Id
+      in: header
+      required: true
+      schema:
+        type: string
+        format: uuid
+
   schemas:
-    CreateAppointmentRequest:
+    AppointmentCreateRequest:
       type: object
-      required:
-        - tenant_id
-        - customer_id
-        - vehicle_id
-        - service_type_id
-        - desired_start_time
+      required: [customerId, vehicleId, serviceTypeId, technicianId, serviceBayId, desiredStartTime]
       properties:
-        tenant_id:
+        holdId:
           type: string
           format: uuid
-          description: Tenant (dealership) identifier — mandatory multi-tenant discriminator
-          example: "d290f1ee-6c54-4b01-90e6-d701748f0851"
-        customer_id:
+          description: Optional hold ID to claim a temporary slot hold
+        customerId:
           type: string
           format: uuid
-          description: Customer identifier (from customer-service)
-          example: "a17c9aaa-bbb0-4c3d-b5b3-80f0a5e2e2a1"
-        vehicle_id:
+        vehicleId:
           type: string
           format: uuid
-          description: Vehicle identifier — used as hashing input for partition routing
-          example: "f47ac10b-58cc-4372-a567-0e02b2c3d479"
-        service_type_id:
+        serviceTypeId:
           type: string
           format: uuid
-          description: Service catalogue item identifier
-          example: "c1e9e2a0-1234-4567-89ab-cdef01234567"
-        desired_start_time:
+        technicianId:
+          type: string
+          format: uuid
+        serviceBayId:
+          type: string
+          format: uuid
+        desiredStartTime:
           type: string
           format: date-time
-          description: Requested appointment start time (ISO 8601, must be in the future)
-          example: "2026-06-15T09:00:00.000Z"
-
-    CreateAppointmentResponse:
-      type: object
-      required:
-        - commandId
-        - partitionId
-      properties:
-        commandId:
-          type: string
-          format: uuid
-          description: Unique identifier for the enqueued command (for tracing)
-          example: "550e8400-e29b-41d4-a716-446655440000"
-        partitionId:
-          type: integer
-          minimum: 0
-          maximum: 3
-          description: Redis Stream partition the command was routed to
-          example: 2
+          description: Must be a valid ISO 8601 datetime
 
     ValidationErrorResponse:
       type: object

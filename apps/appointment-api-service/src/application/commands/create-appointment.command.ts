@@ -1,6 +1,8 @@
 import { z } from 'zod';
 
 export const createAppointmentSchema = z.object({
+  technicianHolId: z.string().uuid('technicianHolId must be a valid UUID'),
+  serviceBayHoldId: z.string().uuid('serviceBayHoldId must be a valid UUID'),
   customerId: z.string().min(1, 'customerId is required'),
   vehicleId: z.string().min(1, 'vehicleId is required'),
   serviceTypeId: z.string().min(1, 'serviceTypeId is required'),
