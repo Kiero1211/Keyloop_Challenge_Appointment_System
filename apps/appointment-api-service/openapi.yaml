@@ -426,8 +426,12 @@ components:
     # ── Appointment ───────────────────────────────────────────────────────────
     AppointmentCreateRequest:
       type: object
-      required: [customerId, vehicleId, serviceTypeId, technicianId, serviceBayId, startTime, endTime]
+      required: [customerId, vehicleId, serviceTypeId, technicianId, serviceBayId, desiredStartTime]
       properties:
+        holdId:
+          type: string
+          format: uuid
+          description: Optional hold ID to claim a temporary slot hold
         customerId:
           type: string
           format: uuid
@@ -443,17 +447,10 @@ components:
         serviceBayId:
           type: string
           format: uuid
-        startTime:
+        desiredStartTime:
           type: string
           format: date-time
-          description: Must be in the future
-        endTime:
-          type: string
-          format: date-time
-          description: Must be strictly after startTime
-        notes:
-          type: string
-          maxLength: 1000
+          description: Must be a valid ISO 8601 datetime
 
     AppointmentUpdateRequest:
       type: object
@@ -1183,12 +1180,10 @@ paths:
                   meta: { $ref: '#/components/schemas/PaginationMeta' }
     post:
       tags: [Appointments]
-      summary: Create an appointment (direct CRUD path — synchronous)
+      summary: Create an appointment via async CQRS ingestion
       description: |
-        Creates and persists an appointment directly in PostgreSQL. 
-        This is the synchronous CRUD path; the async ingestion path via Redis Stream
-        is still available at `POST /api/v1/appointments` for high-throughput scenarios.
-        Performs overlap detection for Technician and ServiceBay before persisting.
+        Asynchronously creates an appointment. Returns 202 Accepted.
+        Uses Redis streams for high-throughput ingestion.
       security:
         - BearerAuth: []
       requestBody:
@@ -1198,14 +1193,58 @@ paths:
             schema:
               $ref: '#/components/schemas/AppointmentCreateRequest'
       responses:
-        "201":
+        "202":
+          description: Accepted
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/AppointmentResponse'
-        "400": { description: "end_time <= start_time or start_time in the past" }
-        "409": { description: Technician or ServiceBay double-booking conflict }
-        "422": { description: Referenced entity does not belong to this tenant }
+                type: object
+                properties:
+                  commandId:
+                    type: string
+                    format: uuid
+                  partition:
+                    type: integer
+        "409":
+          description: Conflict (e.g. invalid or missing hold)
+        "400":
+          description: Validation error
+
+  /appointments/hold:
+    parameters:
+      - $ref: '#/components/parameters/XTenantId'
+    post:
+      tags: [Appointments]
+      summary: Create a temporary hold for a technician and service bay
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                technicianId:
+                  type: string
+                serviceBayId:
+                  type: string
+      responses:
+        "201":
+          description: Hold created successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  holdId:
+                    type: string
+                    format: uuid
+                  expiresAt:
+                    type: string
+                    format: date-time
+        "409":
+          description: The selected technician or service bay is currently held by another user
 
   /appointments/{id}:
     parameters:

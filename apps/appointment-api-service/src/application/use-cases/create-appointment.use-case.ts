@@ -2,7 +2,7 @@ import { ICacheProvider } from '@/application/ports/cache-provider.port';
 import { IMessagePublisher } from '@/application/ports/message-publisher.port';
 import { CreateAppointmentCommand } from '@/application/commands/create-appointment.command';
 import { tenantContext } from '@/domain/context/tenant-context';
-import { DuplicateAppointmentException, DomainValidationException } from '@/domain/exceptions';
+import { DomainValidationException, ConflictException } from '@/domain/exceptions';
 import { CommandId } from '@/domain/value-objects/command-id';
 import { CustomerId } from '@/domain/value-objects/customer-id';
 import { VehicleId } from '@/domain/value-objects/vehicle-id';
@@ -32,15 +32,39 @@ export class CreateAppointmentUseCase {
     const serviceTypeId = new ServiceTypeId(command.serviceTypeId);
     const desiredStartTime = new DesiredTime(command.desiredStartTime);
 
-    // Check for idempotency
-    const idempotencyKey = `tenant:${tenantId}:appointment:${vehicleId.value}:pending`;
-    const isPending = await this.cacheProvider.exists(idempotencyKey);
+    // Validate hold
+    const holdErrorMsg = 'The booking session has expired. Please re-create the booking session.';
     
-    // if (isPending) {
-    //   throw new DuplicateAppointmentException(vehicleId.value);
-    // }
+    if (!command.technicianHolId || !command.serviceBayHoldId) {
+      throw new ConflictException(holdErrorMsg);
+    }
 
-    // Determine Partition
+    const keysToDelete: string[] = [];
+
+    if (command.technicianId) {
+      const techKey = `tenant:${tenantId}:hold:technician:${command.technicianId}`;
+      const techHoldStr = await this.cacheProvider.get(techKey);
+      if (techHoldStr) {
+        const techHold = JSON.parse(techHoldStr);
+        if (techHold.holdId !== command.technicianHolId || techHold.technicianId !== command.technicianId) {
+          throw new ConflictException("The selected technician is currently held by another user.");
+        }
+        keysToDelete.push(techKey);
+      }
+    }
+
+    if (command.serviceBayId) {
+      const bayKey = `tenant:${tenantId}:hold:bay:${command.serviceBayId}`;
+      const bayHoldStr = await this.cacheProvider.get(bayKey);
+      if (bayHoldStr) {
+        const bayHold = JSON.parse(bayHoldStr);
+        if (bayHold.holdId !== command.serviceBayHoldId || bayHold.serviceBayId !== command.serviceBayId) {
+          throw new ConflictException("The selected service bay is currently held by another user.");
+        }
+        keysToDelete.push(bayKey);
+      }
+    }
+
     const partition = this.partitionHasher(tenantId, vehicleId.value);
     const streamName = `appointments_stream_${partition}`;
 
@@ -60,10 +84,16 @@ export class CreateAppointmentUseCase {
     };
 
     // Save tracking hash
+    const idempotencyKey = `tenant:${tenantId}:appointment:${vehicleId.value}:pending`;
     await this.cacheProvider.hset(idempotencyKey, payload);
 
     // Publish to stream
     await this.messagePublisher.publish(streamName, payload);
+
+    // Delete holds
+    if (keysToDelete.length > 0) {
+      await this.cacheProvider.deleteMultiple(keysToDelete);
+    }
 
     return {
       commandId: commandId.value,

@@ -31,7 +31,7 @@ describe('Appointments List API E2E', () => {
 
   it('should filter appointments', async () => {
     const response = await request(app)
-      .get('/api/v1/crud-appointments?date=2026-06-01')
+      .get('/api/v1/appointments?date=2026-06-01')
       .set('Authorization', `Bearer ${adminToken}`)
       .set('x-tenant-id', tenantId);
 

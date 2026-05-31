@@ -64,6 +64,6 @@ describe('RedisStreamPublisher Integration', () => {
       parsedData[data[i]] = data[i + 1];
     }
     
-    expect(parsedData).toEqual(payload);
+    expect(parsedData).toEqual({ payload: JSON.stringify(payload) });
   });
 });

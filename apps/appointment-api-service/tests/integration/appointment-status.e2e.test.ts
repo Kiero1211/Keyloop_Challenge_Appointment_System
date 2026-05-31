@@ -55,10 +55,10 @@ describe('Appointment Status E2E', () => {
     await container.destroy();
   });
 
-  describe('PATCH /api/v1/crud-appointments/:id/status', () => {
+  describe('PATCH /api/v1/appointments/:id/status', () => {
     it('should transition to CONFIRMED successfully', async () => {
       const response = await request(app)
-        .patch(`/api/v1/crud-appointments/${appointmentId}/status`)
+        .patch(`/api/v1/appointments/${appointmentId}/status`)
         .set('Authorization', `Bearer ${token1}`)
         .set('x-tenant-id', tenantId1)
         .send({ status: 'CONFIRMED' });
@@ -69,7 +69,7 @@ describe('Appointment Status E2E', () => {
 
     it('should transition to COMPLETED successfully', async () => {
       const response = await request(app)
-        .patch(`/api/v1/crud-appointments/${appointmentId}/status`)
+        .patch(`/api/v1/appointments/${appointmentId}/status`)
         .set('Authorization', `Bearer ${token1}`)
         .set('x-tenant-id', tenantId1)
         .send({ status: 'COMPLETED' });
@@ -80,7 +80,7 @@ describe('Appointment Status E2E', () => {
 
     it('should block transition from COMPLETED to CANCELLED (422)', async () => {
       const response = await request(app)
-        .patch(`/api/v1/crud-appointments/${appointmentId}/status`)
+        .patch(`/api/v1/appointments/${appointmentId}/status`)
         .set('Authorization', `Bearer ${token1}`)
         .set('x-tenant-id', tenantId1)
         .send({ status: 'CANCELLED' });

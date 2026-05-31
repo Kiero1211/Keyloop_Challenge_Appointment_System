@@ -8,10 +8,13 @@ describe('HealthCheckUseCase', () => {
   beforeEach(() => {
     cacheProvider = {
       exists: jest.fn(),
+      get: jest.fn(),
       hset: jest.fn(),
       hgetall: jest.fn(),
       del: jest.fn(),
       ping: jest.fn(),
+      deleteMultiple: jest.fn(),
+      setMultipleIfNotExists: jest.fn(),
     };
     
     useCase = new HealthCheckUseCase(cacheProvider);

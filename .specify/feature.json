@@ -1,1 +1,3 @@
-{"feature_directory": "specs/004-worker-core-logic"}
+{
+  "feature_directory": "specs/005-temporary-slot-hold"
+}
