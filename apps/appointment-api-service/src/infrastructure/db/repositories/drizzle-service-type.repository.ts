@@ -1,6 +1,6 @@
 import { eq, and, isNull } from 'drizzle-orm';
-import { db } from '../client';
-import { serviceTypes } from '../schema';
+import { db } from '@/infrastructure/db/client';
+import { serviceTypes } from '@/infrastructure/db/schema';
 import { ServiceType } from '@/domain/entities/service-type.entity';
 import { IServiceTypeRepository } from '@/application/ports/repositories/service-type.repository.port';
 

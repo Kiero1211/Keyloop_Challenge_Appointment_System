@@ -1,6 +1,6 @@
-import { CreateServiceTypeUseCase } from '../../../src/application/use-cases/crud/service-type/create-service-type.use-case';
-import { IServiceTypeRepository } from '../../../src/application/ports/repositories/service-type.repository.port';
-import { ConflictException } from '../../../src/domain/exceptions';
+import { CreateServiceTypeUseCase } from '@/application/use-cases/crud/service-type/create-service-type.use-case';
+import { IServiceTypeRepository } from '@/application/ports/repositories/service-type.repository.port';
+import { ConflictException } from '@/domain/exceptions';
 
 describe('CreateServiceTypeUseCase', () => {
   let mockRepo: IServiceTypeRepository;

@@ -1,4 +1,4 @@
-import { ICacheProvider } from '../ports/cache-provider.port';
+import { ICacheProvider } from '@/application/ports/cache-provider.port';
 
 export class HealthCheckUseCase {
   constructor(private readonly cacheProvider: ICacheProvider) {}

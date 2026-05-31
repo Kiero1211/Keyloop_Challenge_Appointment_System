@@ -1,4 +1,4 @@
-import { Vehicle } from '../../../domain/entities/vehicle.entity';
+import { Vehicle } from '@/domain/entities/vehicle.entity';
 
 export interface IVehicleRepository {
   create(vehicle: Partial<Vehicle>): Promise<Vehicle>;

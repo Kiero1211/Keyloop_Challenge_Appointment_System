@@ -1,22 +1,22 @@
 import express from 'express';
-import { appointmentRouter } from './routes/appointment.routes';
-import { healthRouter } from './routes/health.routes';
-import { serviceTypesRouter } from './routes/service-types.routes';
-import { techniciansRouter } from './routes/technicians.routes';
-import { serviceBaysRouter } from './routes/service-bays.routes';
-import { appointmentsCrudRouter } from './routes/appointments-crud.routes';
-import { customersRouter } from './routes/customers.routes';
-import { vehiclesRouter } from './routes/vehicles.routes';
-import { tenantRouter } from './routes/tenant.routes';
-import { authRouter } from './routes/auth.routes';
-import { tenantContextMiddleware } from './middleware/tenant-context.middleware';
+import { appointmentRouter } from '@/infrastructure/http/routes/appointment.routes';
+import { healthRouter } from '@/infrastructure/http/routes/health.routes';
+import { serviceTypesRouter } from '@/infrastructure/http/routes/service-types.routes';
+import { techniciansRouter } from '@/infrastructure/http/routes/technicians.routes';
+import { serviceBaysRouter } from '@/infrastructure/http/routes/service-bays.routes';
+import { appointmentsCrudRouter } from '@/infrastructure/http/routes/appointments-crud.routes';
+import { customersRouter } from '@/infrastructure/http/routes/customers.routes';
+import { vehiclesRouter } from '@/infrastructure/http/routes/vehicles.routes';
+import { tenantRouter } from '@/infrastructure/http/routes/tenant.routes';
+import { authRouter } from '@/infrastructure/http/routes/auth.routes';
+import { tenantContextMiddleware } from '@/infrastructure/http/middleware/tenant-context.middleware';
 import swaggerUi from 'swagger-ui-express';
 import YAML from 'yamljs';
 import path from 'path';
-import { errorHandlerMiddleware } from './middleware/error-handler.middleware';
-import { jwtAuthMiddleware } from './middleware/jwt-auth.middleware';
-import { container } from '../di/container';
-import { requestLoggerMiddleware } from './middleware/request-logger.middleware';
+import { errorHandlerMiddleware } from '@/infrastructure/http/middleware/error-handler.middleware';
+import { jwtAuthMiddleware } from '@/infrastructure/http/middleware/jwt-auth.middleware';
+import { container } from '@/infrastructure/di/container';
+import { requestLoggerMiddleware } from '@/infrastructure/http/middleware/request-logger.middleware';
 
 const app = express();
 

@@ -1,12 +1,12 @@
 import { Router } from 'express';
-import { container } from '../../di/container';
-import { CreateAppointmentUseCase } from '../../../application/use-cases/crud/appointment/create-appointment.use-case';
-import { CancelAppointmentUseCase } from '../../../application/use-cases/crud/appointment/cancel-appointment.use-case';
-import { ListAppointmentsUseCase } from '../../../application/use-cases/crud/appointment/list-appointments.use-case';
-import { GetAppointmentDetailUseCase } from '../../../application/use-cases/crud/appointment/get-appointment-detail.use-case';
-import { UpdateAppointmentStatusUseCase } from '../../../application/use-cases/crud/appointment/update-appointment-status.use-case';
-import { updateAppointmentStatusSchema } from '../../../application/commands/appointment.command';
-import { tenantContext } from '../../../domain/context/tenant-context';
+import { container } from '@/infrastructure/di/container';
+import { CreateAppointmentUseCase } from '@/application/use-cases/crud/appointment/create-appointment.use-case';
+import { CancelAppointmentUseCase } from '@/application/use-cases/crud/appointment/cancel-appointment.use-case';
+import { ListAppointmentsUseCase } from '@/application/use-cases/crud/appointment/list-appointments.use-case';
+import { GetAppointmentDetailUseCase } from '@/application/use-cases/crud/appointment/get-appointment-detail.use-case';
+import { UpdateAppointmentStatusUseCase } from '@/application/use-cases/crud/appointment/update-appointment-status.use-case';
+import { updateAppointmentStatusSchema } from '@/application/commands/appointment.command';
+import { tenantContext } from '@/domain/context/tenant-context';
 
 const router = Router();
 

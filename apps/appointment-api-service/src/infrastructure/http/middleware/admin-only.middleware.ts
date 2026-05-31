@@ -1,5 +1,5 @@
 import { Request, Response, NextFunction } from 'express';
-import { ForbiddenException } from '../../../domain/exceptions';
+import { ForbiddenException } from '@/domain/exceptions';
 
 export const adminOnlyMiddleware = (req: Request, res: Response, next: NextFunction) => {
   const user = (req as any).user;

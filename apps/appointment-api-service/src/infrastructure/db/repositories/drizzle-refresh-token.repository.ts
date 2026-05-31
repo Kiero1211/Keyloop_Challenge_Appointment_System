@@ -1,7 +1,7 @@
 import { eq } from 'drizzle-orm';
-import { db } from '../client';
-import { refreshTokens } from '../schema';
-import { IRefreshTokenRepository, RefreshToken } from '../../../application/ports/repositories/refresh-token.repository.port';
+import { db } from '@/infrastructure/db/client';
+import { refreshTokens } from '@/infrastructure/db/schema';
+import { IRefreshTokenRepository, RefreshToken } from '@/application/ports/repositories/refresh-token.repository.port';
 
 export class DrizzleRefreshTokenRepository implements IRefreshTokenRepository {
   async create(token: Partial<RefreshToken>): Promise<RefreshToken> {

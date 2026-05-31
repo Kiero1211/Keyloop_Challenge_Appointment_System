@@ -1,5 +1,5 @@
 import { Request, Response, NextFunction } from 'express';
-import { JwtService } from '../../auth/jwt.service';
+import { JwtService } from '@/infrastructure/auth/jwt.service';
 
 export const jwtAuthMiddleware = (jwtService: JwtService) => {
   return (req: Request, res: Response, next: NextFunction) => {

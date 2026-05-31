@@ -1,5 +1,5 @@
-import { ListAppointmentsUseCase } from '../../../src/application/use-cases/crud/appointment/list-appointments.use-case';
-import { IAppointmentCrudRepository } from '../../../src/application/ports/repositories/appointment-crud.repository.port';
+import { ListAppointmentsUseCase } from '@/application/use-cases/crud/appointment/list-appointments.use-case';
+import { IAppointmentCrudRepository } from '@/application/ports/repositories/appointment-crud.repository.port';
 
 describe('ListAppointmentsUseCase', () => {
   let useCase: ListAppointmentsUseCase;

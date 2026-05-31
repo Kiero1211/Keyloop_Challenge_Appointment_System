@@ -1,4 +1,4 @@
-import { Appointment } from '../../../domain/entities/appointment.entity';
+import { Appointment } from '@/domain/entities/appointment.entity';
 
 export interface IAppointmentCrudRepository {
   create(appointment: Partial<Appointment>): Promise<Appointment>;

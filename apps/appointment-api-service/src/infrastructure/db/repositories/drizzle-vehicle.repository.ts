@@ -1,6 +1,6 @@
 import { eq, and, isNull } from 'drizzle-orm';
-import { db } from '../client';
-import { vehicles } from '../schema';
+import { db } from '@/infrastructure/db/client';
+import { vehicles } from '@/infrastructure/db/schema';
 import { Vehicle } from '@/domain/entities/vehicle.entity';
 import { IVehicleRepository } from '@/application/ports/repositories/vehicle.repository.port';
 

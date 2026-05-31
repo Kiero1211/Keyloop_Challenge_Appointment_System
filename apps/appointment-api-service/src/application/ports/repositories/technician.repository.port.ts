@@ -1,4 +1,4 @@
-import { Technician } from '../../../domain/entities/technician.entity';
+import { Technician } from '@/domain/entities/technician.entity';
 
 export interface ITechnicianRepository {
   create(technician: Partial<Technician>): Promise<Technician>;

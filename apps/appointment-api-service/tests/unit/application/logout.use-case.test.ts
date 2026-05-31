@@ -1,5 +1,5 @@
-import { LogoutUseCase } from '../../../src/application/use-cases/auth/logout.use-case';
-import { IRefreshTokenRepository } from '../../../src/application/ports/repositories/refresh-token.repository.port';
+import { LogoutUseCase } from '@/application/use-cases/auth/logout.use-case';
+import { IRefreshTokenRepository } from '@/application/ports/repositories/refresh-token.repository.port';
 
 describe('LogoutUseCase', () => {
   let useCase: LogoutUseCase;

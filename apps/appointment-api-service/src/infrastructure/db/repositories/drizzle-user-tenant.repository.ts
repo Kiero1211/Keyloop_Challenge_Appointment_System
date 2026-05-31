@@ -1,7 +1,7 @@
 import { eq, and } from 'drizzle-orm';
-import { db } from '../client';
-import { userTenants } from '../schema';
-import { IUserTenantRepository, UserTenant } from '../../../application/ports/repositories/user-tenant.repository.port';
+import { db } from '@/infrastructure/db/client';
+import { userTenants } from '@/infrastructure/db/schema';
+import { IUserTenantRepository, UserTenant } from '@/application/ports/repositories/user-tenant.repository.port';
 
 export class DrizzleUserTenantRepository implements IUserTenantRepository {
   async create(userTenant: Partial<UserTenant>): Promise<UserTenant> {

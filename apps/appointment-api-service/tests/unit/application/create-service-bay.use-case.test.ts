@@ -1,6 +1,6 @@
-import { CreateServiceBayUseCase } from '../../../src/application/use-cases/crud/service-bay/create-service-bay.use-case';
-import { IServiceBayRepository } from '../../../src/application/ports/repositories/service-bay.repository.port';
-import { ConflictException } from '../../../src/domain/exceptions';
+import { CreateServiceBayUseCase } from '@/application/use-cases/crud/service-bay/create-service-bay.use-case';
+import { IServiceBayRepository } from '@/application/ports/repositories/service-bay.repository.port';
+import { ConflictException } from '@/domain/exceptions';
 
 describe('CreateServiceBayUseCase', () => {
   let mockRepo: IServiceBayRepository;

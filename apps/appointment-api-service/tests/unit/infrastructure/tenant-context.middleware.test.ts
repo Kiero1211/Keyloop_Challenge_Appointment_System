@@ -1,5 +1,5 @@
 import { Request, Response, NextFunction } from 'express';
-import { tenantContextMiddleware } from '../../../src/infrastructure/http/middleware/tenant-context.middleware';
+import { tenantContextMiddleware } from '@/infrastructure/http/middleware/tenant-context.middleware';
 
 describe('tenantContextMiddleware', () => {
   let mockRequest: Partial<Request>;

@@ -1,6 +1,6 @@
-import { CreateCustomerUseCase } from '../../../src/application/use-cases/crud/customer/create-customer.use-case';
-import { ICustomerRepository } from '../../../src/application/ports/repositories/customer.repository.port';
-import { ConflictException } from '../../../src/domain/exceptions';
+import { CreateCustomerUseCase } from '@/application/use-cases/crud/customer/create-customer.use-case';
+import { ICustomerRepository } from '@/application/ports/repositories/customer.repository.port';
+import { ConflictException } from '@/domain/exceptions';
 
 describe('CreateCustomerUseCase', () => {
   let useCase: CreateCustomerUseCase;

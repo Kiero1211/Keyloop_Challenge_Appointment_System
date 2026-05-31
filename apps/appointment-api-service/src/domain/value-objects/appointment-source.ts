@@ -1,4 +1,4 @@
-import { DomainValidationException } from '../exceptions';
+import { DomainValidationException } from '@/domain/exceptions';
 
 export class AppointmentSource {
   constructor(public readonly value: string) {

@@ -1,5 +1,5 @@
-import { adminOnlyMiddleware } from '../../../src/infrastructure/http/middleware/admin-only.middleware';
-import { ForbiddenException } from '../../../src/domain/exceptions';
+import { adminOnlyMiddleware } from '@/infrastructure/http/middleware/admin-only.middleware';
+import { ForbiddenException } from '@/domain/exceptions';
 
 describe('adminOnlyMiddleware', () => {
   it('should pass if user is SuperAdmin', () => {

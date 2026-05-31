@@ -1,7 +1,7 @@
-import { db } from '../client';
-import { tenants } from '../schema';
-import { ITenantRepository } from '../../../application/ports/repositories/tenant.repository.port';
-import { Tenant } from '../../../domain/entities/tenant.entity';
+import { db } from '@/infrastructure/db/client';
+import { tenants } from '@/infrastructure/db/schema';
+import { ITenantRepository } from '@/application/ports/repositories/tenant.repository.port';
+import { Tenant } from '@/domain/entities/tenant.entity';
 import { eq } from 'drizzle-orm';
 
 export class DrizzleTenantRepository implements ITenantRepository {

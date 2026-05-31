@@ -1,6 +1,6 @@
-import { CreateTechnicianUseCase } from '../../../src/application/use-cases/crud/technician/create-technician.use-case';
-import { ITechnicianRepository } from '../../../src/application/ports/repositories/technician.repository.port';
-import { ConflictException } from '../../../src/domain/exceptions';
+import { CreateTechnicianUseCase } from '@/application/use-cases/crud/technician/create-technician.use-case';
+import { ITechnicianRepository } from '@/application/ports/repositories/technician.repository.port';
+import { ConflictException } from '@/domain/exceptions';
 
 describe('CreateTechnicianUseCase', () => {
   let mockRepo: ITechnicianRepository;

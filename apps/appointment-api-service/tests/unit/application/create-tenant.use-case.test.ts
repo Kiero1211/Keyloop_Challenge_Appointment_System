@@ -1,6 +1,6 @@
-import { CreateTenantUseCase } from '../../../src/application/use-cases/crud/tenant/create-tenant.use-case';
-import { ITenantRepository } from '../../../src/application/ports/repositories/tenant.repository.port';
-import { ConflictException } from '../../../src/domain/exceptions';
+import { CreateTenantUseCase } from '@/application/use-cases/crud/tenant/create-tenant.use-case';
+import { ITenantRepository } from '@/application/ports/repositories/tenant.repository.port';
+import { ConflictException } from '@/domain/exceptions';
 
 describe('CreateTenantUseCase', () => {
   let useCase: CreateTenantUseCase;

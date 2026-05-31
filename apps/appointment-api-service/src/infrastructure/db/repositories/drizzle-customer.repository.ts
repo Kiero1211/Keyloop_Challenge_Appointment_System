@@ -1,6 +1,6 @@
 import { eq, and, isNull } from 'drizzle-orm';
-import { db } from '../client';
-import { customers } from '../schema';
+import { db } from '@/infrastructure/db/client';
+import { customers } from '@/infrastructure/db/schema';
 import { Customer } from '@/domain/entities/customer.entity';
 import { ICustomerRepository } from '@/application/ports/repositories/customer.repository.port';
 

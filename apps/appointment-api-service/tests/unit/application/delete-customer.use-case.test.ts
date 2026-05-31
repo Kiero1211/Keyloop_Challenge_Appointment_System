@@ -1,6 +1,6 @@
-import { DeleteCustomerUseCase } from '../../../src/application/use-cases/crud/customer/delete-customer.use-case';
-import { ICustomerRepository } from '../../../src/application/ports/repositories/customer.repository.port';
-import { ConflictException } from '../../../src/domain/exceptions';
+import { DeleteCustomerUseCase } from '@/application/use-cases/crud/customer/delete-customer.use-case';
+import { ICustomerRepository } from '@/application/ports/repositories/customer.repository.port';
+import { ConflictException } from '@/domain/exceptions';
 
 describe('DeleteCustomerUseCase', () => {
   let useCase: DeleteCustomerUseCase;

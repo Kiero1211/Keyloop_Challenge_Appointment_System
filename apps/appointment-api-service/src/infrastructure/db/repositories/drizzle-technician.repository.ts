@@ -1,6 +1,6 @@
 import { eq, and, isNull } from 'drizzle-orm';
-import { db } from '../client';
-import { technicians } from '../schema';
+import { db } from '@/infrastructure/db/client';
+import { technicians } from '@/infrastructure/db/schema';
 import { Technician } from '@/domain/entities/technician.entity';
 import { ITechnicianRepository } from '@/application/ports/repositories/technician.repository.port';
 

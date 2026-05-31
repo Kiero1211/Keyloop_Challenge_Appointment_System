@@ -1,23 +1,23 @@
 import Redis from 'ioredis';
-import { RedisCacheAdapter } from '../cache/redis-cache.adapter';
-import { RedisStreamPublisher } from '../messaging/redis-stream.publisher';
-import { CreateAppointmentUseCase } from '../../application/use-cases/create-appointment.use-case';
-import { HealthCheckUseCase } from '../../application/use-cases/health-check.use-case';
-import { PartitionHasher } from '../../domain/utils/partition-hasher';
-import { JwtService } from '../auth/jwt.service';
-import { DrizzleUserRepository } from '../db/repositories/drizzle-user.repository';
-import { DrizzleRefreshTokenRepository } from '../db/repositories/drizzle-refresh-token.repository';
-import { DrizzleUserTenantRepository } from '../db/repositories/drizzle-user-tenant.repository';
-import { DrizzleServiceTypeRepository } from '../db/repositories/drizzle-service-type.repository';
-import { DrizzleTechnicianRepository } from '../db/repositories/drizzle-technician.repository';
-import { DrizzleTechnicianSkillRepository } from '../db/repositories/drizzle-technician-skill.repository';
-import { DrizzleServiceBayRepository } from '../db/repositories/drizzle-service-bay.repository';
-import { IAppointmentCrudRepository } from '../../application/ports/repositories/appointment-crud.repository.port';
+import { RedisCacheAdapter } from '@/infrastructure/cache/redis-cache.adapter';
+import { RedisStreamPublisher } from '@/infrastructure/messaging/redis-stream.publisher';
+import { CreateAppointmentUseCase } from '@/application/use-cases/create-appointment.use-case';
+import { HealthCheckUseCase } from '@/application/use-cases/health-check.use-case';
+import { PartitionHasher } from '@/domain/utils/partition-hasher';
+import { JwtService } from '@/infrastructure/auth/jwt.service';
+import { DrizzleUserRepository } from '@/infrastructure/db/repositories/drizzle-user.repository';
+import { DrizzleRefreshTokenRepository } from '@/infrastructure/db/repositories/drizzle-refresh-token.repository';
+import { DrizzleUserTenantRepository } from '@/infrastructure/db/repositories/drizzle-user-tenant.repository';
+import { DrizzleServiceTypeRepository } from '@/infrastructure/db/repositories/drizzle-service-type.repository';
+import { DrizzleTechnicianRepository } from '@/infrastructure/db/repositories/drizzle-technician.repository';
+import { DrizzleTechnicianSkillRepository } from '@/infrastructure/db/repositories/drizzle-technician-skill.repository';
+import { DrizzleServiceBayRepository } from '@/infrastructure/db/repositories/drizzle-service-bay.repository';
+import { IAppointmentCrudRepository } from '@/application/ports/repositories/appointment-crud.repository.port';
 
-import { DrizzleCustomerRepository } from '../db/repositories/drizzle-customer.repository';
-import { DrizzleVehicleRepository } from '../db/repositories/drizzle-vehicle.repository';
-import { DrizzleTenantRepository } from '../db/repositories/drizzle-tenant.repository';
-import { DrizzleAppointmentCrudRepository } from '../db/repositories/drizzle-appointment-crud.repository';
+import { DrizzleCustomerRepository } from '@/infrastructure/db/repositories/drizzle-customer.repository';
+import { DrizzleVehicleRepository } from '@/infrastructure/db/repositories/drizzle-vehicle.repository';
+import { DrizzleTenantRepository } from '@/infrastructure/db/repositories/drizzle-tenant.repository';
+import { DrizzleAppointmentCrudRepository } from '@/infrastructure/db/repositories/drizzle-appointment-crud.repository';
 
 class DIContainer {
   public redisClient!: Redis;

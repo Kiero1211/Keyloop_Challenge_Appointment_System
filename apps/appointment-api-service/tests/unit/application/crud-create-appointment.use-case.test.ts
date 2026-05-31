@@ -1,11 +1,11 @@
-import { CreateAppointmentUseCase } from '../../../src/application/use-cases/crud/appointment/create-appointment.use-case';
-import { IAppointmentCrudRepository } from '../../../src/application/ports/repositories/appointment-crud.repository.port';
-import { ICustomerRepository } from '../../../src/application/ports/repositories/customer.repository.port';
-import { IVehicleRepository } from '../../../src/application/ports/repositories/vehicle.repository.port';
-import { IServiceTypeRepository } from '../../../src/application/ports/repositories/service-type.repository.port';
-import { ITechnicianRepository } from '../../../src/application/ports/repositories/technician.repository.port';
-import { IServiceBayRepository } from '../../../src/application/ports/repositories/service-bay.repository.port';
-import { UnprocessableException } from '../../../src/domain/exceptions';
+import { CreateAppointmentUseCase } from '@/application/use-cases/crud/appointment/create-appointment.use-case';
+import { IAppointmentCrudRepository } from '@/application/ports/repositories/appointment-crud.repository.port';
+import { ICustomerRepository } from '@/application/ports/repositories/customer.repository.port';
+import { IVehicleRepository } from '@/application/ports/repositories/vehicle.repository.port';
+import { IServiceTypeRepository } from '@/application/ports/repositories/service-type.repository.port';
+import { ITechnicianRepository } from '@/application/ports/repositories/technician.repository.port';
+import { IServiceBayRepository } from '@/application/ports/repositories/service-bay.repository.port';
+import { UnprocessableException } from '@/domain/exceptions';
 
 describe('CreateAppointmentUseCase (CRUD)', () => {
   let mockApptRepo: IAppointmentCrudRepository;

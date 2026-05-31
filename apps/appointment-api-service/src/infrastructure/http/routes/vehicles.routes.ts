@@ -1,12 +1,12 @@
 import { Router } from 'express';
-import { container } from '../../di/container';
-import { CreateVehicleUseCase } from '../../../application/use-cases/crud/vehicle/create-vehicle.use-case';
-import { GetVehicleUseCase } from '../../../application/use-cases/crud/vehicle/get-vehicle.use-case';
-import { ListVehiclesUseCase } from '../../../application/use-cases/crud/vehicle/list-vehicles.use-case';
-import { UpdateVehicleUseCase } from '../../../application/use-cases/crud/vehicle/update-vehicle.use-case';
-import { DeleteVehicleUseCase } from '../../../application/use-cases/crud/vehicle/delete-vehicle.use-case';
-import { createVehicleSchema, updateVehicleSchema } from '../../../application/commands/vehicle.command';
-import { tenantContext } from '../../../domain/context/tenant-context';
+import { container } from '@/infrastructure/di/container';
+import { CreateVehicleUseCase } from '@/application/use-cases/crud/vehicle/create-vehicle.use-case';
+import { GetVehicleUseCase } from '@/application/use-cases/crud/vehicle/get-vehicle.use-case';
+import { ListVehiclesUseCase } from '@/application/use-cases/crud/vehicle/list-vehicles.use-case';
+import { UpdateVehicleUseCase } from '@/application/use-cases/crud/vehicle/update-vehicle.use-case';
+import { DeleteVehicleUseCase } from '@/application/use-cases/crud/vehicle/delete-vehicle.use-case';
+import { createVehicleSchema, updateVehicleSchema } from '@/application/commands/vehicle.command';
+import { tenantContext } from '@/domain/context/tenant-context';
 
 const router = Router();
 

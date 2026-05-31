@@ -1,10 +1,10 @@
 import { Router } from 'express';
-import { container } from '../../di/container';
-import { CreateServiceTypeUseCase } from '../../../application/use-cases/crud/service-type/create-service-type.use-case';
-import { DeleteServiceTypeUseCase } from '../../../application/use-cases/crud/service-type/delete-service-type.use-case';
-import { createServiceTypeSchema, updateServiceTypeSchema } from '../../../application/commands/service-type.command';
-import { tenantContext } from '../../../domain/context/tenant-context';
-import { NotFoundException } from '../../../domain/exceptions';
+import { container } from '@/infrastructure/di/container';
+import { CreateServiceTypeUseCase } from '@/application/use-cases/crud/service-type/create-service-type.use-case';
+import { DeleteServiceTypeUseCase } from '@/application/use-cases/crud/service-type/delete-service-type.use-case';
+import { createServiceTypeSchema, updateServiceTypeSchema } from '@/application/commands/service-type.command';
+import { tenantContext } from '@/domain/context/tenant-context';
+import { NotFoundException } from '@/domain/exceptions';
 
 const router = Router();
 

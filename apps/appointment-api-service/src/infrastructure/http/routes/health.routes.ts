@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { container } from '../../di/container';
+import { container } from '@/infrastructure/di/container';
 
 const router = Router();
 

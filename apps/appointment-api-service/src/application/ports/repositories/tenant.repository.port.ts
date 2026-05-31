@@ -1,4 +1,4 @@
-import { Tenant } from '../../../domain/entities/tenant.entity';
+import { Tenant } from '@/domain/entities/tenant.entity';
 
 export interface ITenantRepository {
   create(data: Omit<Tenant, 'id' | 'createdAt' | 'updatedAt' | 'isActive'>): Promise<Tenant>;

@@ -1,6 +1,6 @@
-import { GetAppointmentDetailUseCase } from '../../../src/application/use-cases/crud/appointment/get-appointment-detail.use-case';
-import { IAppointmentCrudRepository } from '../../../src/application/ports/repositories/appointment-crud.repository.port';
-import { NotFoundException } from '../../../src/domain/exceptions';
+import { GetAppointmentDetailUseCase } from '@/application/use-cases/crud/appointment/get-appointment-detail.use-case';
+import { IAppointmentCrudRepository } from '@/application/ports/repositories/appointment-crud.repository.port';
+import { NotFoundException } from '@/domain/exceptions';
 
 describe('GetAppointmentDetailUseCase', () => {
   let useCase: GetAppointmentDetailUseCase;

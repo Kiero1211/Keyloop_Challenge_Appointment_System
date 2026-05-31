@@ -1,6 +1,6 @@
-import { CancelAppointmentUseCase } from '../../../src/application/use-cases/crud/appointment/cancel-appointment.use-case';
-import { IAppointmentCrudRepository } from '../../../src/application/ports/repositories/appointment-crud.repository.port';
-import { NotFoundException, UnprocessableException } from '../../../src/domain/exceptions';
+import { CancelAppointmentUseCase } from '@/application/use-cases/crud/appointment/cancel-appointment.use-case';
+import { IAppointmentCrudRepository } from '@/application/ports/repositories/appointment-crud.repository.port';
+import { NotFoundException, UnprocessableException } from '@/domain/exceptions';
 
 describe('CancelAppointmentUseCase', () => {
   let mockApptRepo: IAppointmentCrudRepository;

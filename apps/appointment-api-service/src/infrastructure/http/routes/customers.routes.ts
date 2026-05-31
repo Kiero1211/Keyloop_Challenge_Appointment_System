@@ -1,12 +1,12 @@
 import { Router } from 'express';
-import { container } from '../../di/container';
-import { CreateCustomerUseCase } from '../../../application/use-cases/crud/customer/create-customer.use-case';
-import { GetCustomerUseCase } from '../../../application/use-cases/crud/customer/get-customer.use-case';
-import { ListCustomersUseCase } from '../../../application/use-cases/crud/customer/list-customers.use-case';
-import { UpdateCustomerUseCase } from '../../../application/use-cases/crud/customer/update-customer.use-case';
-import { DeleteCustomerUseCase } from '../../../application/use-cases/crud/customer/delete-customer.use-case';
-import { createCustomerSchema, updateCustomerSchema } from '../../../application/commands/customer.command';
-import { tenantContext } from '../../../domain/context/tenant-context';
+import { container } from '@/infrastructure/di/container';
+import { CreateCustomerUseCase } from '@/application/use-cases/crud/customer/create-customer.use-case';
+import { GetCustomerUseCase } from '@/application/use-cases/crud/customer/get-customer.use-case';
+import { ListCustomersUseCase } from '@/application/use-cases/crud/customer/list-customers.use-case';
+import { UpdateCustomerUseCase } from '@/application/use-cases/crud/customer/update-customer.use-case';
+import { DeleteCustomerUseCase } from '@/application/use-cases/crud/customer/delete-customer.use-case';
+import { createCustomerSchema, updateCustomerSchema } from '@/application/commands/customer.command';
+import { tenantContext } from '@/domain/context/tenant-context';
 
 const router = Router();
 

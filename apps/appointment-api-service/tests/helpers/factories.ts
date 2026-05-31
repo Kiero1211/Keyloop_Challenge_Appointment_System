@@ -1,5 +1,5 @@
-import { db } from '../../src/infrastructure/db/client';
-import { users, tenants, userTenants, customers, vehicles, serviceTypes, technicians, serviceBays, appointments } from '../../src/infrastructure/db/schema';
+import { db } from '@/infrastructure/db/client';
+import { users, tenants, userTenants, customers, vehicles, serviceTypes, technicians, serviceBays, appointments } from '@/infrastructure/db/schema';
 import { v4 as uuidv4 } from 'uuid';
 import * as bcrypt from 'bcryptjs';
 

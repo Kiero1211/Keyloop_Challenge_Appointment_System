@@ -1,11 +1,11 @@
 import { Router } from 'express';
-import { container } from '../../di/container';
-import { CreateTechnicianUseCase } from '../../../application/use-cases/crud/technician/create-technician.use-case';
-import { CreateTechnicianSkillUseCase } from '../../../application/use-cases/crud/technician-skill/create-technician-skill.use-case';
-import { createTechnicianSchema, updateTechnicianSchema } from '../../../application/commands/technician.command';
-import { createTechnicianSkillSchema } from '../../../application/commands/technician-skill.command';
-import { tenantContext } from '../../../domain/context/tenant-context';
-import { NotFoundException } from '../../../domain/exceptions';
+import { container } from '@/infrastructure/di/container';
+import { CreateTechnicianUseCase } from '@/application/use-cases/crud/technician/create-technician.use-case';
+import { CreateTechnicianSkillUseCase } from '@/application/use-cases/crud/technician-skill/create-technician-skill.use-case';
+import { createTechnicianSchema, updateTechnicianSchema } from '@/application/commands/technician.command';
+import { createTechnicianSkillSchema } from '@/application/commands/technician-skill.command';
+import { tenantContext } from '@/domain/context/tenant-context';
+import { NotFoundException } from '@/domain/exceptions';
 
 const router = Router();
 

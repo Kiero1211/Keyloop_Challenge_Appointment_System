@@ -1,4 +1,4 @@
-import { JwtService } from '../../../src/infrastructure/auth/jwt.service';
+import { JwtService } from '@/infrastructure/auth/jwt.service';
 import * as jwt from 'jsonwebtoken';
 
 describe('JwtService', () => {

@@ -1,8 +1,8 @@
-import { CreateTechnicianSkillUseCase } from '../../../src/application/use-cases/crud/technician-skill/create-technician-skill.use-case';
-import { ITechnicianSkillRepository } from '../../../src/application/ports/repositories/technician-skill.repository.port';
-import { ITechnicianRepository } from '../../../src/application/ports/repositories/technician.repository.port';
-import { IServiceTypeRepository } from '../../../src/application/ports/repositories/service-type.repository.port';
-import { ConflictException, UnprocessableException } from '../../../src/domain/exceptions';
+import { CreateTechnicianSkillUseCase } from '@/application/use-cases/crud/technician-skill/create-technician-skill.use-case';
+import { ITechnicianSkillRepository } from '@/application/ports/repositories/technician-skill.repository.port';
+import { ITechnicianRepository } from '@/application/ports/repositories/technician.repository.port';
+import { IServiceTypeRepository } from '@/application/ports/repositories/service-type.repository.port';
+import { ConflictException, UnprocessableException } from '@/domain/exceptions';
 
 describe('CreateTechnicianSkillUseCase', () => {
   let mockSkillRepo: ITechnicianSkillRepository;

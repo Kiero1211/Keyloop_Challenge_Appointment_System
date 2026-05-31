@@ -1,5 +1,5 @@
 import { Request, Response, NextFunction } from 'express';
-import { DomainValidationException, DuplicateAppointmentException, UnauthorizedException, ForbiddenException, NotFoundException, ConflictException, UnprocessableException } from '../../../domain/exceptions';
+import { DomainValidationException, DuplicateAppointmentException, UnauthorizedException, ForbiddenException, NotFoundException, ConflictException, UnprocessableException } from '@/domain/exceptions';
 import { ZodError } from 'zod';
 
 export const errorHandlerMiddleware = (err: Error, req: Request, res: Response, next: NextFunction) => {

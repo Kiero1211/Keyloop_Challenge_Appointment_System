@@ -1,6 +1,6 @@
-import { RefreshTokenUseCase } from '../../../src/application/use-cases/auth/refresh-token.use-case';
-import { IRefreshTokenRepository } from '../../../src/application/ports/repositories/refresh-token.repository.port';
-import { UnauthorizedException } from '../../../src/domain/exceptions';
+import { RefreshTokenUseCase } from '@/application/use-cases/auth/refresh-token.use-case';
+import { IRefreshTokenRepository } from '@/application/ports/repositories/refresh-token.repository.port';
+import { UnauthorizedException } from '@/domain/exceptions';
 
 describe('RefreshTokenUseCase', () => {
   let useCase: RefreshTokenUseCase;

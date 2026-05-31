@@ -1,5 +1,5 @@
 import { Request, Response, NextFunction } from 'express';
-import { jwtAuthMiddleware } from '../../../src/infrastructure/http/middleware/jwt-auth.middleware';
+import { jwtAuthMiddleware } from '@/infrastructure/http/middleware/jwt-auth.middleware';
 
 describe('jwtAuthMiddleware', () => {
   let mockRequest: Partial<Request>;

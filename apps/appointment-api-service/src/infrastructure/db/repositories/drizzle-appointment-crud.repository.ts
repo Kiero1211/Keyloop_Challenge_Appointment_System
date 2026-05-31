@@ -1,9 +1,9 @@
 import { eq, and, isNull, sql } from 'drizzle-orm';
-import { db } from '../client';
-import { appointments } from '../schema';
+import { db } from '@/infrastructure/db/client';
+import { appointments } from '@/infrastructure/db/schema';
 import { Appointment } from '@/domain/entities/appointment.entity';
 import { IAppointmentCrudRepository } from '@/application/ports/repositories/appointment-crud.repository.port';
-import { customers, vehicles, serviceTypes, technicians, serviceBays } from '../schema';
+import { customers, vehicles, serviceTypes, technicians, serviceBays } from '@/infrastructure/db/schema';
 
 export class DrizzleAppointmentCrudRepository implements IAppointmentCrudRepository {
   async create(data: Partial<Appointment>): Promise<Appointment> {

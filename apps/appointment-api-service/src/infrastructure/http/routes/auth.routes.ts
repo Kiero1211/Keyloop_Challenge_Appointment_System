@@ -1,12 +1,13 @@
 import { Router } from 'express';
-import { container } from '../../di/container';
-import { RegisterUseCase } from '../../../application/use-cases/auth/register.use-case';
-import { LoginUseCase } from '../../../application/use-cases/auth/login.use-case';
-import { RefreshTokenUseCase } from '../../../application/use-cases/auth/refresh-token.use-case';
-import { LogoutUseCase } from '../../../application/use-cases/auth/logout.use-case';
-import { SwitchTenantUseCase } from '../../../application/use-cases/auth/switch-tenant.use-case';
-import { registerSchema, loginSchema, refreshTokenSchema, switchTenantSchema } from '../../../application/commands/auth.command';
-import { jwtAuthMiddleware } from '../middleware/jwt-auth.middleware';
+import { container } from '@/infrastructure/di/container';
+import { RegisterUseCase } from '@/application/use-cases/auth/register.use-case';
+import { LoginUseCase } from '@/application/use-cases/auth/login.use-case';
+import { RefreshTokenUseCase } from '@/application/use-cases/auth/refresh-token.use-case';
+import { LogoutUseCase } from '@/application/use-cases/auth/logout.use-case';
+import { SwitchTenantUseCase } from '@/application/use-cases/auth/switch-tenant.use-case';
+import { GetMyTenantsUseCase } from '@/application/use-cases/auth/get-my-tenants.use-case';
+import { registerSchema, loginSchema, refreshTokenSchema, switchTenantSchema } from '@/application/commands/auth.command';
+import { jwtAuthMiddleware } from '@/infrastructure/http/middleware/jwt-auth.middleware';
 
 const router = Router();
 
@@ -66,6 +67,7 @@ router.post('/logout', async (req, res, next) => {
 });
 
 // Guarded by auth (need to know who is switching)
+// Guarded by auth (need to know who is switching)
 router.post('/switch-tenant', (req, res, next) => jwtAuthMiddleware(container.jwtService)(req, res, next), async (req, res, next) => {
   try {
     const data = switchTenantSchema.parse(req.body);
@@ -84,4 +86,18 @@ router.post('/switch-tenant', (req, res, next) => jwtAuthMiddleware(container.jw
   }
 });
 
-export const authRouter = router;
+router.get(
+  '/tenants',
+  (req, res, next) => jwtAuthMiddleware(container.jwtService)(req, res, next),
+  async (req, res, next) => {
+    try {
+      const useCase = new GetMyTenantsUseCase(container.userTenantRepository);
+      const result = await useCase.execute((req as any).user.userId);
+      res.json(result);
+    } catch (error) {
+      next(error);
+    }
+  }
+);
+
+export { router as authRouter };

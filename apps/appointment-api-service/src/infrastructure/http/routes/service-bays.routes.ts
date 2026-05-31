@@ -1,9 +1,9 @@
 import { Router } from 'express';
-import { container } from '../../di/container';
-import { CreateServiceBayUseCase } from '../../../application/use-cases/crud/service-bay/create-service-bay.use-case';
-import { createServiceBaySchema, updateServiceBaySchema } from '../../../application/commands/service-bay.command';
-import { tenantContext } from '../../../domain/context/tenant-context';
-import { NotFoundException } from '../../../domain/exceptions';
+import { container } from '@/infrastructure/di/container';
+import { CreateServiceBayUseCase } from '@/application/use-cases/crud/service-bay/create-service-bay.use-case';
+import { createServiceBaySchema, updateServiceBaySchema } from '@/application/commands/service-bay.command';
+import { tenantContext } from '@/domain/context/tenant-context';
+import { NotFoundException } from '@/domain/exceptions';
 
 const router = Router();
 

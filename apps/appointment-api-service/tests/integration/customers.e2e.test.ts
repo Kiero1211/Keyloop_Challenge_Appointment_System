@@ -1,9 +1,9 @@
 import request from 'supertest';
-import { app } from '../../src/infrastructure/http/app';
-import { db } from '../../src/infrastructure/db/client';
+import { app } from '@/infrastructure/http/app';
+import { db } from '@/infrastructure/db/client';
 import { factories } from '../helpers/factories';
-import { container } from '../../src/infrastructure/di/container';
-import { customers } from '../../src/infrastructure/db/schema';
+import { container } from '@/infrastructure/di/container';
+import { customers } from '@/infrastructure/db/schema';
 
 describe('Customers API E2E', () => {
   let tenantId1: string;

@@ -1,6 +1,6 @@
 import cluster from 'cluster';
 import os from 'os';
-import { startServer } from './server';
+import { startServer } from '@/infrastructure/http/server';
 
 if (cluster.isPrimary) {
   const numCPUs = os.cpus().length;

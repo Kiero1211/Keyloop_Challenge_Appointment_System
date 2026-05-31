@@ -1,4 +1,4 @@
-import { IUserRepository } from '../../../src/application/ports/repositories/user.repository.port';
+import { IUserRepository } from '@/application/ports/repositories/user.repository.port';
 
 describe('IUserRepository Port', () => {
   it('should be mockable for finding by email', async () => {

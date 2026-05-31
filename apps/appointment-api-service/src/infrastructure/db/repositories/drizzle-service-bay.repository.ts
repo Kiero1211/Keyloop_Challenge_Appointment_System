@@ -1,6 +1,6 @@
 import { eq, and, isNull } from 'drizzle-orm';
-import { db } from '../client';
-import { serviceBays } from '../schema';
+import { db } from '@/infrastructure/db/client';
+import { serviceBays } from '@/infrastructure/db/schema';
 import { ServiceBay } from '@/domain/entities/service-bay.entity';
 import { IServiceBayRepository } from '@/application/ports/repositories/service-bay.repository.port';
 

@@ -1,4 +1,4 @@
-import { IRefreshTokenRepository } from '../../../src/application/ports/repositories/refresh-token.repository.port';
+import { IRefreshTokenRepository } from '@/application/ports/repositories/refresh-token.repository.port';
 
 describe('IRefreshTokenRepository Port', () => {
   it('should be mockable', async () => {

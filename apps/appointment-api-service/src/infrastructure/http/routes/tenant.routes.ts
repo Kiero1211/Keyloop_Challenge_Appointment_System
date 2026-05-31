@@ -1,13 +1,13 @@
 import { Router } from 'express';
-import { container } from '../../di/container';
-import { CreateTenantUseCase } from '../../../application/use-cases/crud/tenant/create-tenant.use-case';
-import { GetTenantUseCase } from '../../../application/use-cases/crud/tenant/get-tenant.use-case';
-import { ListTenantsUseCase } from '../../../application/use-cases/crud/tenant/list-tenants.use-case';
-import { UpdateTenantUseCase } from '../../../application/use-cases/crud/tenant/update-tenant.use-case';
-import { DeactivateTenantUseCase } from '../../../application/use-cases/crud/tenant/deactivate-tenant.use-case';
-import { createTenantSchema, updateTenantSchema } from '../../../application/commands/tenant.command';
-import { jwtAuthMiddleware } from '../middleware/jwt-auth.middleware';
-import { adminOnlyMiddleware } from '../middleware/admin-only.middleware';
+import { container } from '@/infrastructure/di/container';
+import { CreateTenantUseCase } from '@/application/use-cases/crud/tenant/create-tenant.use-case';
+import { GetTenantUseCase } from '@/application/use-cases/crud/tenant/get-tenant.use-case';
+import { ListTenantsUseCase } from '@/application/use-cases/crud/tenant/list-tenants.use-case';
+import { UpdateTenantUseCase } from '@/application/use-cases/crud/tenant/update-tenant.use-case';
+import { DeactivateTenantUseCase } from '@/application/use-cases/crud/tenant/deactivate-tenant.use-case';
+import { createTenantSchema, updateTenantSchema } from '@/application/commands/tenant.command';
+import { jwtAuthMiddleware } from '@/infrastructure/http/middleware/jwt-auth.middleware';
+import { adminOnlyMiddleware } from '@/infrastructure/http/middleware/admin-only.middleware';
 
 const router = Router();
 

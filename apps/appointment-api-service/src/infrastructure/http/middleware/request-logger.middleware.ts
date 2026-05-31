@@ -1,5 +1,5 @@
 import { Request, Response, NextFunction } from 'express';
-import { tenantContext } from '../../../domain/context/tenant-context';
+import { tenantContext } from '@/domain/context/tenant-context';
 import crypto from 'crypto';
 
 export function requestLoggerMiddleware(req: Request, res: Response, next: NextFunction) {

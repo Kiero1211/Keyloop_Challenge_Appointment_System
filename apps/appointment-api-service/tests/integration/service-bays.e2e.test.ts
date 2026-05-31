@@ -1,9 +1,9 @@
 import request from 'supertest';
-import { app } from '../../src/infrastructure/http/app';
-import { db } from '../../src/infrastructure/db/client';
+import { app } from '@/infrastructure/http/app';
+import { db } from '@/infrastructure/db/client';
 import { factories } from '../helpers/factories';
-import { container } from '../../src/infrastructure/di/container';
-import { serviceBays } from '../../src/infrastructure/db/schema';
+import { container } from '@/infrastructure/di/container';
+import { serviceBays } from '@/infrastructure/db/schema';
 
 describe('Service Bays API Integration', () => {
   let tenantId1: string;

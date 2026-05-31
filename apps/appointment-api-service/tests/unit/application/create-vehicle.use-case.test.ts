@@ -1,7 +1,7 @@
-import { CreateVehicleUseCase } from '../../../src/application/use-cases/crud/vehicle/create-vehicle.use-case';
-import { IVehicleRepository } from '../../../src/application/ports/repositories/vehicle.repository.port';
-import { ICustomerRepository } from '../../../src/application/ports/repositories/customer.repository.port';
-import { UnprocessableException } from '../../../src/domain/exceptions';
+import { CreateVehicleUseCase } from '@/application/use-cases/crud/vehicle/create-vehicle.use-case';
+import { IVehicleRepository } from '@/application/ports/repositories/vehicle.repository.port';
+import { ICustomerRepository } from '@/application/ports/repositories/customer.repository.port';
+import { UnprocessableException } from '@/domain/exceptions';
 
 describe('CreateVehicleUseCase', () => {
   let useCase: CreateVehicleUseCase;

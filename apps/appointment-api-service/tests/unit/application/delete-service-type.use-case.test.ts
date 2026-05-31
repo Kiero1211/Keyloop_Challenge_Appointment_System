@@ -1,7 +1,7 @@
-import { DeleteServiceTypeUseCase } from '../../../src/application/use-cases/crud/service-type/delete-service-type.use-case';
-import { IServiceTypeRepository } from '../../../src/application/ports/repositories/service-type.repository.port';
-import { IAppointmentCrudRepository } from '../../../src/application/ports/repositories/appointment-crud.repository.port';
-import { ConflictException, NotFoundException } from '../../../src/domain/exceptions';
+import { DeleteServiceTypeUseCase } from '@/application/use-cases/crud/service-type/delete-service-type.use-case';
+import { IServiceTypeRepository } from '@/application/ports/repositories/service-type.repository.port';
+import { IAppointmentCrudRepository } from '@/application/ports/repositories/appointment-crud.repository.port';
+import { ConflictException, NotFoundException } from '@/domain/exceptions';
 
 describe('DeleteServiceTypeUseCase', () => {
   let mockRepo: IServiceTypeRepository;

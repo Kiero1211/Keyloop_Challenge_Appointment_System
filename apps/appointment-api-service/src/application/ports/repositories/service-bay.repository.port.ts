@@ -1,4 +1,4 @@
-import { ServiceBay } from '../../../domain/entities/service-bay.entity';
+import { ServiceBay } from '@/domain/entities/service-bay.entity';
 
 export interface IServiceBayRepository {
   create(bay: Partial<ServiceBay>): Promise<ServiceBay>;

@@ -1,7 +1,7 @@
-import { SwitchTenantUseCase } from '../../../src/application/use-cases/auth/switch-tenant.use-case';
-import { IUserTenantRepository } from '../../../src/application/ports/repositories/user-tenant.repository.port';
-import { IRefreshTokenRepository } from '../../../src/application/ports/repositories/refresh-token.repository.port';
-import { UnauthorizedException } from '../../../src/domain/exceptions';
+import { SwitchTenantUseCase } from '@/application/use-cases/auth/switch-tenant.use-case';
+import { IUserTenantRepository } from '@/application/ports/repositories/user-tenant.repository.port';
+import { IRefreshTokenRepository } from '@/application/ports/repositories/refresh-token.repository.port';
+import { UnauthorizedException } from '@/domain/exceptions';
 
 describe('SwitchTenantUseCase', () => {
   let useCase: SwitchTenantUseCase;

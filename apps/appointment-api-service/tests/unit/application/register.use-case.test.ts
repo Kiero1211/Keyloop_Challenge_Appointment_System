@@ -1,9 +1,9 @@
-import { RegisterUseCase } from '../../../src/application/use-cases/auth/register.use-case';
-import { IUserRepository } from '../../../src/application/ports/repositories/user.repository.port';
-import { IUserTenantRepository } from '../../../src/application/ports/repositories/user-tenant.repository.port';
-import { ITenantRepository } from '../../../src/application/ports/repositories/tenant.repository.port';
-import { IRefreshTokenRepository } from '../../../src/application/ports/repositories/refresh-token.repository.port';
-import { ConflictException, NotFoundException } from '../../../src/domain/exceptions';
+import { RegisterUseCase } from '@/application/use-cases/auth/register.use-case';
+import { IUserRepository } from '@/application/ports/repositories/user.repository.port';
+import { IUserTenantRepository } from '@/application/ports/repositories/user-tenant.repository.port';
+import { ITenantRepository } from '@/application/ports/repositories/tenant.repository.port';
+import { IRefreshTokenRepository } from '@/application/ports/repositories/refresh-token.repository.port';
+import { ConflictException, NotFoundException } from '@/domain/exceptions';
 
 describe('RegisterUseCase', () => {
   let useCase: RegisterUseCase;

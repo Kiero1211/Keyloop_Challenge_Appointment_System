@@ -1,6 +1,6 @@
 import { eq, and } from 'drizzle-orm';
-import { db } from '../client';
-import { technicianSkills } from '../schema';
+import { db } from '@/infrastructure/db/client';
+import { technicianSkills } from '@/infrastructure/db/schema';
 import { TechnicianSkill } from '@/domain/entities/technician-skill.entity';
 import { ITechnicianSkillRepository } from '@/application/ports/repositories/technician-skill.repository.port';
 

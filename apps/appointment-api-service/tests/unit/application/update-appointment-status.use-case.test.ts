@@ -1,6 +1,6 @@
-import { UpdateAppointmentStatusUseCase } from '../../../src/application/use-cases/crud/appointment/update-appointment-status.use-case';
-import { IAppointmentCrudRepository } from '../../../src/application/ports/repositories/appointment-crud.repository.port';
-import { UnprocessableException, NotFoundException } from '../../../src/domain/exceptions';
+import { UpdateAppointmentStatusUseCase } from '@/application/use-cases/crud/appointment/update-appointment-status.use-case';
+import { IAppointmentCrudRepository } from '@/application/ports/repositories/appointment-crud.repository.port';
+import { UnprocessableException, NotFoundException } from '@/domain/exceptions';
 
 describe('UpdateAppointmentStatusUseCase', () => {
   let useCase: UpdateAppointmentStatusUseCase;

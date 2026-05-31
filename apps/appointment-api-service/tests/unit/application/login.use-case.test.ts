@@ -1,8 +1,8 @@
-import { LoginUseCase } from '../../../src/application/use-cases/auth/login.use-case';
-import { IUserRepository } from '../../../src/application/ports/repositories/user.repository.port';
-import { IUserTenantRepository } from '../../../src/application/ports/repositories/user-tenant.repository.port';
-import { IRefreshTokenRepository } from '../../../src/application/ports/repositories/refresh-token.repository.port';
-import { UnauthorizedException } from '../../../src/domain/exceptions';
+import { LoginUseCase } from '@/application/use-cases/auth/login.use-case';
+import { IUserRepository } from '@/application/ports/repositories/user.repository.port';
+import { IUserTenantRepository } from '@/application/ports/repositories/user-tenant.repository.port';
+import { IRefreshTokenRepository } from '@/application/ports/repositories/refresh-token.repository.port';
+import { UnauthorizedException } from '@/domain/exceptions';
 import * as bcrypt from 'bcryptjs';
 
 jest.mock('bcryptjs');

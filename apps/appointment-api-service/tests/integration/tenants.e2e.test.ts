@@ -1,9 +1,9 @@
 import request from 'supertest';
-import { app } from '../../src/infrastructure/http/app';
-import { db } from '../../src/infrastructure/db/client';
+import { app } from '@/infrastructure/http/app';
+import { db } from '@/infrastructure/db/client';
 import { factories } from '../helpers/factories';
-import { container } from '../../src/infrastructure/di/container';
-import { tenants } from '../../src/infrastructure/db/schema';
+import { container } from '@/infrastructure/di/container';
+import { tenants } from '@/infrastructure/db/schema';
 import { eq } from 'drizzle-orm';
 
 describe('Tenants API E2E', () => {
