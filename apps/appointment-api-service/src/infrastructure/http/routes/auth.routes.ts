@@ -66,7 +66,7 @@ router.post('/logout', async (req, res, next) => {
 });
 
 // Guarded by auth (need to know who is switching)
-router.post('/switch-tenant', jwtAuthMiddleware(container.jwtService), async (req, res, next) => {
+router.post('/switch-tenant', (req, res, next) => jwtAuthMiddleware(container.jwtService)(req, res, next), async (req, res, next) => {
   try {
     const data = switchTenantSchema.parse(req.body);
     const user = (req as any).user;

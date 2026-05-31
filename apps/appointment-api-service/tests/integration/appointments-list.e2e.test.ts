@@ -12,7 +12,7 @@ describe('Appointments List API E2E', () => {
 
   beforeAll(async () => {
     await container.initialize();
-    const t = await container.tenantRepository.create({ name: 'List Tenant' });
+    const t = await factories.tenant();
     tenantId = t.id;
 
     const u1 = await factories.user();
@@ -31,11 +31,11 @@ describe('Appointments List API E2E', () => {
 
   it('should filter appointments', async () => {
     const response = await request(app)
-      .get('/api/v1/appointments?date=2026-06-01')
+      .get('/api/v1/crud-appointments?date=2026-06-01')
       .set('Authorization', `Bearer ${adminToken}`)
       .set('x-tenant-id', tenantId);
 
     expect(response.status).toBe(200);
-    expect(Array.isArray(response.body)).toBe(true);
+    expect(Array.isArray(response.body.data)).toBe(true);
   });
 });

@@ -1,8 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
 import { AsyncLocalStorage } from 'async_hooks';
-import { TenantContext } from '../../../domain/context/tenant-context';
-
-export const tenantContextStore = new AsyncLocalStorage<TenantContext>();
+import { TenantContext, tenantContext } from '../../../domain/context/tenant-context';
 
 export const tenantContextMiddleware = (req: Request, res: Response, next: NextFunction) => {
   const tenantIdHeader = req.headers['x-tenant-id'] as string;
@@ -29,13 +27,13 @@ export const tenantContextMiddleware = (req: Request, res: Response, next: NextF
     isSuperAdmin: user.isSuperAdmin || false,
   };
 
-  tenantContextStore.run(context, () => {
+  tenantContext.run(context, () => {
     next();
   });
 };
 
 export const getTenantContext = (): TenantContext => {
-  const context = tenantContextStore.getStore();
+  const context = tenantContext.getStore();
   if (!context) {
     throw new Error('Tenant context is not available outside of request lifecycle.');
   }

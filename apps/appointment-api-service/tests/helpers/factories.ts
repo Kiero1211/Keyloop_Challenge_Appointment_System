@@ -102,7 +102,7 @@ export const factories = {
       serviceBayId,
       scheduledStartTime,
       scheduledEndTime,
-      status: 'PENDING',
+      status: 'Scheduled',
       ...overrides,
     }).returning();
     return app;

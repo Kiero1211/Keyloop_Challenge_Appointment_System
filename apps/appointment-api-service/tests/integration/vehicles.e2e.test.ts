@@ -91,11 +91,11 @@ describe('Vehicles API E2E', () => {
         .set('Authorization', `Bearer ${token1}`)
         .set('x-tenant-id', tenantId1)
         .send({
-          color: 'Blue',
+          licensePlate: 'NEW-PLATE',
         });
 
       expect(response.status).toBe(200);
-      expect(response.body.color).toBe('Blue');
+      expect(response.body.licensePlate).toBe('NEW-PLATE');
     });
   });
 

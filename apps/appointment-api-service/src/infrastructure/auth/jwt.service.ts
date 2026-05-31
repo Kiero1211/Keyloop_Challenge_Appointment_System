@@ -1,4 +1,5 @@
 import * as jwt from 'jsonwebtoken';
+import { v4 as uuidv4 } from 'uuid';
 
 export interface JwtPayload {
   sub: string;
@@ -38,7 +39,7 @@ export class JwtService {
   }
   generateRefreshToken(payload: { userId: string; tenantId: string }): string {
     return jwt.sign(
-      { sub: payload.userId, tenant_id: payload.tenantId, isRefresh: true },
+      { sub: payload.userId, tenant_id: payload.tenantId, isRefresh: true, jti: uuidv4() },
       this.secret,
       { expiresIn: this.refreshExpiresIn as any }
     );

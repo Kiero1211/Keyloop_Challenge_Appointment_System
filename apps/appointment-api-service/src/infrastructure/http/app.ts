@@ -8,6 +8,7 @@ import { appointmentsCrudRouter } from './routes/appointments-crud.routes';
 import { customersRouter } from './routes/customers.routes';
 import { vehiclesRouter } from './routes/vehicles.routes';
 import { tenantRouter } from './routes/tenant.routes';
+import { authRouter } from './routes/auth.routes';
 import { tenantContextMiddleware } from './middleware/tenant-context.middleware';
 import swaggerUi from 'swagger-ui-express';
 import YAML from 'yamljs';
@@ -28,6 +29,7 @@ app.use('/api/docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument));
 // Global middlewares
 app.use(requestLoggerMiddleware);
 app.use('/health', healthRouter);
+app.use('/api/v1/auth', authRouter);
 
 // Protected routes
 app.use(
@@ -65,7 +67,12 @@ app.use(
   appointmentsCrudRouter
 );
 
-app.use('/api/v1/customers', jwtAuthMiddleware(container.jwtService), tenantContextMiddleware, customersRouter);
+app.use(
+  '/api/v1/customers',
+  (req, res, next) => jwtAuthMiddleware(container.jwtService)(req, res, next),
+  tenantContextMiddleware,
+  customersRouter
+);
 
 app.use(
   '/api/v1/vehicles',

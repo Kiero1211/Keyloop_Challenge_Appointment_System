@@ -1,5 +1,5 @@
 import { pgTable, uuid, text, boolean, timestamp, integer, uniqueIndex, index } from 'drizzle-orm/pg-core';
-import { relations } from 'drizzle-orm';
+import { relations, sql } from 'drizzle-orm';
 
 export const users = pgTable('users', {
   id: uuid('id').defaultRandom().primaryKey(),
@@ -8,7 +8,7 @@ export const users = pgTable('users', {
   firstName: text('first_name').notNull(),
   lastName: text('last_name').notNull(),
   role: text('role').notNull(),
-  permissions: text('permissions').array().default([]),
+  permissions: text('permissions').array().default(sql`'{}'::text[]`),
   isActive: boolean('is_active').default(true),
   isSuperAdmin: boolean('is_super_admin').default(false),
   lastLoginAt: timestamp('last_login_at', { withTimezone: true }),
@@ -40,7 +40,7 @@ export const userTenants = pgTable('user_tenants', {
   userId: uuid('user_id').notNull().references(() => users.id),
   tenantId: uuid('tenant_id').notNull().references(() => tenants.id),
   role: text('role').notNull().default('TenantUser'),
-  permissions: text('permissions').array().default([]),
+  permissions: text('permissions').array().default(sql`'{}'::text[]`),
   isActive: boolean('is_active').default(true),
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
   updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
@@ -65,7 +65,6 @@ export const customers = pgTable('customers', {
   lastName: text('last_name').notNull(),
   email: text('email').notNull(),
   phone: text('phone'),
-  isActive: boolean('is_active').default(true),
   deletedAt: timestamp('deleted_at', { withTimezone: true }),
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
   updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
@@ -152,7 +151,9 @@ export const appointments = pgTable('appointments', {
   serviceBayId: uuid('service_bay_id').notNull().references(() => serviceBays.id),
   scheduledStartTime: timestamp('start_time', { withTimezone: true }).notNull(),
   scheduledEndTime: timestamp('end_time', { withTimezone: true }).notNull(),
-  status: text('status').notNull().default('PENDING'),
+  actualStartTime: timestamp('actual_start_time', { withTimezone: true }),
+  actualEndTime: timestamp('actual_end_time', { withTimezone: true }),
+  status: text('status').notNull().default('Scheduled'),
   notes: text('notes'),
   deletedAt: timestamp('deleted_at', { withTimezone: true }),
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),

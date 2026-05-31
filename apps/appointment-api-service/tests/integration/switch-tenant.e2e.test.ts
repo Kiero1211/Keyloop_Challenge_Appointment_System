@@ -16,8 +16,8 @@ describe('Switch Tenant API E2E', () => {
     await container.initialize();
     
     // Create tenants
-    const t1 = await container.tenantRepository.create({ name: 'Tenant 1' });
-    const t2 = await container.tenantRepository.create({ name: 'Tenant 2' });
+    const t1 = await factories.tenant();
+    const t2 = await factories.tenant();
     tenant1Id = t1.id;
     tenant2Id = t2.id;
 
@@ -46,6 +46,17 @@ describe('Switch Tenant API E2E', () => {
     oldRefreshToken = tokens.token;
   });
 
+  let accessToken: string;
+  beforeAll(async () => {
+    accessToken = container.jwtService.generateAccessToken({
+      userId,
+      tenantId: tenant1Id,
+      role: 'TenantUser',
+      permissions: [],
+      isSuperAdmin: false,
+    });
+  });
+
   afterAll(async () => {
     await db.delete(userTenants).where(eq(userTenants.userId, userId));
     await db.delete(refreshTokens).where(eq(refreshTokens.userId, userId));
@@ -58,6 +69,7 @@ describe('Switch Tenant API E2E', () => {
   it('should switch tenant and return new tokens', async () => {
     const response = await request(app)
       .post('/api/v1/auth/switch-tenant')
+      .set('Authorization', `Bearer ${accessToken}`)
       .send({
         targetTenantId: tenant2Id,
         refreshToken: oldRefreshToken

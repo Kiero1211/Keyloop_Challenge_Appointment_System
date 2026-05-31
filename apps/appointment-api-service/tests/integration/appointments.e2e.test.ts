@@ -51,10 +51,10 @@ describe('Appointments API Integration', () => {
     await container.destroy();
   });
 
-  describe('POST /api/v1/appointments', () => {
+  describe('POST /api/v1/crud-appointments', () => {
     it('should create an appointment successfully', async () => {
       const response = await request(app)
-        .post('/api/v1/appointments')
+        .post('/api/v1/crud-appointments')
         .set('Authorization', `Bearer ${token1}`)
         .set('x-tenant-id', tenantId1)
         .send({
