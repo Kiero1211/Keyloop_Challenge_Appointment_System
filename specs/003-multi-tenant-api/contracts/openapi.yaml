@@ -176,11 +176,13 @@ components:
 
     SwitchTenantRequest:
       type: object
-      required: [tenantId]
+      required: [targetTenantId, refreshToken]
       properties:
-        tenantId:
+        targetTenantId:
           type: string
           format: uuid
+        refreshToken:
+          type: string
 
     # ── Tenant ────────────────────────────────────────────────────────────────
     TenantRequest:

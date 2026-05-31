@@ -178,10 +178,12 @@ components:
       type: object
       required: [tenantId]
       properties:
-        tenantId:
+        targetTenantId:
           type: string
           format: uuid
-
+        refreshToken:
+          type: string
+          
     # ── Tenant ────────────────────────────────────────────────────────────────
     TenantRequest:
       type: object
