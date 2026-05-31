@@ -27,7 +27,7 @@ public class AppDbContext : DbContext
             if (typeof(IMustHaveTenant).IsAssignableFrom(entityType.ClrType))
             {
                 modelBuilder.Entity(entityType.ClrType)
-                    .HasQueryFilter(CreateTenantFilter(entityType.ClrType, _tenantId));
+                    .HasQueryFilter(CreateTenantFilter(entityType.ClrType));
             }
         }
 
@@ -51,12 +51,12 @@ public class AppDbContext : DbContext
             .HasKey(ts => new { ts.TechnicianId, ts.ServiceTypeId, ts.TenantId });
     }
 
-    private static System.Linq.Expressions.LambdaExpression CreateTenantFilter(Type type, string tenantId)
+    private System.Linq.Expressions.LambdaExpression CreateTenantFilter(Type type)
     {
         var parameter = System.Linq.Expressions.Expression.Parameter(type, "e");
         var property = System.Linq.Expressions.Expression.Property(parameter, nameof(IMustHaveTenant.TenantId));
-        var constant = System.Linq.Expressions.Expression.Constant(tenantId);
-        var body = System.Linq.Expressions.Expression.Equal(property, constant);
+        var tenantIdField = System.Linq.Expressions.Expression.Field(System.Linq.Expressions.Expression.Constant(this), nameof(_tenantId));
+        var body = System.Linq.Expressions.Expression.Equal(property, tenantIdField);
         return System.Linq.Expressions.Expression.Lambda(body, parameter);
     }
 }

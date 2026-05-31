@@ -50,9 +50,9 @@ Both capabilities follow strict TDD: failing tests written first (xUnit + Moq), 
 
 ## Constitution Check
 
-- [x] **I. Hexagonal Microservice Architecture & Role Separation**: All new logic stays inside `appointment-worker-service`. No HTTP added. Worker remains a pure background consumer. `IBayAvailabilityService` (HTTP adapter) is fully removed.
+- [x] **I. Hexagonal Microservice Architecture & Role Separation**: All new logic stays inside `appointment-worker-service`. No HTTP added. Worker remains a pure background consumer. `IBayAvailabilityService` (HTTP adapter) is fully removed. **Gap resolved (Phase 6)**: The constitution mandates the worker consume all 4 Redis Stream partitions (`appointments_stream_0..3`); the previous single-stream consumer is replaced with a partitioned multi-task consumer.
 - [x] **II. Clean Architecture Boundaries**: Repository ports in `Core/Application/Ports/Repositories/`. Service ports in `Core/Application/Ports/Services/`. Service implementations in `Core/Application/Services/`. EF Core repository adapters in `Infrastructure/Data/`. Exceptions in `Core/Domain/Exceptions/`. No infrastructure namespace referenced from Core layers.
-- [x] **III. Multi-Tenancy & Data Isolation**: `AppDbContext` global query filter enforces `tenant_id`. All new EF queries rely on this filter. Bulkhead keyed by `tenant_id`.
+- [x] **III. Multi-Tenancy & Data Isolation**: `AppDbContext` global query filter enforces `tenant_id`. All new EF queries rely on this filter. Bulkhead keyed by `tenant_id`. Consumer propagates `TenantId` from message to `TenantContext` before dispatching.
 - [x] **IV. Spec-Driven & TDD**: All new logic covered by unit tests (mocked ports) written before implementation; integration tests (Testcontainers) written before EF implementation.
 - [x] **V. Executive Command Execution Protocol**: Port interfaces defined in data-model.md first, then tests scaffolded, then implementation.
 - [x] **VI. Monorepo & Docker**: New test projects under `apps/appointment-worker-service/tests/`. No new service created. `docker-compose.yml` unchanged.
@@ -119,7 +119,9 @@ apps/appointment-worker-service/
 │       │   ├── ServiceBayRepository.cs                ← NEW
 │       │   └── TechnicianSkillRepository.cs           ← NEW
 │       ├── Workers/
-│       │   └── RedisStreamConsumerService.cs          ← MODIFY: route through TenantBulkheadRouter
+│       │   ├── RedisStreamConsumerService.cs          ← DELETE: replaced by PartitionedStreamHost
+│       │   ├── PartitionedStreamHost.cs               ← NEW: IHostedService that spawns one Task per partition
+│       │   └── StreamPartitionWorker.cs               ← NEW: per-partition XREADGROUP polling loop
 │       ├── Http/
 │       │   └── HttpBayAvailabilityService.cs          ← DELETE
 │       ├── Cache/
@@ -335,11 +337,12 @@ Singleton. `ConcurrentDictionary<string, (BoundedChannel<Func<Task>>, SemaphoreS
 - `DispatchAsync(tenantId, handler)` → writes to bounded channel → returns `DispatchResult` (Dispatched | ChannelFull)
 - Background drain task per tenant respects `SemaphoreSlim` (max concurrent)
 
-#### [MODIFY] `Infrastructure/Workers/RedisStreamConsumerService.cs`
-After deserializing message: `var result = await _bulkheadRouter.DispatchAsync(message.TenantId, handler)`. If `ChannelFull` → do NOT acknowledge → `continue`.
+#### [DELETE] `Infrastructure/Workers/RedisStreamConsumerService.cs`
+Remove entirely — replaced by `PartitionedStreamHost` + `StreamPartitionWorker`.
 
 #### [MODIFY] `Program.cs`
 - **Remove**: `IBayAvailabilityService` / `HttpBayAvailabilityService` registration
+- **Remove**: `RedisStreamConsumerService` registration
 - **Add** (all scoped unless noted):
   - `IAppointmentRepository → AppointmentRepository`
   - `ITechnicianRepository → TechnicianRepository`
@@ -349,10 +352,188 @@ After deserializing message: `var result = await _bulkheadRouter.DispatchAsync(m
   - `IBayService → BayService`
   - `TenantBulkheadRouter` (singleton)
   - `services.AddValidatorsFromAssemblyContaining<AppointmentMessageValidator>()`
-  - Bind `WorkerOptions` from config (`WORKER_BULKHEAD_MAX_CONCURRENT`, `WORKER_BULKHEAD_QUEUE_CAPACITY`)
+  - Bind `WorkerOptions` from config (`WORKER_BULKHEAD_MAX_CONCURRENT`, `WORKER_BULKHEAD_QUEUE_CAPACITY`, `WORKER_STREAM_PARTITION_COUNT` default: 4)
+  - `services.AddHostedService<PartitionedStreamHost>()`
 
 #### [DELETE] `Infrastructure/Http/HttpBayAvailabilityService.cs`
 Remove file entirely.
+
+---
+
+### Phase 6 — Multi-Partition Stream Consumer
+
+> **Constitution mandate (Principle I)**: The API service routes every command deterministically via `f(tenant_id, vehicle_id) → partition_id` across exactly **4** Redis Stream partitions named `appointments_stream_0`, `appointments_stream_1`, `appointments_stream_2`, `appointments_stream_3`. The worker MUST consume all 4 partitions simultaneously.
+
+#### Design
+
+**Consumer Group & Consumer Identity**:
+- All 4 partition workers share the **same consumer group name** (`worker_group`) so that multiple worker instances (horizontal scaling) share the load naturally via XREADGROUP's built-in cooperative delivery.
+- Each worker instance generates a **unique consumer ID** at startup: `worker_{Guid.NewGuid():N}`. This ID is reused across all 4 partitions within the same process lifetime. If the process restarts, a new ID is generated, allowing Redis to reclaim the previous consumer's PEL (pending entry list) via `XAUTOCLAIM`.
+
+**Concurrency Model**:
+- `PartitionedStreamHost` (implements `IHostedService`) is registered once. In `StartAsync`, it launches one `Task` per partition using `Task.Run` and stores them in a `List<Task>`. In `StopAsync`, it signals a `CancellationToken` and `await Task.WhenAll(...)` all tasks.
+- `StreamPartitionWorker` encapsulates the per-partition polling loop:
+  1. Ensure consumer group exists (`XGROUP CREATE ... MKSTREAM` — idempotent with `BUSYGROUP` guard).
+  2. Loop until cancellation: call `XREADGROUP GROUP worker_group {consumerId} COUNT 1 BLOCK 2000 STREAMS {streamName} >`.
+  3. If no messages: loop (BLOCK already waited up to 2 s, so no extra `Task.Delay` needed).
+  4. If message received: call `_bulkheadRouter.DispatchAsync(tenantId, handler)`. On `ChannelFull` → do **not** ACK (message stays in PEL for redelivery).
+  5. **Handler (on success)**: process → `XACK {streamName} worker_group {id}` → `XDEL {streamName} {id}`.
+  6. **Handler (on failure / exception)**: write to DLQ stream (`{streamName}_dlq`) → then ACK+DEL to prevent infinite redelivery.
+
+**Why ACK + DEL on success**: Messages are ephemeral booking commands. Once a `TrackingRecord` is persisted and the cache is updated, the raw stream entry has no further value and wastes Redis memory. `XDEL` removes the entry from the stream while `XACK` removes it from the PEL.
+
+**Why no ACK on `ChannelFull`**: The message remains in the PEL. Redis will redeliver it (via `XAUTOCLAIM` or a future `XREADGROUP PENDING` sweep) when the bulkhead drains. This satisfies FR-008: no messages silently dropped under overflow.
+
+#### [NEW] `Infrastructure/Workers/PartitionedStreamHost.cs`
+
+```csharp
+public class PartitionedStreamHost : IHostedService
+{
+    // Injects: RedisConnectionProvider, IServiceScopeFactory, TenantBulkheadRouter, ILogger, WorkerOptions
+    // StartAsync: creates StreamPartitionWorker for each partition index 0..WORKER_STREAM_PARTITION_COUNT-1
+    //             starts each on a Task.Run background task
+    // StopAsync:  cancels shared CancellationTokenSource, awaits all tasks
+    
+    private readonly List<Task> _partitionTasks = new();
+    private readonly CancellationTokenSource _cts = new();
+    private const int PartitionCount = 4; // configurable via WorkerOptions
+    private readonly string _consumerId = $"worker_{Guid.NewGuid():N}";
+}
+```
+
+#### [NEW] `Infrastructure/Workers/StreamPartitionWorker.cs`
+
+```csharp
+/// Encapsulates the XREADGROUP polling loop for a single partition.
+public class StreamPartitionWorker
+{
+    private readonly string _streamName;   // e.g. "appointments_stream_2"
+    private readonly string _groupName = "worker_group";
+    private readonly string _consumerId;   // unique per process lifetime, shared across all partitions
+    private readonly IDatabase _db;
+    private readonly TenantBulkheadRouter _bulkheadRouter;
+    private readonly IServiceScopeFactory _scopeFactory;
+    private readonly ILogger _logger;
+
+    public async Task RunAsync(CancellationToken ct)
+    {
+        // 1. Ensure consumer group (MKSTREAM = create stream if absent)
+        try { await _db.StreamCreateConsumerGroupAsync(_streamName, _groupName, "0-0", createStream: true); }
+        catch (RedisServerException ex) when (ex.Message.Contains("BUSYGROUP")) { /* already exists */ }
+
+        _logger.LogInformation("Partition worker started: stream={Stream} group={Group} consumer={Consumer}",
+            _streamName, _groupName, _consumerId);
+
+        while (!ct.IsCancellationRequested)
+        {
+            StreamEntry[] entries;
+            try
+            {
+                // BLOCK up to 2 s waiting for new messages — avoids busy-loop, preserves < 2 s shutdown latency
+                entries = await _db.StreamReadGroupAsync(
+                    _streamName, _groupName, _consumerId,
+                    position: ">",   // only undelivered messages
+                    count: 1,
+                    noAck: false);
+            }
+            catch (OperationCanceledException) { break; }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "XREADGROUP error on {Stream}", _streamName);
+                await Task.Delay(1_000, ct);
+                continue;
+            }
+
+            foreach (var entry in entries)
+                await HandleEntryAsync(entry, ct);
+        }
+    }
+
+    private async Task HandleEntryAsync(StreamEntry entry, CancellationToken ct)
+    {
+        AppointmentMessage? message = null;
+        try
+        {
+            var payload = entry["payload"];
+            message = JsonSerializer.Deserialize<AppointmentMessage>(payload!, JsonOptions);
+            if (message is null) throw new InvalidOperationException("Null deserialization");
+
+            TenantContext.CurrentTenantId = message.TenantId;
+
+            var result = _bulkheadRouter.DispatchAsync(message.TenantId, async () =>
+            {
+                using var scope = _scopeFactory.CreateScope();
+                var processor = scope.ServiceProvider.GetRequiredService<IAppointmentProcessor>();
+                await processor.ProcessAsync(message, entry.Id.ToString(), ct);
+
+                // ACK + DEL on success
+                await _db.StreamAcknowledgeAsync(_streamName, _groupName, entry.Id);
+                await _db.KeyDeleteAsync((RedisKey)_streamName); // XDEL equivalent via scripting if needed
+            });
+
+            if (result == DispatchResult.ChannelFull)
+            {
+                _logger.LogWarning("Bulkhead full for tenant {TenantId} on {Stream}. Message {Id} left in PEL.",
+                    message.TenantId, _streamName, entry.Id);
+                // Do NOT ACK — message stays in PEL for redelivery
+            }
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to process entry {Id} on {Stream}", entry.Id, _streamName);
+            try
+            {
+                // Move to DLQ stream then ACK to prevent infinite redelivery of poison messages
+                await _db.StreamAddAsync($"{_streamName}_dlq", entry.Values);
+                await _db.StreamAcknowledgeAsync(_streamName, _groupName, entry.Id);
+                // XDEL after ACK to reclaim memory
+                _logger.LogInformation("Entry {Id} moved to DLQ on {Stream}", entry.Id, _streamName);
+            }
+            catch (Exception dlqEx)
+            {
+                _logger.LogCritical(dlqEx, "DLQ write failed for entry {Id} on {Stream}", entry.Id, _streamName);
+            }
+        }
+    }
+}
+```
+
+#### Tests for Phase 6
+
+##### [NEW] `Tests.Unit/Infrastructure/PartitionedStreamHostTests.cs`
+- `GivenFourPartitions_WhenStartAsync_ThenFourWorkerTasksLaunched`
+- `GivenStopAsync_ThenAllPartitionTasksCancelledCleanly`
+- `GivenConsumerIdGenerated_ThenSameIdUsedAcrossAllPartitions`
+
+##### [NEW] `Tests.Unit/Infrastructure/StreamPartitionWorkerTests.cs`
+- `GivenNoMessages_WhenPolling_ThenLoopsWithoutAck`
+- `GivenValidMessage_WhenProcessingSucceeds_ThenAckAndDelCalled`
+- `GivenValidMessage_WhenBulkheadFull_ThenNoAckAndMessageLeftInPEL`
+- `GivenValidMessage_WhenProcessingThrows_ThenMovedToDLQAndThenAcked`
+- `GivenMissingPayload_WhenDeserializationFails_ThenMovedToDLQ`
+
+##### [NEW] `Tests.Integration/Workers/PartitionedStreamIntegrationTests.cs`
+- `GivenMessageOnPartition0_WhenWorkerRunning_ThenProcessedAndAcked`
+- `GivenMessageOnPartition3_WhenWorkerRunning_ThenProcessedAndAcked`
+- `GivenPoisonMessage_WhenWorkerRunning_ThenMovedToDLQ`
+- `GivenTwoWorkerInstances_WhenSameGroup_ThenEachMessageProcessedOnlyOnce`
+
+> Integration tests use `Testcontainers.Redis` alongside `Testcontainers.PostgreSql` to spin up a real Redis instance. The `PartitionedStreamHost` is started in-process against it.
+
+#### `WorkerOptions` additions
+
+```csharp
+public class WorkerOptions
+{
+    public int BulkheadMaxConcurrent { get; set; } = 5;
+    public int BulkheadQueueCapacity { get; set; } = 50;
+    public int StreamPartitionCount { get; set; } = 4;        // NEW
+    public string StreamBaseName { get; set; } = "appointments_stream"; // NEW
+    public string ConsumerGroupName { get; set; } = "worker_group";     // NEW
+}
+```
+
+Environment variables: `WORKER_STREAM_PARTITION_COUNT` (default: 4), `WORKER_STREAM_BASE_NAME` (default: `appointments_stream`), `WORKER_CONSUMER_GROUP_NAME` (default: `worker_group`).
 
 ---
 
@@ -383,12 +564,24 @@ dotnet format apps/appointment-worker-service/AppointmentWorkerService.sln --ver
 ### Manual Smoke Test
 ```bash
 docker compose up -d
-# 1. Send message missing TechnicianId → expect DLQ entry
-redis-cli XADD appointments_stream '*' payload '{"tenantId":"t1","vehicleId":"v1","customerId":"c1","serviceTypeId":"s1","desiredStartTime":"2026-06-01T10:00:00Z","source":"api"}'
-redis-cli XLEN appointments_stream_dlq   # expect 1
 
-# 2. Send valid message for an occupied slot → expect second booking rejected
-# (seed a Scheduled record first, then publish two overlapping messages)
+# 1. Verify all 4 consumer group entries exist after startup:
+redis-cli XINFO GROUPS appointments_stream_0   # should show group "worker_group"
+redis-cli XINFO GROUPS appointments_stream_1
+redis-cli XINFO GROUPS appointments_stream_2
+redis-cli XINFO GROUPS appointments_stream_3
+
+# 2. Send message missing TechnicianId to partition 0 → expect DLQ entry:
+redis-cli XADD appointments_stream_0 '*' payload '{"tenantId":"t1","vehicleId":"v1","customerId":"c1","serviceTypeId":"s1","desiredStartTime":"2026-06-01T10:00:00Z","source":"api"}'
+redis-cli XLEN appointments_stream_0_dlq   # expect 1
+
+# 3. Send valid message to partition 2 → expect ACK + stream entry removed:
+redis-cli XADD appointments_stream_2 '*' payload '{"tenantId":"t1","vehicleId":"v2","customerId":"c1","technicianId":"tech-1","serviceBayId":"bay-1","serviceTypeId":"s1","desiredStartTime":"2026-06-01T11:00:00Z","source":"api"}'
+# After processing: XLEN appointments_stream_2 should be 0 (entry deleted)
+
+# 4. Send overlapping slot to same partition → second booking must be rejected to DLQ:
+redis-cli XADD appointments_stream_2 '*' payload '{"tenantId":"t1","vehicleId":"v3","customerId":"c2","technicianId":"tech-1","serviceBayId":"bay-1","serviceTypeId":"s1","desiredStartTime":"2026-06-01T11:00:00Z","source":"api"}'
+redis-cli XLEN appointments_stream_2_dlq   # expect 1
 ```
 
 ---

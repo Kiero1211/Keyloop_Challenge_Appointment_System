@@ -214,6 +214,37 @@
 
 ---
 
+## Phase 7: Multi-Partition Stream Consumer
+
+**Goal**: The worker MUST consume all 4 Redis Stream partitions simultaneously, using cooperative delivery (consumer group) and proper DLQ/overflow semantics.
+
+### RED: Unit and Integration Tests (write first — must fail)
+
+- [x] T045 [P] [US4] Write failing unit tests in `apps/appointment-worker-service/tests/AppointmentWorkerService.Tests.Unit/Infrastructure/PartitionedStreamHostTests.cs`:
+  - `GivenFourPartitions_WhenStartAsync_ThenFourWorkerTasksLaunched`
+  - `GivenStopAsync_ThenAllPartitionTasksCancelledCleanly`
+  - `GivenConsumerIdGenerated_ThenSameIdUsedAcrossAllPartitions`
+- [x] T046 [P] [US4] Write failing unit tests in `apps/appointment-worker-service/tests/AppointmentWorkerService.Tests.Unit/Infrastructure/StreamPartitionWorkerTests.cs`:
+  - `GivenNoMessages_WhenPolling_ThenLoopsWithoutAck`
+  - `GivenValidMessage_WhenProcessingSucceeds_ThenAckAndDelCalled`
+  - `GivenValidMessage_WhenBulkheadFull_ThenNoAckAndMessageLeftInPEL`
+  - `GivenValidMessage_WhenProcessingThrows_ThenMovedToDLQAndThenAcked`
+  - `GivenMissingPayload_WhenDeserializationFails_ThenMovedToDLQ`
+- [x] T047 [P] [US4] Write failing integration tests in `apps/appointment-worker-service/tests/AppointmentWorkerService.Tests.Integration/Workers/PartitionedStreamIntegrationTests.cs`:
+  - `GivenMessageOnPartition0_WhenWorkerRunning_ThenProcessedAndAcked`
+  - `GivenMessageOnPartition3_WhenWorkerRunning_ThenProcessedAndAcked`
+  - `GivenPoisonMessage_WhenWorkerRunning_ThenMovedToDLQ`
+  - `GivenTwoWorkerInstances_WhenSameGroup_ThenEachMessageProcessedOnlyOnce`
+
+### GREEN: Infrastructure Implementation
+
+- [x] T048 [US4] Delete `apps/appointment-worker-service/src/Infrastructure/Workers/RedisStreamConsumerService.cs`
+- [x] T049 [US4] Create `apps/appointment-worker-service/src/Infrastructure/Workers/PartitionedStreamHost.cs` implementing `IHostedService`
+- [x] T050 [US4] Create `apps/appointment-worker-service/src/Infrastructure/Workers/StreamPartitionWorker.cs` with the `XREADGROUP` polling loop
+- [x] T051 [US4] Update `apps/appointment-worker-service/src/Program.cs` to remove `RedisStreamConsumerService`, register `PartitionedStreamHost`, and add new `WorkerOptions` properties
+
+---
+
 ## Dependencies & Execution Order
 
 ### Phase Dependencies

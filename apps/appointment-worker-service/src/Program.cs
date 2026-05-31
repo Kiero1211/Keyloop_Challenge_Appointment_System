@@ -52,7 +52,15 @@ public class Program
                 int queueCapacity = int.TryParse(hostContext.Configuration["WORKER_BULKHEAD_QUEUE_CAPACITY"], out int qc) ? qc : 50;
                 services.AddSingleton(new AppointmentWorkerService.Infrastructure.Bulkhead.TenantBulkheadRouter(maxConcurrent, queueCapacity));
 
-                services.AddHostedService<RedisStreamConsumerService>();
+                services.Configure<WorkerOptions>(options => 
+                {
+                    if (int.TryParse(hostContext.Configuration["WORKER_STREAM_PARTITION_COUNT"], out int pc))
+                        options.StreamPartitionCount = pc;
+                    options.StreamBaseName = hostContext.Configuration["WORKER_STREAM_BASE_NAME"] ?? "appointments_stream";
+                    options.ConsumerGroupName = hostContext.Configuration["WORKER_CONSUMER_GROUP"] ?? "worker_group";
+                });
+                
+                services.AddHostedService<PartitionedStreamHost>();
             });
 }
 
