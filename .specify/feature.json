@@ -1,3 +1,1 @@
-{
-  "feature_directory": "specs/003-multi-tenant-api"
-}
+{"feature_directory": "specs/004-worker-core-logic"}
