@@ -2,12 +2,15 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.EntityFrameworkCore;
 using AppointmentWorkerService.Core.Application.Ports;
+using AppointmentWorkerService.Core.Application.Ports.Repositories;
+using AppointmentWorkerService.Core.Application.Ports.Services;
+using AppointmentWorkerService.Core.Application.Services;
 using AppointmentWorkerService.Core.Application.UseCases;
 using AppointmentWorkerService.Infrastructure.Data;
 using AppointmentWorkerService.Infrastructure.Redis;
 using AppointmentWorkerService.Infrastructure.Cache;
 using AppointmentWorkerService.Infrastructure.Workers;
-using AppointmentWorkerService.Infrastructure.Http;
+using FluentValidation;
 
 namespace AppointmentWorkerService;
 
@@ -30,26 +33,43 @@ public class Program
 
                 services.AddSingleton(new RedisConnectionProvider(redisConnection));
                 services.AddSingleton<ICacheProvider, CacheProvider>();
-                services.AddHttpClient<IBayAvailabilityService, HttpBayAvailabilityService>(client =>
-                {
-                    client.BaseAddress = new Uri(hostContext.Configuration["BAY_SERVICE_URL"] ?? "http://bay-service:3000");
-                });
                 
-                // We need a scoped tenant service for EF Core query filter
                 services.AddScoped<ITenantService, ScopedTenantService>();
                 
                 services.AddScoped<IAppointmentRepository, AppointmentRepository>();
+                services.AddScoped<ITechnicianRepository, TechnicianRepository>();
+                services.AddScoped<IServiceBayRepository, ServiceBayRepository>();
+                services.AddScoped<ITechnicianSkillRepository, TechnicianSkillRepository>();
+                
+                services.AddScoped<ITechnicianService, TechnicianService>();
+                services.AddScoped<IBayService, BayService>();
+                
                 services.AddScoped<IAppointmentProcessor, AppointmentProcessor>();
+                
+                services.AddValidatorsFromAssemblyContaining<AppointmentWorkerService.Core.Application.Validators.AppointmentMessageValidator>();
+
+                int maxConcurrent = int.TryParse(hostContext.Configuration["WORKER_BULKHEAD_MAX_CONCURRENT"], out int mc) ? mc : 5;
+                int queueCapacity = int.TryParse(hostContext.Configuration["WORKER_BULKHEAD_QUEUE_CAPACITY"], out int qc) ? qc : 50;
+                services.AddSingleton(new AppointmentWorkerService.Infrastructure.Bulkhead.TenantBulkheadRouter(maxConcurrent, queueCapacity));
 
                 services.AddHostedService<RedisStreamConsumerService>();
             });
 }
 
-// Simple tenant service for worker context - in a real app this might extract from the message payload via an AsyncLocal or similar
+public static class TenantContext
+{
+    private static readonly AsyncLocal<string> _currentTenantId = new AsyncLocal<string>();
+
+    public static string CurrentTenantId
+    {
+        get => _currentTenantId.Value ?? "default-tenant";
+        set => _currentTenantId.Value = value;
+    }
+}
+
 public class ScopedTenantService : ITenantService
 {
-    // For now, hardcode or inject based on context. The processor will pass the tenant ID down.
-    public string GetTenantId() => "default-tenant";
+    public string GetTenantId() => TenantContext.CurrentTenantId;
 }
 
 

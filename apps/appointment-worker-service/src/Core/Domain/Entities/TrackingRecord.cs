@@ -4,7 +4,11 @@ public enum AppointmentStatus
 {
     Pending,
     Confirmed,
-    Rejected
+    Rejected,
+    Scheduled,
+    InProgress,
+    Cancelled,
+    Completed
 }
 
 public class TrackingRecord : IMustHaveTenant

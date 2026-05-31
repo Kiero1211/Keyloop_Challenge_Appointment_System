@@ -14,6 +14,7 @@ public class RedisStreamConsumerService : BackgroundService
     private readonly RedisConnectionProvider _redisConnectionProvider;
     private readonly IServiceScopeFactory _scopeFactory;
     private readonly ILogger<RedisStreamConsumerService> _logger;
+    private readonly AppointmentWorkerService.Infrastructure.Bulkhead.TenantBulkheadRouter _bulkheadRouter;
     private readonly string _streamName = "appointments_stream";
     private readonly string _groupName = "worker_group";
     private readonly string _consumerName = $"worker_{Guid.NewGuid():N}";
@@ -21,11 +22,13 @@ public class RedisStreamConsumerService : BackgroundService
     public RedisStreamConsumerService(
         RedisConnectionProvider redisConnectionProvider,
         IServiceScopeFactory scopeFactory,
-        ILogger<RedisStreamConsumerService> logger)
+        ILogger<RedisStreamConsumerService> logger,
+        AppointmentWorkerService.Infrastructure.Bulkhead.TenantBulkheadRouter bulkheadRouter)
     {
         _redisConnectionProvider = redisConnectionProvider;
         _scopeFactory = scopeFactory;
         _logger = logger;
+        _bulkheadRouter = bulkheadRouter;
     }
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
@@ -96,9 +99,19 @@ public class RedisStreamConsumerService : BackgroundService
 
             if (appointmentMessage != null)
             {
-                using var scope = _scopeFactory.CreateScope();
-                var processor = scope.ServiceProvider.GetRequiredService<IAppointmentProcessor>();
-                await processor.ProcessAsync(appointmentMessage, streamEntry.Id.ToString(), stoppingToken);
+                TenantContext.CurrentTenantId = appointmentMessage.TenantId;
+                
+                var dispatchResult = _bulkheadRouter.DispatchAsync(appointmentMessage.TenantId, async () =>
+                {
+                    using var scope = _scopeFactory.CreateScope();
+                    var processor = scope.ServiceProvider.GetRequiredService<IAppointmentProcessor>();
+                    await processor.ProcessAsync(appointmentMessage, streamEntry.Id.ToString(), stoppingToken);
+                });
+
+                if (dispatchResult == AppointmentWorkerService.Infrastructure.Bulkhead.DispatchResult.ChannelFull)
+                {
+                    _logger.LogWarning("Channel full for tenant {TenantId}. Skipping message {Id}", appointmentMessage.TenantId, streamEntry.Id);
+                }
             }
         }
         catch (Exception ex)

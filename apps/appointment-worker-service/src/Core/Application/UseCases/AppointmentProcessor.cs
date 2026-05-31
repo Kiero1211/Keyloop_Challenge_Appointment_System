@@ -1,5 +1,8 @@
 using AppointmentWorkerService.Core.Application.Ports;
+using AppointmentWorkerService.Core.Application.Ports.Repositories;
+using AppointmentWorkerService.Core.Application.Ports.Services;
 using AppointmentWorkerService.Core.Domain.Entities;
+using AppointmentWorkerService.Core.Domain.Exceptions;
 using Microsoft.Extensions.Logging;
 
 namespace AppointmentWorkerService.Core.Application.UseCases;
@@ -8,34 +11,50 @@ public class AppointmentProcessor : IAppointmentProcessor
 {
     private readonly IAppointmentRepository _appointmentRepository;
     private readonly ICacheProvider _cacheProvider;
-    private readonly IBayAvailabilityService _bayAvailabilityService;
     private readonly ILogger<AppointmentProcessor> _logger;
+
+    private readonly ITechnicianService _technicianService;
+    private readonly IBayService _bayService;
+    private readonly FluentValidation.IValidator<AppointmentMessage> _validator;
 
     public AppointmentProcessor(
         IAppointmentRepository appointmentRepository,
         ICacheProvider cacheProvider,
-        IBayAvailabilityService bayAvailabilityService,
-        ILogger<AppointmentProcessor> logger)
+        ILogger<AppointmentProcessor> logger,
+        ITechnicianService technicianService = null!,
+        IBayService bayService = null!,
+        FluentValidation.IValidator<AppointmentMessage> validator = null!)
     {
         _appointmentRepository = appointmentRepository;
         _cacheProvider = cacheProvider;
-        _bayAvailabilityService = bayAvailabilityService;
         _logger = logger;
+        _technicianService = technicianService;
+        _bayService = bayService;
+        _validator = validator;
     }
 
     public async Task ProcessAsync(AppointmentMessage message, string messageId, CancellationToken cancellationToken = default)
     {
         _logger.LogInformation("Processing appointment message for tenant {TenantId}, vehicle {VehicleId}", message.TenantId, message.VehicleId);
 
-        // End time is mocked for MVP, would normally be based on service type duration
-        var endTime = message.DesiredStartTime.AddHours(1);
+        var validationResult = await _validator.ValidateAsync(message, cancellationToken);
+        if (!validationResult.IsValid)
+        {
+            throw new InvalidBookingRequestException($"Validation failed: {string.Join(", ", validationResult.Errors)}");
+        }
 
-        var isAvailable = await _bayAvailabilityService.IsAvailableAsync(
-            message.ServiceBayId ?? "default-bay", 
-            message.TechnicianId ?? "default-tech", 
-            message.DesiredStartTime, 
-            endTime, 
-            cancellationToken);
+        var startUtc = message.DesiredStartTime.ToUniversalTime();
+        var endUtc = startUtc.AddHours(1);
+
+        if (message.TechnicianId != null)
+        {
+            await _technicianService.ValidateAndCheckAvailabilityAsync(message.TechnicianId, message.ServiceTypeId, startUtc, endUtc, cancellationToken);
+        }
+
+        if (message.ServiceBayId != null)
+        {
+            await _bayService.ValidateAndCheckAvailabilityAsync(message.ServiceBayId, startUtc, endUtc, cancellationToken);
+        }
 
         var record = new TrackingRecord
         {
@@ -44,9 +63,11 @@ public class AppointmentProcessor : IAppointmentProcessor
             VehicleId = message.VehicleId,
             CustomerId = message.CustomerId,
             ServiceTypeId = message.ServiceTypeId,
-            StartTime = message.DesiredStartTime,
-            EndTime = endTime,
-            Status = isAvailable ? AppointmentStatus.Confirmed : AppointmentStatus.Rejected
+            TechnicianId = message.TechnicianId,
+            ServiceBayId = message.ServiceBayId,
+            StartTime = startUtc,
+            EndTime = endUtc,
+            Status = AppointmentStatus.Scheduled
         };
 
         try

@@ -1,4 +1,4 @@
-using AppointmentWorkerService.Core.Application.Ports;
+using AppointmentWorkerService.Core.Application.Ports.Repositories;
 using AppointmentWorkerService.Core.Domain.Entities;
 using Microsoft.EntityFrameworkCore;
 
@@ -29,5 +29,23 @@ public class AppointmentRepository : IAppointmentRepository
     {
         _dbContext.Set<TrackingRecord>().Update(trackingRecord);
         await _dbContext.SaveChangesAsync(cancellationToken);
+    }
+
+    public async Task<bool> HasTechnicianOverlapAsync(string technicianId, DateTimeOffset startUtc, DateTimeOffset endUtc, CancellationToken ct = default)
+    {
+        return await _dbContext.Set<TrackingRecord>()
+            .AnyAsync(a => a.TechnicianId == technicianId &&
+                           (a.Status == AppointmentStatus.Scheduled || a.Status == AppointmentStatus.InProgress) &&
+                           a.StartTime < endUtc &&
+                           a.EndTime > startUtc, ct);
+    }
+
+    public async Task<bool> HasBayOverlapAsync(string serviceBayId, DateTimeOffset startUtc, DateTimeOffset endUtc, CancellationToken ct = default)
+    {
+        return await _dbContext.Set<TrackingRecord>()
+            .AnyAsync(a => a.ServiceBayId == serviceBayId &&
+                           (a.Status == AppointmentStatus.Scheduled || a.Status == AppointmentStatus.InProgress) &&
+                           a.StartTime < endUtc &&
+                           a.EndTime > startUtc, ct);
     }
 }

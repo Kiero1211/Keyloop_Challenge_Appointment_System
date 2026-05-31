@@ -12,6 +12,11 @@ public class AppDbContext : DbContext
         _tenantId = tenantService.GetTenantId();
     }
 
+    public DbSet<TrackingRecord> TrackingRecords => Set<TrackingRecord>();
+    public DbSet<Technician> Technicians => Set<Technician>();
+    public DbSet<ServiceBay> ServiceBays => Set<ServiceBay>();
+    public DbSet<TechnicianSkill> TechnicianSkills => Set<TechnicianSkill>();
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
@@ -26,12 +31,24 @@ public class AppDbContext : DbContext
             }
         }
 
-        // Configure concurrency token
-        modelBuilder.Entity<TrackingRecord>()
-            .Property(t => t.Version)
-            .IsRowVersion()
-            .HasColumnName("xmin")
-            .HasColumnType("xid");
+        // Configure concurrency token and timestamptz
+        modelBuilder.Entity<TrackingRecord>(entity =>
+        {
+            entity.Property(t => t.Version)
+                .IsRowVersion()
+                .HasColumnName("xmin")
+                .HasColumnType("xid");
+
+            entity.Property(t => t.StartTime)
+                .HasColumnType("timestamp with time zone");
+
+            entity.Property(t => t.EndTime)
+                .HasColumnType("timestamp with time zone");
+        });
+
+        // Configure TechnicianSkill composite key
+        modelBuilder.Entity<TechnicianSkill>()
+            .HasKey(ts => new { ts.TechnicianId, ts.ServiceTypeId, ts.TenantId });
     }
 
     private static System.Linq.Expressions.LambdaExpression CreateTenantFilter(Type type, string tenantId)
