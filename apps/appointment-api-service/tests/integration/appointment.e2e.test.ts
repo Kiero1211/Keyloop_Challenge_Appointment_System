@@ -57,6 +57,8 @@ describe("Appointment API E2E", () => {
         customerId: "cust-1",
         vehicleId: "veh-1",
         serviceTypeId: "srv-1",
+        technicianId: "tech-1",
+        serviceBayId: "bay-1",
         desiredStartTime: new Date(Date.now() + 86400000).toISOString(), // Tomorrow
       };
 
@@ -94,6 +96,8 @@ describe("Appointment API E2E", () => {
         customerId: "cust-1",
         vehicleId: "veh-1",
         serviceTypeId: "srv-1",
+        technicianId: "tech-1",
+        serviceBayId: "bay-1",
         desiredStartTime: new Date(Date.now() + 86400000).toISOString(),
       };
 

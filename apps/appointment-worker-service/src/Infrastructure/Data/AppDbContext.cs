@@ -12,34 +12,69 @@ public class AppDbContext : DbContext
         _tenantId = tenantService.GetTenantId();
     }
 
+    public DbSet<TrackingRecord> TrackingRecords => Set<TrackingRecord>();
+    public DbSet<Technician> Technicians => Set<Technician>();
+    public DbSet<ServiceBay> ServiceBays => Set<ServiceBay>();
+    public DbSet<TechnicianSkill> TechnicianSkills => Set<TechnicianSkill>();
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
 
-        // Apply global query filter for multi-tenancy on all entities implementing IMustHaveTenant
+        var stringToGuidConverter = new Microsoft.EntityFrameworkCore.Storage.ValueConversion.ValueConverter<string, Guid>(
+            v => Guid.Parse(v),
+            v => v.ToString()
+        );
+
+        // Apply global query filter for multi-tenancy and string-to-uuid conversions
         foreach (var entityType in modelBuilder.Model.GetEntityTypes())
         {
             if (typeof(IMustHaveTenant).IsAssignableFrom(entityType.ClrType))
             {
                 modelBuilder.Entity(entityType.ClrType)
-                    .HasQueryFilter(CreateTenantFilter(entityType.ClrType, _tenantId));
+                    .HasQueryFilter(CreateTenantFilter(entityType.ClrType));
+            }
+
+            foreach (var property in entityType.GetProperties())
+            {
+                if (property.ClrType == typeof(string) && (property.Name.EndsWith("Id") || property.Name == "Id"))
+                {
+                    property.SetValueConverter(stringToGuidConverter);
+                }
             }
         }
 
-        // Configure concurrency token
-        modelBuilder.Entity<TrackingRecord>()
-            .Property(t => t.Version)
-            .IsRowVersion()
-            .HasColumnName("xmin")
-            .HasColumnType("xid");
+        // Configure concurrency token and timestamptz
+        modelBuilder.Entity<TrackingRecord>(entity =>
+        {
+            entity.ToTable("appointments");
+
+            entity.Property(t => t.Version)
+                .IsRowVersion()
+                .HasColumnName("xmin")
+                .HasColumnType("xid");
+
+            entity.Property(t => t.StartTime)
+                .HasColumnType("timestamp with time zone");
+
+            entity.Property(t => t.EndTime)
+                .HasColumnType("timestamp with time zone");
+
+            entity.Property(t => t.Status)
+                .HasConversion<string>();
+        });
+
+        // Configure TechnicianSkill primary key
+        modelBuilder.Entity<TechnicianSkill>()
+            .HasKey(ts => ts.Id);
     }
 
-    private static System.Linq.Expressions.LambdaExpression CreateTenantFilter(Type type, string tenantId)
+    private System.Linq.Expressions.LambdaExpression CreateTenantFilter(Type type)
     {
         var parameter = System.Linq.Expressions.Expression.Parameter(type, "e");
         var property = System.Linq.Expressions.Expression.Property(parameter, nameof(IMustHaveTenant.TenantId));
-        var constant = System.Linq.Expressions.Expression.Constant(tenantId);
-        var body = System.Linq.Expressions.Expression.Equal(property, constant);
+        var tenantIdField = System.Linq.Expressions.Expression.Field(System.Linq.Expressions.Expression.Constant(this), nameof(_tenantId));
+        var body = System.Linq.Expressions.Expression.Equal(property, tenantIdField);
         return System.Linq.Expressions.Expression.Lambda(body, parameter);
     }
 }

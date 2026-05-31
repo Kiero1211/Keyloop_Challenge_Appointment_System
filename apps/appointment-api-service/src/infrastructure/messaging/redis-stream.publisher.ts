@@ -5,16 +5,11 @@ import { StreamPublishException } from '@/domain/exceptions';
 export class RedisStreamPublisher implements IMessagePublisher {
   constructor(private readonly redisClient: Redis) {}
 
-  async publish(streamName: string, payload: Record<string, string>): Promise<string> {
+  async publish(streamName: string, payload: Record<string, any>): Promise<string> {
     try {
-      // Flatten the payload object into an array of strings
-      const args: string[] = [];
-      for (const [key, value] of Object.entries(payload)) {
-        args.push(key, value);
-      }
-
-      // XADD streamName * key1 value1 key2 value2 ...
-      const messageId = await this.redisClient.xadd(streamName, '*', ...args);
+      const jsonPayload = JSON.stringify(payload);
+      // XADD streamName * payload "{...}"
+      const messageId = await this.redisClient.xadd(streamName, '*', 'payload', jsonPayload);
       return messageId as string;
     } catch (error: any) {
       throw new StreamPublishException(`Failed to publish message to ${streamName}: ${error.message}`);

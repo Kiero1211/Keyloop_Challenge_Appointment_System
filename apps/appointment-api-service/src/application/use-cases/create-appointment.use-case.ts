@@ -36,9 +36,9 @@ export class CreateAppointmentUseCase {
     const idempotencyKey = `tenant:${tenantId}:appointment:${vehicleId.value}:pending`;
     const isPending = await this.cacheProvider.exists(idempotencyKey);
     
-    if (isPending) {
-      throw new DuplicateAppointmentException(vehicleId.value);
-    }
+    // if (isPending) {
+    //   throw new DuplicateAppointmentException(vehicleId.value);
+    // }
 
     // Determine Partition
     const partition = this.partitionHasher(tenantId, vehicleId.value);
@@ -51,6 +51,8 @@ export class CreateAppointmentUseCase {
       customerId: customerId.value,
       vehicleId: vehicleId.value,
       serviceTypeId: serviceTypeId.value,
+      technicianId: command.technicianId,
+      serviceBayId: command.serviceBayId,
       desiredStartTime: desiredStartTime.value,
       source: 'public',
       status: 'pending',
