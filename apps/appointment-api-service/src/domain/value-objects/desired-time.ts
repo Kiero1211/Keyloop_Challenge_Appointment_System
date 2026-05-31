@@ -1,4 +1,4 @@
-import { DomainValidationException } from '../exceptions';
+import { DomainValidationException } from '@/domain/exceptions';
 
 export class DesiredTime {
   public readonly value: string;

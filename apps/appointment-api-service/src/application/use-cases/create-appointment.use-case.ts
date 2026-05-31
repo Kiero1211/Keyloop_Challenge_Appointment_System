@@ -1,13 +1,13 @@
-import { ICacheProvider } from '../ports/cache-provider.port';
-import { IMessagePublisher } from '../ports/message-publisher.port';
-import { CreateAppointmentCommand } from '../commands/create-appointment.command';
-import { tenantContext } from '../../domain/context/tenant-context';
-import { DuplicateAppointmentException, DomainValidationException } from '../../domain/exceptions';
-import { CommandId } from '../../domain/value-objects/command-id';
-import { CustomerId } from '../../domain/value-objects/customer-id';
-import { VehicleId } from '../../domain/value-objects/vehicle-id';
-import { ServiceTypeId } from '../../domain/value-objects/service-type-id';
-import { DesiredTime } from '../../domain/value-objects/desired-time';
+import { ICacheProvider } from '@/application/ports/cache-provider.port';
+import { IMessagePublisher } from '@/application/ports/message-publisher.port';
+import { CreateAppointmentCommand } from '@/application/commands/create-appointment.command';
+import { tenantContext } from '@/domain/context/tenant-context';
+import { DuplicateAppointmentException, DomainValidationException } from '@/domain/exceptions';
+import { CommandId } from '@/domain/value-objects/command-id';
+import { CustomerId } from '@/domain/value-objects/customer-id';
+import { VehicleId } from '@/domain/value-objects/vehicle-id';
+import { ServiceTypeId } from '@/domain/value-objects/service-type-id';
+import { DesiredTime } from '@/domain/value-objects/desired-time';
 import { v4 as uuidv4 } from 'uuid';
 
 export class CreateAppointmentUseCase {

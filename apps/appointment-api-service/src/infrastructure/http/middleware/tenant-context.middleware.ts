@@ -1,17 +1,41 @@
 import { Request, Response, NextFunction } from 'express';
-import { tenantContext } from '../../../domain/context/tenant-context';
+import { AsyncLocalStorage } from 'async_hooks';
+import { TenantContext, tenantContext } from '@/domain/context/tenant-context';
 
 export const tenantContextMiddleware = (req: Request, res: Response, next: NextFunction) => {
-  const tenantId = req.headers['x-tenant-id'] as string;
+  const tenantIdHeader = req.headers['x-tenant-id'] as string;
   
-  if (!tenantId) {
-    return res.status(400).json({
-      error: 'Bad Request',
-      message: 'Missing x-tenant-id header'
-    });
+  if (!tenantIdHeader) {
+    return res.status(400).json({ error: 'Bad Request', message: 'Missing x-tenant-id header' });
   }
 
-  tenantContext.run({ tenantId }, () => {
+  const user = (req as any).user;
+  
+  if (!user) {
+    return res.status(401).json({ error: 'Unauthorized', message: 'User not authenticated' });
+  }
+
+  if (tenantIdHeader !== user.tenantId && !user.isSuperAdmin) {
+    return res.status(403).json({ error: 'Forbidden', message: 'Tenant access denied' });
+  }
+
+  const context: TenantContext = {
+    userId: user.userId,
+    tenantId: tenantIdHeader,
+    role: user.role,
+    permissions: user.permissions || [],
+    isSuperAdmin: user.isSuperAdmin || false,
+  };
+
+  tenantContext.run(context, () => {
     next();
   });
+};
+
+export const getTenantContext = (): TenantContext => {
+  const context = tenantContext.getStore();
+  if (!context) {
+    throw new Error('Tenant context is not available outside of request lifecycle.');
+  }
+  return context;
 };

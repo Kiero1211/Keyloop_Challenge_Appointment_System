@@ -5,7 +5,5 @@ Dockerfile*
 *.log*
 .env*
 coverage/
-
-# C# / .NET
-bin/
-obj/
+dist/
+build/

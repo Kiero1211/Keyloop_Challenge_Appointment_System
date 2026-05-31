@@ -1,4 +1,4 @@
-import { ICacheProvider } from '../../application/ports/cache-provider.port';
+import { ICacheProvider } from '@/application/ports/cache-provider.port';
 import Redis from 'ioredis';
 
 export class RedisCacheAdapter implements ICacheProvider {

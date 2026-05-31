@@ -1,4 +1,4 @@
-import { DomainValidationException } from '../exceptions';
+import { DomainValidationException } from '@/domain/exceptions';
 import { validate as uuidValidate, version as uuidVersion } from 'uuid';
 
 export class CommandId {

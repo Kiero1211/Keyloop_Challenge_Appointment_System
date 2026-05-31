@@ -1,5 +1,5 @@
-import { app } from './app';
-import { container } from '../di/container';
+import { app } from '@/infrastructure/http/app';
+import { container } from '@/infrastructure/di/container';
 
 const port = process.env.PORT || 3000;
 

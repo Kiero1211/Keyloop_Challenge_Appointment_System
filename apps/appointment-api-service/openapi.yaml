@@ -1,0 +1,1276 @@
+openapi: "3.1.0"
+info:
+  title: Keyloop — Multi-Tenant Vehicle Service Appointment API
+  version: "1.0.0"
+  description: |
+    REST API for a multi-tenant vehicle service appointment system.
+    All protected endpoints require a Bearer JWT in the Authorization header.
+    All tenant-scoped endpoints require the `x-tenant-id` header matching the JWT `tenant_id` claim.
+
+servers:
+  - url: http://localhost:3000/api/v1
+    description: Local development
+
+tags:
+  - name: Auth
+    description: Public authentication endpoints
+  - name: Tenants
+    description: Tenant management (Admin only)
+  - name: Customers
+    description: Tenant-scoped customer management
+  - name: Vehicles
+    description: Tenant-scoped vehicle management
+  - name: ServiceTypes
+    description: Tenant-scoped service type management
+  - name: Technicians
+    description: Tenant-scoped technician management
+  - name: TechnicianSkills
+    description: Tenant-scoped technician skill associations
+  - name: ServiceBays
+    description: Tenant-scoped service bay management
+  - name: Appointments
+    description: Tenant-scoped appointment management
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Security
+# ─────────────────────────────────────────────────────────────────────────────
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  parameters:
+    XTenantId:
+      name: x-tenant-id
+      in: header
+      required: true
+      description: UUID of the target tenant. Must match the `tenant_id` claim in the JWT (unless isSuperAdmin).
+      schema:
+        type: string
+        format: uuid
+
+  schemas:
+    # ── Common ────────────────────────────────────────────────────────────────
+    ErrorResponse:
+      type: object
+      required: [code, message]
+      properties:
+        code:
+          type: string
+          example: VALIDATION_ERROR
+        message:
+          type: string
+          example: Validation failed
+        details:
+          type: array
+          items:
+            type: object
+            properties:
+              field:
+                type: string
+              message:
+                type: string
+
+    PaginationMeta:
+      type: object
+      properties:
+        page:
+          type: integer
+        pageSize:
+          type: integer
+        total:
+          type: integer
+
+    # ── Auth ──────────────────────────────────────────────────────────────────
+    RegisterRequest:
+      type: object
+      required: [email, password, firstName, lastName]
+      properties:
+        email:
+          type: string
+          format: email
+        password:
+          type: string
+          minLength: 8
+        firstName:
+          type: string
+        lastName:
+          type: string
+        tenantId:
+          type: string
+          format: uuid
+          description: Optional. If provided, user is immediately enrolled in this tenant and tokens are issued.
+
+    LoginRequest:
+      type: object
+      required: [email, password]
+      properties:
+        email:
+          type: string
+          format: email
+        password:
+          type: string
+
+    UserTenantDto:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        tenantId:
+          type: string
+          format: uuid
+        tenantName:
+          type: string
+        role:
+          type: string
+          enum: [Admin, TenantUser]
+        permissions:
+          type: array
+          items:
+            type: string
+        isActive:
+          type: boolean
+
+    AuthResponse:
+      type: object
+      properties:
+        accessToken:
+          type: string
+        refreshToken:
+          type: string
+        user:
+          type: object
+          properties:
+            id:
+              type: string
+              format: uuid
+            email:
+              type: string
+            firstName:
+              type: string
+            lastName:
+              type: string
+            role:
+              type: string
+            isSuperAdmin:
+              type: boolean
+        currentTenant:
+          $ref: '#/components/schemas/UserTenantDto'
+          nullable: true
+        tenants:
+          type: array
+          items:
+            $ref: '#/components/schemas/UserTenantDto'
+        hasMultipleTenants:
+          type: boolean
+
+    RefreshRequest:
+      type: object
+      required: [refreshToken]
+      properties:
+        refreshToken:
+          type: string
+
+    SwitchTenantRequest:
+      type: object
+      required: [tenantId]
+      properties:
+        targetTenantId:
+          type: string
+          format: uuid
+        refreshToken:
+          type: string
+          
+    # ── Tenant ────────────────────────────────────────────────────────────────
+    TenantRequest:
+      type: object
+      required: [name, contactEmail]
+      properties:
+        name:
+          type: string
+          maxLength: 255
+        contactEmail:
+          type: string
+          format: email
+
+    TenantResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        contactEmail:
+          type: string
+        isActive:
+          type: boolean
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    # ── Customer ──────────────────────────────────────────────────────────────
+    CustomerRequest:
+      type: object
+      required: [firstName, lastName, email]
+      properties:
+        firstName:
+          type: string
+          maxLength: 100
+        lastName:
+          type: string
+          maxLength: 100
+        email:
+          type: string
+          format: email
+        phone:
+          type: string
+          maxLength: 30
+
+    CustomerResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        tenantId:
+          type: string
+          format: uuid
+        firstName:
+          type: string
+        lastName:
+          type: string
+        email:
+          type: string
+        phone:
+          type: string
+          nullable: true
+        isActive:
+          type: boolean
+        createdAt:
+          type: string
+          format: date-time
+
+    # ── Vehicle ───────────────────────────────────────────────────────────────
+    VehicleRequest:
+      type: object
+      required: [customerId, licensePlate, make, model, year]
+      properties:
+        customerId:
+          type: string
+          format: uuid
+        licensePlate:
+          type: string
+          maxLength: 20
+        make:
+          type: string
+          maxLength: 100
+        model:
+          type: string
+          maxLength: 100
+        year:
+          type: integer
+          minimum: 1900
+          maximum: 2100
+
+    VehicleResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        tenantId:
+          type: string
+          format: uuid
+        customerId:
+          type: string
+          format: uuid
+        licensePlate:
+          type: string
+        make:
+          type: string
+        model:
+          type: string
+        year:
+          type: integer
+        createdAt:
+          type: string
+          format: date-time
+
+    # ── ServiceType ───────────────────────────────────────────────────────────
+    ServiceTypeRequest:
+      type: object
+      required: [name, estimatedDurationMinutes]
+      properties:
+        name:
+          type: string
+          maxLength: 255
+        estimatedDurationMinutes:
+          type: integer
+          minimum: 1
+
+    ServiceTypeResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        tenantId:
+          type: string
+          format: uuid
+        name:
+          type: string
+        estimatedDurationMinutes:
+          type: integer
+        createdAt:
+          type: string
+          format: date-time
+
+    # ── Technician ────────────────────────────────────────────────────────────
+    TechnicianRequest:
+      type: object
+      required: [firstName, lastName, email]
+      properties:
+        firstName:
+          type: string
+          maxLength: 100
+        lastName:
+          type: string
+          maxLength: 100
+        email:
+          type: string
+          format: email
+
+    TechnicianResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        tenantId:
+          type: string
+          format: uuid
+        firstName:
+          type: string
+        lastName:
+          type: string
+        email:
+          type: string
+        isActive:
+          type: boolean
+        createdAt:
+          type: string
+          format: date-time
+
+    # ── TechnicianSkill ───────────────────────────────────────────────────────
+    TechnicianSkillRequest:
+      type: object
+      required: [technicianId, serviceTypeId]
+      properties:
+        technicianId:
+          type: string
+          format: uuid
+        serviceTypeId:
+          type: string
+          format: uuid
+
+    TechnicianSkillResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        tenantId:
+          type: string
+          format: uuid
+        technicianId:
+          type: string
+          format: uuid
+        serviceTypeId:
+          type: string
+          format: uuid
+        createdAt:
+          type: string
+          format: date-time
+
+    # ── ServiceBay ────────────────────────────────────────────────────────────
+    ServiceBayRequest:
+      type: object
+      required: [name]
+      properties:
+        name:
+          type: string
+          maxLength: 100
+
+    ServiceBayResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        tenantId:
+          type: string
+          format: uuid
+        name:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+
+    # ── Appointment ───────────────────────────────────────────────────────────
+    AppointmentCreateRequest:
+      type: object
+      required: [customerId, vehicleId, serviceTypeId, technicianId, serviceBayId, startTime, endTime]
+      properties:
+        customerId:
+          type: string
+          format: uuid
+        vehicleId:
+          type: string
+          format: uuid
+        serviceTypeId:
+          type: string
+          format: uuid
+        technicianId:
+          type: string
+          format: uuid
+        serviceBayId:
+          type: string
+          format: uuid
+        startTime:
+          type: string
+          format: date-time
+          description: Must be in the future
+        endTime:
+          type: string
+          format: date-time
+          description: Must be strictly after startTime
+        notes:
+          type: string
+          maxLength: 1000
+
+    AppointmentUpdateRequest:
+      type: object
+      properties:
+        status:
+          type: string
+          enum: [CONFIRMED, COMPLETED, CANCELLED]
+        notes:
+          type: string
+          maxLength: 1000
+
+    AppointmentResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        tenantId:
+          type: string
+          format: uuid
+        customerId:
+          type: string
+          format: uuid
+        vehicleId:
+          type: string
+          format: uuid
+        serviceTypeId:
+          type: string
+          format: uuid
+        technicianId:
+          type: string
+          format: uuid
+        serviceBayId:
+          type: string
+          format: uuid
+        startTime:
+          type: string
+          format: date-time
+        endTime:
+          type: string
+          format: date-time
+        status:
+          type: string
+          enum: [PENDING, CONFIRMED, COMPLETED, CANCELLED]
+        notes:
+          type: string
+          nullable: true
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Paths
+# ─────────────────────────────────────────────────────────────────────────────
+paths:
+
+  # ── Auth ────────────────────────────────────────────────────────────────────
+  /auth/register:
+    post:
+      tags: [Auth]
+      summary: Register a new user
+      description: |
+        Creates a new platform user. If `tenantId` is provided, the user is enrolled in that tenant
+        immediately and `accessToken` / `refreshToken` are returned. Without `tenantId`, tokens are
+        empty strings and the user must wait for Admin assignment.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RegisterRequest'
+      responses:
+        "201":
+          description: User registered
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthResponse'
+        "400":
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        "404":
+          description: Tenant not found (when tenantId provided)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        "409":
+          description: Email already registered
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /auth/login:
+    post:
+      tags: [Auth]
+      summary: Login with email and password
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+      responses:
+        "200":
+          description: Login successful
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthResponse'
+        "401":
+          description: Invalid credentials, deactivated account, or no active tenant membership
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /auth/refresh:
+    post:
+      tags: [Auth]
+      summary: Refresh access token
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RefreshRequest'
+      responses:
+        "200":
+          description: New access token issued
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  accessToken:
+                    type: string
+        "401":
+          description: Invalid, expired, or revoked refresh token
+
+  /auth/logout:
+    post:
+      tags: [Auth]
+      summary: Logout — revoke refresh token
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RefreshRequest'
+      responses:
+        "200":
+          description: Logged out successfully
+
+  /auth/switch-tenant:
+    post:
+      tags: [Auth]
+      summary: Switch active tenant context (issues new token pair)
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SwitchTenantRequest'
+      responses:
+        "200":
+          description: Tenant switched, new tokens issued
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthResponse'
+        "401":
+          description: User not a member of the target tenant
+
+  /auth/tenants:
+    get:
+      tags: [Auth]
+      summary: List tenants the current user belongs to
+      security:
+        - BearerAuth: []
+      responses:
+        "200":
+          description: Tenant list
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/UserTenantDto'
+
+  # ── Tenants (Admin only) ────────────────────────────────────────────────────
+  /tenants:
+    get:
+      tags: [Tenants]
+      summary: List all tenants (Admin only)
+      security:
+        - BearerAuth: []
+      parameters:
+        - { name: page, in: query, schema: { type: integer, default: 1 } }
+        - { name: pageSize, in: query, schema: { type: integer, default: 20, maximum: 100 } }
+      responses:
+        "200":
+          description: Tenant list
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/TenantResponse'
+                  meta:
+                    $ref: '#/components/schemas/PaginationMeta'
+        "403":
+          description: Not an Admin
+
+    post:
+      tags: [Tenants]
+      summary: Create a new tenant (Admin only)
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TenantRequest'
+      responses:
+        "201":
+          description: Tenant created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TenantResponse'
+        "403":
+          description: Not an Admin
+        "409":
+          description: Tenant name already exists
+
+  /tenants/{tenantId}:
+    parameters:
+      - name: tenantId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+    get:
+      tags: [Tenants]
+      summary: Get a tenant by ID (Admin only)
+      security:
+        - BearerAuth: []
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TenantResponse'
+        "403": { description: Not an Admin }
+        "404": { description: Tenant not found }
+    put:
+      tags: [Tenants]
+      summary: Update a tenant (Admin only)
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TenantRequest'
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TenantResponse'
+        "403": { description: Not an Admin }
+        "404": { description: Tenant not found }
+    delete:
+      tags: [Tenants]
+      summary: Soft-delete a tenant (Admin only)
+      security:
+        - BearerAuth: []
+      responses:
+        "204": { description: Tenant deactivated }
+        "403": { description: Not an Admin }
+        "404": { description: Tenant not found }
+
+  # ── Customers ───────────────────────────────────────────────────────────────
+  /customers:
+    parameters:
+      - $ref: '#/components/parameters/XTenantId'
+    get:
+      tags: [Customers]
+      summary: List customers
+      security:
+        - BearerAuth: []
+      parameters:
+        - { name: page, in: query, schema: { type: integer, default: 1 } }
+        - { name: pageSize, in: query, schema: { type: integer, default: 20, maximum: 100 } }
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data: { type: array, items: { $ref: '#/components/schemas/CustomerResponse' } }
+                  meta: { $ref: '#/components/schemas/PaginationMeta' }
+        "400": { description: Missing x-tenant-id header }
+        "403": { description: x-tenant-id does not match JWT }
+    post:
+      tags: [Customers]
+      summary: Create a customer
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CustomerRequest'
+      responses:
+        "201":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CustomerResponse'
+        "409": { description: Email already exists in this tenant }
+
+  /customers/{id}:
+    parameters:
+      - $ref: '#/components/parameters/XTenantId'
+      - { name: id, in: path, required: true, schema: { type: string, format: uuid } }
+    get:
+      tags: [Customers]
+      summary: Get a customer
+      security:
+        - BearerAuth: []
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CustomerResponse'
+        "404": { description: Customer not found }
+    put:
+      tags: [Customers]
+      summary: Update a customer
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CustomerRequest'
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CustomerResponse'
+    delete:
+      tags: [Customers]
+      summary: Soft-delete a customer
+      security:
+        - BearerAuth: []
+      responses:
+        "204": { description: Customer deleted }
+        "409": { description: Customer has active appointments }
+
+  # ── Vehicles ────────────────────────────────────────────────────────────────
+  /vehicles:
+    parameters:
+      - $ref: '#/components/parameters/XTenantId'
+    get:
+      tags: [Vehicles]
+      summary: List vehicles
+      security:
+        - BearerAuth: []
+      parameters:
+        - { name: customerId, in: query, schema: { type: string, format: uuid } }
+        - { name: page, in: query, schema: { type: integer, default: 1 } }
+        - { name: pageSize, in: query, schema: { type: integer, default: 20, maximum: 100 } }
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data: { type: array, items: { $ref: '#/components/schemas/VehicleResponse' } }
+                  meta: { $ref: '#/components/schemas/PaginationMeta' }
+    post:
+      tags: [Vehicles]
+      summary: Create a vehicle
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/VehicleRequest'
+      responses:
+        "201":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/VehicleResponse'
+        "422": { description: Customer does not belong to this tenant }
+
+  /vehicles/{id}:
+    parameters:
+      - $ref: '#/components/parameters/XTenantId'
+      - { name: id, in: path, required: true, schema: { type: string, format: uuid } }
+    get:
+      tags: [Vehicles]
+      summary: Get a vehicle
+      security:
+        - BearerAuth: []
+      responses:
+        "200": { content: { application/json: { schema: { $ref: '#/components/schemas/VehicleResponse' } } } }
+        "404": { description: Vehicle not found }
+    put:
+      tags: [Vehicles]
+      summary: Update a vehicle
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/VehicleRequest'
+      responses:
+        "200": { content: { application/json: { schema: { $ref: '#/components/schemas/VehicleResponse' } } } }
+    delete:
+      tags: [Vehicles]
+      summary: Soft-delete a vehicle
+      security:
+        - BearerAuth: []
+      responses:
+        "204": { description: Vehicle deleted }
+        "409": { description: Vehicle referenced by active appointment }
+
+  # ── ServiceTypes ─────────────────────────────────────────────────────────────
+  /service-types:
+    parameters:
+      - $ref: '#/components/parameters/XTenantId'
+    get:
+      tags: [ServiceTypes]
+      summary: List service types
+      security:
+        - BearerAuth: []
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data: { type: array, items: { $ref: '#/components/schemas/ServiceTypeResponse' } }
+                  meta: { $ref: '#/components/schemas/PaginationMeta' }
+    post:
+      tags: [ServiceTypes]
+      summary: Create a service type
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ServiceTypeRequest'
+      responses:
+        "201": { content: { application/json: { schema: { $ref: '#/components/schemas/ServiceTypeResponse' } } } }
+        "409": { description: Name already exists in this tenant }
+
+  /service-types/{id}:
+    parameters:
+      - $ref: '#/components/parameters/XTenantId'
+      - { name: id, in: path, required: true, schema: { type: string, format: uuid } }
+    get:
+      tags: [ServiceTypes]
+      summary: Get a service type
+      security:
+        - BearerAuth: []
+      responses:
+        "200": { content: { application/json: { schema: { $ref: '#/components/schemas/ServiceTypeResponse' } } } }
+    put:
+      tags: [ServiceTypes]
+      summary: Update a service type
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ServiceTypeRequest'
+      responses:
+        "200": { content: { application/json: { schema: { $ref: '#/components/schemas/ServiceTypeResponse' } } } }
+    delete:
+      tags: [ServiceTypes]
+      summary: Soft-delete a service type
+      security:
+        - BearerAuth: []
+      responses:
+        "204": { description: Deleted }
+        "409": { description: Referenced by active appointment }
+
+  # ── Technicians ──────────────────────────────────────────────────────────────
+  /technicians:
+    parameters:
+      - $ref: '#/components/parameters/XTenantId'
+    get:
+      tags: [Technicians]
+      summary: List technicians
+      security:
+        - BearerAuth: []
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data: { type: array, items: { $ref: '#/components/schemas/TechnicianResponse' } }
+                  meta: { $ref: '#/components/schemas/PaginationMeta' }
+    post:
+      tags: [Technicians]
+      summary: Create a technician
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TechnicianRequest'
+      responses:
+        "201": { content: { application/json: { schema: { $ref: '#/components/schemas/TechnicianResponse' } } } }
+        "409": { description: Email already exists in this tenant }
+
+  /technicians/{id}:
+    parameters:
+      - $ref: '#/components/parameters/XTenantId'
+      - { name: id, in: path, required: true, schema: { type: string, format: uuid } }
+    get:
+      tags: [Technicians]
+      summary: Get a technician
+      security:
+        - BearerAuth: []
+      responses:
+        "200": { content: { application/json: { schema: { $ref: '#/components/schemas/TechnicianResponse' } } } }
+    put:
+      tags: [Technicians]
+      summary: Update a technician
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TechnicianRequest'
+      responses:
+        "200": { content: { application/json: { schema: { $ref: '#/components/schemas/TechnicianResponse' } } } }
+    delete:
+      tags: [Technicians]
+      summary: Soft-delete a technician
+      security:
+        - BearerAuth: []
+      responses:
+        "204": { description: Deleted }
+
+  # ── TechnicianSkills ─────────────────────────────────────────────────────────
+  /technician-skills:
+    parameters:
+      - $ref: '#/components/parameters/XTenantId'
+    get:
+      tags: [TechnicianSkills]
+      summary: List skill associations (optionally filter by technicianId)
+      security:
+        - BearerAuth: []
+      parameters:
+        - { name: technicianId, in: query, schema: { type: string, format: uuid } }
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/TechnicianSkillResponse'
+    post:
+      tags: [TechnicianSkills]
+      summary: Add a skill to a technician
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TechnicianSkillRequest'
+      responses:
+        "201": { content: { application/json: { schema: { $ref: '#/components/schemas/TechnicianSkillResponse' } } } }
+        "409": { description: Association already exists }
+        "422": { description: Technician or ServiceType does not belong to this tenant }
+
+  /technician-skills/{id}:
+    parameters:
+      - $ref: '#/components/parameters/XTenantId'
+      - { name: id, in: path, required: true, schema: { type: string, format: uuid } }
+    delete:
+      tags: [TechnicianSkills]
+      summary: Remove a skill from a technician
+      security:
+        - BearerAuth: []
+      responses:
+        "204": { description: Association removed }
+        "404": { description: Association not found }
+
+  # ── ServiceBays ──────────────────────────────────────────────────────────────
+  /service-bays:
+    parameters:
+      - $ref: '#/components/parameters/XTenantId'
+    get:
+      tags: [ServiceBays]
+      summary: List service bays
+      security:
+        - BearerAuth: []
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data: { type: array, items: { $ref: '#/components/schemas/ServiceBayResponse' } }
+                  meta: { $ref: '#/components/schemas/PaginationMeta' }
+    post:
+      tags: [ServiceBays]
+      summary: Create a service bay
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ServiceBayRequest'
+      responses:
+        "201": { content: { application/json: { schema: { $ref: '#/components/schemas/ServiceBayResponse' } } } }
+        "409": { description: Name already exists in this tenant }
+
+  /service-bays/{id}:
+    parameters:
+      - $ref: '#/components/parameters/XTenantId'
+      - { name: id, in: path, required: true, schema: { type: string, format: uuid } }
+    get:
+      tags: [ServiceBays]
+      summary: Get a service bay
+      security:
+        - BearerAuth: []
+      responses:
+        "200": { content: { application/json: { schema: { $ref: '#/components/schemas/ServiceBayResponse' } } } }
+    put:
+      tags: [ServiceBays]
+      summary: Update a service bay
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ServiceBayRequest'
+      responses:
+        "200": { content: { application/json: { schema: { $ref: '#/components/schemas/ServiceBayResponse' } } } }
+    delete:
+      tags: [ServiceBays]
+      summary: Soft-delete a service bay
+      security:
+        - BearerAuth: []
+      responses:
+        "204": { description: Deleted }
+
+  # ── Appointments ─────────────────────────────────────────────────────────────
+  /appointments:
+    parameters:
+      - $ref: '#/components/parameters/XTenantId'
+    get:
+      tags: [Appointments]
+      summary: List appointments with optional filters
+      security:
+        - BearerAuth: []
+      parameters:
+        - { name: date, in: query, schema: { type: string, format: date }, description: "Filter by date (YYYY-MM-DD) — matches start_time" }
+        - { name: status, in: query, schema: { type: string, enum: [PENDING, CONFIRMED, COMPLETED, CANCELLED] } }
+        - { name: technicianId, in: query, schema: { type: string, format: uuid } }
+        - { name: serviceBayId, in: query, schema: { type: string, format: uuid } }
+        - { name: page, in: query, schema: { type: integer, default: 1 } }
+        - { name: pageSize, in: query, schema: { type: integer, default: 20, maximum: 100 } }
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data: { type: array, items: { $ref: '#/components/schemas/AppointmentResponse' } }
+                  meta: { $ref: '#/components/schemas/PaginationMeta' }
+    post:
+      tags: [Appointments]
+      summary: Create an appointment (direct CRUD path — synchronous)
+      description: |
+        Creates and persists an appointment directly in PostgreSQL. 
+        This is the synchronous CRUD path; the async ingestion path via Redis Stream
+        is still available at `POST /api/v1/appointments` for high-throughput scenarios.
+        Performs overlap detection for Technician and ServiceBay before persisting.
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AppointmentCreateRequest'
+      responses:
+        "201":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AppointmentResponse'
+        "400": { description: "end_time <= start_time or start_time in the past" }
+        "409": { description: Technician or ServiceBay double-booking conflict }
+        "422": { description: Referenced entity does not belong to this tenant }
+
+  /appointments/{id}:
+    parameters:
+      - $ref: '#/components/parameters/XTenantId'
+      - { name: id, in: path, required: true, schema: { type: string, format: uuid } }
+    get:
+      tags: [Appointments]
+      summary: Get an appointment by ID (with enriched details)
+      security:
+        - BearerAuth: []
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/AppointmentResponse'
+                  - type: object
+                    properties:
+                      customer:
+                        type: object
+                        properties:
+                          firstName: { type: string }
+                          lastName: { type: string }
+                      vehicle:
+                        type: object
+                        properties:
+                          licensePlate: { type: string }
+                          make: { type: string }
+                          model: { type: string }
+                          year: { type: integer }
+                      serviceType:
+                        type: object
+                        properties:
+                          name: { type: string }
+                      technician:
+                        type: object
+                        properties:
+                          firstName: { type: string }
+                          lastName: { type: string }
+                      serviceBay:
+                        type: object
+                        properties:
+                          name: { type: string }
+        "403": { description: Appointment belongs to a different tenant }
+        "404": { description: Appointment not found }
+    patch:
+      tags: [Appointments]
+      summary: Update appointment status or notes
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AppointmentUpdateRequest'
+      responses:
+        "200": { content: { application/json: { schema: { $ref: '#/components/schemas/AppointmentResponse' } } } }
+        "422": { description: Invalid status transition }
+    delete:
+      tags: [Appointments]
+      summary: Cancel (soft-delete) an appointment
+      security:
+        - BearerAuth: []
+      responses:
+        "204": { description: Appointment cancelled }
+        "422": { description: Appointment is already COMPLETED and cannot be cancelled }

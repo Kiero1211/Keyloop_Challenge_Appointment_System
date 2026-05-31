@@ -1,6 +1,6 @@
 import { Router } from 'express';
-import { container } from '../../di/container';
-import { createAppointmentSchema } from '../../../application/commands/create-appointment.command';
+import { container } from '@/infrastructure/di/container';
+import { createAppointmentSchema } from '@/application/commands/create-appointment.command';
 
 const router = Router();
 

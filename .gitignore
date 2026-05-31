@@ -19,3 +19,8 @@ obj/
 *.user
 *.suo
 packages/
+/auth-service
+package-lock.json
+apps/appointment-api-service/.vscode/launch.json
+apps/appointment-api-service/src/infrastructure/db/migrations/meta/0000_snapshot.json
+apps/appointment-api-service/src/infrastructure/db/migrations/meta/_journal.json

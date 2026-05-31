@@ -1,0 +1,24 @@
+import { IServiceTypeRepository } from '@/application/ports/repositories/service-type.repository.port';
+import { IAppointmentCrudRepository } from '@/application/ports/repositories/appointment-crud.repository.port';
+import { ConflictException, NotFoundException } from '@/domain/exceptions';
+
+export class DeleteServiceTypeUseCase {
+  constructor(
+    private readonly serviceTypeRepo: IServiceTypeRepository,
+    private readonly appointmentRepo: IAppointmentCrudRepository
+  ) {}
+
+  async execute(tenantId: string, id: string): Promise<void> {
+    const existing = await this.serviceTypeRepo.findById(tenantId, id);
+    if (!existing) {
+      throw new NotFoundException(`Service type not found`);
+    }
+
+    const { total } = await this.appointmentRepo.findAll(tenantId, { serviceTypeId: id }, 1, 0);
+    if (total > 0) {
+      throw new ConflictException(`Cannot delete service type that is referenced by appointments`);
+    }
+
+    await this.serviceTypeRepo.softDelete(tenantId, id);
+  }
+}

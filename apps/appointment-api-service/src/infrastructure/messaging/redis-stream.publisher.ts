@@ -1,6 +1,6 @@
-import { IMessagePublisher } from '../../application/ports/message-publisher.port';
+import { IMessagePublisher } from '@/application/ports/message-publisher.port';
 import Redis from 'ioredis';
-import { StreamPublishException } from '../../domain/exceptions';
+import { StreamPublishException } from '@/domain/exceptions';
 
 export class RedisStreamPublisher implements IMessagePublisher {
   constructor(private readonly redisClient: Redis) {}
