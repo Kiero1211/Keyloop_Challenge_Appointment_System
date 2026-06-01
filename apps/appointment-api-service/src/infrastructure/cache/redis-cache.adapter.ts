@@ -13,8 +13,22 @@ export class RedisCacheAdapter implements ICacheProvider {
     return this.redisClient.get(key);
   }
 
-  async hset(key: string, fields: Record<string, string>): Promise<void> {
-    await this.redisClient.hset(key, fields);
+  async hset(key: string, fields: Record<string, string>, ttlSeconds?: number): Promise<void> {
+    if (Object.keys(fields).length === 0) return;
+    
+    if (ttlSeconds !== undefined && ttlSeconds > 0) {
+      const pipeline = this.redisClient.pipeline();
+      pipeline.hset(key, fields);
+      pipeline.expire(key, ttlSeconds);
+      await pipeline.exec();
+    } else {
+      await this.redisClient.hset(key, fields);
+    }
+  }
+
+  async expire(key: string, seconds: number): Promise<boolean> {
+    const result = await this.redisClient.expire(key, seconds);
+    return result === 1;
   }
 
   async hgetall(key: string): Promise<Record<string, string> | null> {

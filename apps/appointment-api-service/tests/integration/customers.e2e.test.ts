@@ -76,6 +76,23 @@ describe('Customers API E2E', () => {
     });
   });
 
+  describe('GET /api/v1/customers/:id', () => {
+    it('should return customer and cache it', async () => {
+      const response1 = await request(app)
+        .get(`/api/v1/customers/${customerId}`)
+        .set('Authorization', `Bearer ${token1}`)
+        .set('x-tenant-id', tenantId1);
+
+      expect(response1.status).toBe(200);
+      expect(response1.body.id).toBe(customerId);
+
+      // Verify it is in cache
+      const cached = await container.cacheProvider.hgetall(`${tenantId1}:Customer:${customerId}`);
+      expect(cached).toBeDefined();
+      expect(cached!.email).toBe('john.doe@example.com');
+    });
+  });
+
   describe('PUT /api/v1/customers/:id', () => {
     it('should update customer successfully', async () => {
       const response = await request(app)

@@ -40,7 +40,7 @@ describe('Appointment Status E2E', () => {
       serviceBayId: sb.id,
       scheduledStartTime: new Date(),
       scheduledEndTime: new Date(Date.now() + 3600000),
-      status: 'PENDING'
+      status: 'Scheduled'
     }).returning();
     appointmentId = appt[0].id;
   });
@@ -56,34 +56,34 @@ describe('Appointment Status E2E', () => {
   });
 
   describe('PATCH /api/v1/appointments/:id/status', () => {
-    it('should transition to CONFIRMED successfully', async () => {
+    it('should transition to InProgress successfully', async () => {
       const response = await request(app)
         .patch(`/api/v1/appointments/${appointmentId}/status`)
         .set('Authorization', `Bearer ${token1}`)
         .set('x-tenant-id', tenantId1)
-        .send({ status: 'CONFIRMED' });
+        .send({ status: 'InProgress' });
 
       expect(response.status).toBe(200);
-      expect(response.body.status).toBe('CONFIRMED');
+      expect(response.body.status).toBe('InProgress');
     });
 
-    it('should transition to COMPLETED successfully', async () => {
+    it('should transition to Completed successfully', async () => {
       const response = await request(app)
         .patch(`/api/v1/appointments/${appointmentId}/status`)
         .set('Authorization', `Bearer ${token1}`)
         .set('x-tenant-id', tenantId1)
-        .send({ status: 'COMPLETED' });
+        .send({ status: 'Completed' });
 
       expect(response.status).toBe(200);
-      expect(response.body.status).toBe('COMPLETED');
+      expect(response.body.status).toBe('Completed');
     });
 
-    it('should block transition from COMPLETED to CANCELLED (422)', async () => {
+    it('should block transition from Completed to Cancelled (422)', async () => {
       const response = await request(app)
         .patch(`/api/v1/appointments/${appointmentId}/status`)
         .set('Authorization', `Bearer ${token1}`)
         .set('x-tenant-id', tenantId1)
-        .send({ status: 'CANCELLED' });
+        .send({ status: 'Cancelled' });
 
       expect(response.status).toBe(422);
     });

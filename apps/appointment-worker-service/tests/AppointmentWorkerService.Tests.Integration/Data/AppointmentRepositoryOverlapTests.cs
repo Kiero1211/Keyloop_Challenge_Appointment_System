@@ -187,17 +187,6 @@ public class AppointmentRepositoryOverlapTests : IAsyncLifetime
 
         Assert.True(result);
     }
-    [Fact]
-    public async Task GivenRejectedRecord_WhenCheckTechnicianOverlap_ThenReturnsFalse()
-    {
-        var start = DateTimeOffset.UtcNow.AddHours(1);
-        var end = start.AddHours(1);
-        await SeedRecordAsync("tech-1", "bay-1", AppointmentStatus.Rejected, start, end);
-
-        var result = await _sut.HasTechnicianOverlapAsync("tech-1", start, end, CancellationToken.None);
-
-        Assert.False(result);
-    }
 
     [Fact]
     public async Task GivenExactMatchSlot_WhenCheckBayOverlap_ThenReturnsTrue()

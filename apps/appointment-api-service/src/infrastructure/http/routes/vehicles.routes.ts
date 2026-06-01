@@ -37,7 +37,7 @@ router.get('/', async (req, res, next) => {
 router.get('/:id', async (req, res, next) => {
   try {
     const tenantId = tenantContext.getStore()!.tenantId;
-    const useCase = new GetVehicleUseCase(container.vehicleRepository);
+    const useCase = new GetVehicleUseCase(container.vehicleRepository, container.cacheProvider);
     const result = await useCase.execute(tenantId, req.params.id);
     res.json(result);
   } catch (error) {
@@ -49,7 +49,7 @@ router.put('/:id', async (req, res, next) => {
   try {
     const tenantId = tenantContext.getStore()!.tenantId;
     const data = updateVehicleSchema.parse(req.body);
-    const useCase = new UpdateVehicleUseCase(container.vehicleRepository);
+    const useCase = new UpdateVehicleUseCase(container.vehicleRepository, container.cacheProvider);
     const result = await useCase.execute(tenantId, req.params.id, data);
     res.json(result);
   } catch (error) {
@@ -60,7 +60,7 @@ router.put('/:id', async (req, res, next) => {
 router.delete('/:id', async (req, res, next) => {
   try {
     const tenantId = tenantContext.getStore()!.tenantId;
-    const useCase = new DeleteVehicleUseCase(container.vehicleRepository);
+    const useCase = new DeleteVehicleUseCase(container.vehicleRepository, container.cacheProvider);
     await useCase.execute(tenantId, req.params.id);
     res.status(204).send();
   } catch (error) {

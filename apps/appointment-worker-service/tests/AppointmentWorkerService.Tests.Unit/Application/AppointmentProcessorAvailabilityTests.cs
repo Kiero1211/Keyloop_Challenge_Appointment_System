@@ -134,6 +134,25 @@ public class AppointmentProcessorAvailabilityTests
     }
 
     [Fact]
+    public async Task GivenDbConcurrencyException_WhenProcessAsync_ThenSetsStatusToCancelled()
+    {
+        var message = CreateMessage();
+        _validatorMock.Setup(x => x.ValidateAsync(message, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new FluentValidation.Results.ValidationResult());
+        _techServiceMock.Setup(x => x.ValidateAndCheckAvailabilityAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<DateTimeOffset>(), It.IsAny<DateTimeOffset>(), It.IsAny<CancellationToken>()))
+            .Returns(Task.CompletedTask);
+        _bayServiceMock.Setup(x => x.ValidateAndCheckAvailabilityAsync(It.IsAny<string>(), It.IsAny<DateTimeOffset>(), It.IsAny<DateTimeOffset>(), It.IsAny<CancellationToken>()))
+            .Returns(Task.CompletedTask);
+
+        _apptRepoMock.Setup(x => x.AddAsync(It.IsAny<TrackingRecord>(), It.IsAny<CancellationToken>()))
+            .ThrowsAsync(new Microsoft.EntityFrameworkCore.DbUpdateConcurrencyException());
+
+        await _sut.ProcessAsync(message, "msg-1", CancellationToken.None);
+
+        _cacheMock.Verify(x => x.SetAsync(It.IsAny<string>(), It.Is<TrackingRecord>(r => r.Status == AppointmentStatus.Cancelled), It.IsAny<TimeSpan?>()), Times.Once);
+    }
+
+    [Fact]
     public async Task GivenBothServicesOk_WhenProcessAsync_ThenAcknowledgesStreamMessage()
     {
         var message = CreateMessage();

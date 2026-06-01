@@ -2,9 +2,6 @@ namespace AppointmentWorkerService.Core.Domain.Entities;
 
 public enum AppointmentStatus
 {
-    Pending,
-    Confirmed,
-    Rejected,
     Scheduled,
     InProgress,
     Cancelled,
@@ -22,7 +19,7 @@ public class TrackingRecord : IMustHaveTenant
     public string TechnicianId { get; set; } = string.Empty;
     public DateTimeOffset StartTime { get; set; }
     public DateTimeOffset EndTime { get; set; }
-    public AppointmentStatus Status { get; set; } = AppointmentStatus.Pending;
+    public AppointmentStatus Status { get; set; } = AppointmentStatus.Scheduled;
     public uint Version { get; set; }
 }
 

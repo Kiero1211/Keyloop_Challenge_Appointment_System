@@ -1,8 +1,13 @@
-namespace AppointmentWorkerService.Core.Application.Ports;
+using System;
+using System.Threading.Tasks;
 
-public interface ICacheProvider
+namespace AppointmentWorkerService.Core.Application.Ports
 {
-    Task SetAsync<T>(string key, T value, TimeSpan? expiration = null);
-    Task<T?> GetAsync<T>(string key);
-    Task StreamAcknowledgeAsync(string streamName, string groupName, string messageId);
+    public interface ICacheProvider
+    {
+        Task<T?> GetAsync<T>(string key);
+        Task SetAsync<T>(string key, T value, TimeSpan? ttl = null);
+        Task DeleteAsync(string key);
+        Task StreamAcknowledgeAsync(string streamName, string groupName, string messageId);
+    }
 }

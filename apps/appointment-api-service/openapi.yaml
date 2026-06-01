@@ -457,7 +457,7 @@ components:
       properties:
         status:
           type: string
-          enum: [CONFIRMED, COMPLETED, CANCELLED]
+          enum: [InProgress, Completed, Cancelled]
         notes:
           type: string
           maxLength: 1000
@@ -494,7 +494,7 @@ components:
           format: date-time
         status:
           type: string
-          enum: [PENDING, CONFIRMED, COMPLETED, CANCELLED]
+          enum: [Scheduled, InProgress, Completed, Cancelled]
         notes:
           type: string
           nullable: true
@@ -1164,7 +1164,7 @@ paths:
         - BearerAuth: []
       parameters:
         - { name: date, in: query, schema: { type: string, format: date }, description: "Filter by date (YYYY-MM-DD) — matches start_time" }
-        - { name: status, in: query, schema: { type: string, enum: [PENDING, CONFIRMED, COMPLETED, CANCELLED] } }
+        - { name: status, in: query, schema: { type: string, enum: [Scheduled, InProgress, Completed, Cancelled] } }
         - { name: technicianId, in: query, schema: { type: string, format: uuid } }
         - { name: serviceBayId, in: query, schema: { type: string, format: uuid } }
         - { name: page, in: query, schema: { type: integer, default: 1 } }

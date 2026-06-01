@@ -75,8 +75,8 @@ public class AppointmentProcessor : IAppointmentProcessor
             await _appointmentRepository.AddAsync(record, cancellationToken);
             _logger.LogInformation("Successfully saved appointment {Id} with status {Status}", record.Id, record.Status);
             
-            // Push status to Redis
-            await _cacheProvider.SetAsync($"appointment:{record.Id}", record, TimeSpan.FromHours(24));
+            // Push status to Redis (No TTL for Scheduled)
+            await _cacheProvider.SetAsync($"appointment:{record.Id}", record, null);
             
             // Mark as acknowledged in stream
             await _cacheProvider.StreamAcknowledgeAsync("appointments_stream", "worker_group", messageId);
@@ -84,10 +84,10 @@ public class AppointmentProcessor : IAppointmentProcessor
         catch (Microsoft.EntityFrameworkCore.DbUpdateConcurrencyException ex)
         {
             _logger.LogWarning(ex, "Concurrency conflict detected for appointment {Id}", record.Id);
-            record.Status = AppointmentStatus.Rejected;
+            record.Status = AppointmentStatus.Cancelled;
             
-            // Update cache with rejected status
-            await _cacheProvider.SetAsync($"appointment:{record.Id}", record, TimeSpan.FromHours(24));
+            // Update cache with rejected status (6 hours TTL for Cancelled)
+            await _cacheProvider.SetAsync($"appointment:{record.Id}", record, TimeSpan.FromHours(6));
             
             // Acknowledge stream message to avoid infinite retry loop
             await _cacheProvider.StreamAcknowledgeAsync("appointments_stream", "worker_group", messageId);

@@ -17,21 +17,28 @@ describe('UpdateAppointmentStatusUseCase', () => {
     useCase = new UpdateAppointmentStatusUseCase(mockRepo);
   });
 
-  it('should successfully transition PENDING to CONFIRMED', async () => {
-    const mockAppt: any = { id: 'a1', status: 'PENDING' };
+  it('should successfully transition Scheduled to InProgress', async () => {
+    const mockAppt: any = { id: 'a1', status: 'Scheduled' };
     mockRepo.findById.mockResolvedValue(mockAppt);
-    mockRepo.updateStatus.mockResolvedValue({ ...mockAppt, status: 'CONFIRMED' });
+    mockRepo.updateStatus.mockResolvedValue({ ...mockAppt, status: 'InProgress' });
 
-    const result = await useCase.execute('tenant1', 'a1', 'CONFIRMED');
-    expect(result.status).toBe('CONFIRMED');
-    expect(mockRepo.updateStatus).toHaveBeenCalledWith('tenant1', 'a1', 'CONFIRMED');
+    const result = await useCase.execute('tenant1', 'a1', 'InProgress');
+    expect(result.status).toBe('InProgress');
+    expect(mockRepo.updateStatus).toHaveBeenCalledWith('tenant1', 'a1', 'InProgress');
   });
 
-  it('should throw UnprocessableException for invalid transition COMPLETED to CANCELLED', async () => {
-    const mockAppt: any = { id: 'a1', status: 'COMPLETED' };
+  it('should throw DomainValidationException for invalid status string', async () => {
+    const mockAppt: any = { id: 'a1', status: 'Scheduled' };
     mockRepo.findById.mockResolvedValue(mockAppt);
 
-    await expect(useCase.execute('tenant1', 'a1', 'CANCELLED')).rejects.toThrow(UnprocessableException);
+    await expect(useCase.execute('tenant1', 'a1', 'INVALID_STATUS')).rejects.toThrow();
+  });
+
+  it('should throw UnprocessableException for invalid transition Completed to Cancelled', async () => {
+    const mockAppt: any = { id: 'a1', status: 'Completed' };
+    mockRepo.findById.mockResolvedValue(mockAppt);
+
+    await expect(useCase.execute('tenant1', 'a1', 'Cancelled')).rejects.toThrow(UnprocessableException);
   });
 
   it('should throw NotFoundException if appointment does not exist', async () => {

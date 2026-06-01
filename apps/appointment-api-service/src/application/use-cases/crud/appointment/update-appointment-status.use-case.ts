@@ -1,9 +1,18 @@
 import { IAppointmentCrudRepository } from '@/application/ports/repositories/appointment-crud.repository.port';
+import { ICacheProvider } from '@/application/ports/cache-provider.port';
 import { Appointment } from '@/domain/entities/appointment.entity';
 import { UnprocessableException, NotFoundException } from '@/domain/exceptions';
+import { ReadThroughCacheWrapper } from '../../cache/read-through-cache.wrapper';
 
 export class UpdateAppointmentStatusUseCase {
-  constructor(private appointmentRepository: IAppointmentCrudRepository) {}
+  private cacheWrapper: ReadThroughCacheWrapper<any>;
+
+  constructor(
+    private appointmentRepository: IAppointmentCrudRepository,
+    cacheProvider: ICacheProvider
+  ) {
+    this.cacheWrapper = new ReadThroughCacheWrapper<any>(cacheProvider, 'AppointmentDetail');
+  }
 
   async execute(tenantId: string, id: string, newStatus: string): Promise<Appointment> {
     const appointment = await this.appointmentRepository.findById(tenantId, id);
@@ -15,13 +24,13 @@ export class UpdateAppointmentStatusUseCase {
     const currentStatus = appointment.status;
 
     // Validate state machine
-    // PENDING -> CONFIRMED -> COMPLETED
-    // PENDING | CONFIRMED -> CANCELLED
+    // Scheduled -> InProgress -> Completed
+    // Scheduled | InProgress -> Cancelled
     const validTransitions: Record<string, string[]> = {
-      'PENDING': ['CONFIRMED', 'CANCELLED'],
-      'CONFIRMED': ['COMPLETED', 'CANCELLED'],
-      'COMPLETED': [],
-      'CANCELLED': []
+      'Scheduled': ['InProgress', 'Cancelled'],
+      'InProgress': ['Completed', 'Cancelled'],
+      'Completed': [],
+      'Cancelled': []
     };
 
     if (!validTransitions[currentStatus]?.includes(newStatus)) {
@@ -32,6 +41,10 @@ export class UpdateAppointmentStatusUseCase {
     if (!updated) {
       throw new NotFoundException('Appointment not found during update');
     }
+    
+    // Invalidate the detailed cache since status changed
+    await this.cacheWrapper.invalidate(tenantId, id);
+
     return updated;
   }
 }

@@ -64,7 +64,7 @@ router.get('/', async (req, res, next) => {
 router.get('/:id', async (req, res, next) => {
   try {
     const tenantId = tenantContext.getStore()!.tenantId;
-    const useCase = new GetAppointmentDetailUseCase(container.appointmentCrudRepository);
+    const useCase = new GetAppointmentDetailUseCase(container.appointmentCrudRepository, container.cacheProvider);
     const result = await useCase.execute(tenantId, req.params.id);
     res.json(result);
   } catch (error) {
@@ -76,7 +76,7 @@ router.patch('/:id/status', async (req, res, next) => {
   try {
     const tenantId = tenantContext.getStore()!.tenantId;
     const command = updateAppointmentStatusSchema.parse(req.body);
-    const useCase = new UpdateAppointmentStatusUseCase(container.appointmentCrudRepository);
+    const useCase = new UpdateAppointmentStatusUseCase(container.appointmentCrudRepository, container.cacheProvider);
     const result = await useCase.execute(tenantId, req.params.id, command.status);
     res.json(result);
   } catch (error) {
@@ -87,7 +87,7 @@ router.patch('/:id/status', async (req, res, next) => {
 router.delete('/:id', async (req, res, next) => {
   try {
     const tenantId = tenantContext.getStore()!.tenantId;
-    const useCase = new CancelAppointmentUseCase(container.appointmentCrudRepository);
+    const useCase = new CancelAppointmentUseCase(container.appointmentCrudRepository, container.cacheProvider);
     const result = await useCase.execute(tenantId, req.params.id);
     res.json(result);
   } catch (error) {

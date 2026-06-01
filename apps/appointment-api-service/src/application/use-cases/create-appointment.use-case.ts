@@ -79,12 +79,12 @@ export class CreateAppointmentUseCase {
       serviceBayId: command.serviceBayId,
       desiredStartTime: desiredStartTime.value,
       source: 'public',
-      status: 'pending',
+      status: 'Scheduled',
       createdAt: new Date().toISOString()
     };
 
     // Save tracking hash
-    const idempotencyKey = `tenant:${tenantId}:appointment:${vehicleId.value}:pending`;
+    const idempotencyKey = `tenant:${tenantId}:appointment:${vehicleId.value}:Scheduled`;
     await this.cacheProvider.hset(idempotencyKey, payload);
 
     // Publish to stream

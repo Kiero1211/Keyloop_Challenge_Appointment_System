@@ -36,7 +36,7 @@ router.get('/', async (req, res, next) => {
 router.get('/:id', async (req, res, next) => {
   try {
     const tenantId = tenantContext.getStore()!.tenantId;
-    const useCase = new GetCustomerUseCase(container.customerRepository);
+    const useCase = new GetCustomerUseCase(container.customerRepository, container.cacheProvider);
     const result = await useCase.execute(tenantId, req.params.id);
     res.json(result);
   } catch (error) {
@@ -48,7 +48,7 @@ router.put('/:id', async (req, res, next) => {
   try {
     const tenantId = tenantContext.getStore()!.tenantId;
     const data = updateCustomerSchema.parse(req.body);
-    const useCase = new UpdateCustomerUseCase(container.customerRepository);
+    const useCase = new UpdateCustomerUseCase(container.customerRepository, container.cacheProvider);
     const result = await useCase.execute(tenantId, req.params.id, data);
     res.json(result);
   } catch (error) {
@@ -59,7 +59,7 @@ router.put('/:id', async (req, res, next) => {
 router.delete('/:id', async (req, res, next) => {
   try {
     const tenantId = tenantContext.getStore()!.tenantId;
-    const useCase = new DeleteCustomerUseCase(container.customerRepository);
+    const useCase = new DeleteCustomerUseCase(container.customerRepository, container.cacheProvider);
     await useCase.execute(tenantId, req.params.id);
     res.status(204).send();
   } catch (error) {
