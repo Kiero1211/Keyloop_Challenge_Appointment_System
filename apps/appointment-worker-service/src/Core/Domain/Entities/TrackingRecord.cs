@@ -5,7 +5,8 @@ public enum AppointmentStatus
     Scheduled,
     InProgress,
     Cancelled,
-    Completed
+    Completed,
+    Failed
 }
 
 public class TrackingRecord : IMustHaveTenant

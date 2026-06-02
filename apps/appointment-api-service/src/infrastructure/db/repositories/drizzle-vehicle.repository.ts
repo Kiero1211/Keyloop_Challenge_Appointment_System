@@ -48,6 +48,7 @@ export class DrizzleVehicleRepository implements IVehicleRepository {
     return !!result;
   }
 
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   async hasActiveAppointments(tenantId: string, id: string): Promise<boolean> {
     return false; // placeholder implementation
   }

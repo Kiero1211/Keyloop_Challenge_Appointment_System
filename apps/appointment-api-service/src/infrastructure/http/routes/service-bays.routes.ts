@@ -4,7 +4,7 @@ import { CreateServiceBayUseCase } from '@/application/use-cases/crud/service-ba
 import { createServiceBaySchema, updateServiceBaySchema } from '@/application/commands/service-bay.command';
 import { tenantContext } from '@/domain/context/tenant-context';
 import { NotFoundException } from '@/domain/exceptions';
-import { ServiceBay } from '@/domain/entities/service-bay.entity';
+
 
 const router = Router();
 

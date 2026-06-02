@@ -19,6 +19,8 @@ describe('ReadThroughCacheWrapper', () => {
       deleteMultiple: jest.fn(),
       ping: jest.fn(),
       setMultipleIfNotExists: jest.fn(),
+      sadd: jest.fn(),
+      smembers: jest.fn(),
     };
     wrapper = new ReadThroughCacheWrapper(cacheProvider, entityName);
   });

@@ -8,4 +8,6 @@ export interface ICacheProvider {
   deleteMultiple(keys: string[]): Promise<void>;
   ping(): Promise<boolean>;
   setMultipleIfNotExists(items: { key: string; value: string }[], ttlSeconds: number): Promise<boolean>;
+  sadd(key: string, members: string[], ttlSeconds?: number): Promise<number>;
+  smembers(key: string): Promise<string[]>;
 }

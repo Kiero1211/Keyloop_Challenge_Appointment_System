@@ -51,6 +51,7 @@ export class DrizzleCustomerRepository implements ICustomerRepository {
     return (result as Customer) || null;
   }
 
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   async hasActiveAppointments(tenantId: string, id: string): Promise<boolean> {
     return false; // placeholder implementation
   }

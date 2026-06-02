@@ -426,12 +426,23 @@ components:
     # ── Appointment ───────────────────────────────────────────────────────────
     AppointmentCreateRequest:
       type: object
-      required: [customerId, vehicleId, serviceTypeId, technicianId, serviceBayId, desiredStartTime]
+      required: [customerId, vehicleId, serviceTypeId, desiredStartTime]
       properties:
         holdId:
           type: string
           format: uuid
           description: Optional hold ID to claim a temporary slot hold
+        technicianHoldId:
+          type: string
+          format: uuid
+          description: Optional technician hold ID
+        serviceBayHoldId:
+          type: string
+          format: uuid
+          description: Optional service bay hold ID
+        autoAssigned:
+          type: boolean
+          description: Indicates if the appointment was auto-assigned
         customerId:
           type: string
           format: uuid
@@ -457,7 +468,7 @@ components:
       properties:
         status:
           type: string
-          enum: [InProgress, Completed, Cancelled]
+          enum: [InProgress, Completed, Cancelled, Failed]
         notes:
           type: string
           maxLength: 1000
@@ -494,7 +505,7 @@ components:
           format: date-time
         status:
           type: string
-          enum: [Scheduled, InProgress, Completed, Cancelled]
+          enum: [Scheduled, InProgress, Completed, Cancelled, Failed]
         notes:
           type: string
           nullable: true
@@ -1164,7 +1175,9 @@ paths:
         - BearerAuth: []
       parameters:
         - { name: date, in: query, schema: { type: string, format: date }, description: "Filter by date (YYYY-MM-DD) — matches start_time" }
-        - { name: status, in: query, schema: { type: string, enum: [Scheduled, InProgress, Completed, Cancelled] } }
+        - { name: startTime, in: query, schema: { type: string, format: date-time }, description: "Filter by exact start time or multi-day range start" }
+        - { name: endTime, in: query, schema: { type: string, format: date-time }, description: "Filter by exact end time or multi-day range end" }
+        - { name: status, in: query, schema: { type: string, enum: [Scheduled, InProgress, Completed, Cancelled, Failed] } }
         - { name: technicianId, in: query, schema: { type: string, format: uuid } }
         - { name: serviceBayId, in: query, schema: { type: string, format: uuid } }
         - { name: page, in: query, schema: { type: integer, default: 1 } }

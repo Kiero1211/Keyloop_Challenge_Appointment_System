@@ -34,7 +34,21 @@ export class CachedCustomerRepository implements ICustomerRepository {
   }
 
   async findAll(tenantId: string): Promise<Customer[]> {
-    return this.baseRepository.findAll(tenantId);
+    return this.cacheWrapper.getList(
+      tenantId,
+      () => this.baseRepository.findAll(tenantId),
+      (record) => ({
+        id: record.id,
+        tenantId: record.tenantId,
+        firstName: record.firstName,
+        lastName: record.lastName,
+        email: record.email,
+        phone: record.phone || undefined,
+        deletedAt: record.deletedAt ? new Date(record.deletedAt) : null,
+        createdAt: new Date(record.createdAt),
+        updatedAt: new Date(record.updatedAt),
+      } as Customer)
+    );
   }
 
   async findByEmail(tenantId: string, email: string): Promise<Customer | null> {

@@ -84,4 +84,23 @@ export class RedisCacheAdapter implements ICacheProvider {
       return false;
     }
   }
+
+  async sadd(key: string, members: string[], ttlSeconds?: number): Promise<number> {
+    if (members.length === 0) return 0;
+    
+    if (ttlSeconds !== undefined && ttlSeconds > 0) {
+      const pipeline = this.redisClient.pipeline();
+      pipeline.sadd(key, ...members);
+      pipeline.expire(key, ttlSeconds);
+      const results = await pipeline.exec();
+      // results[0][1] contains the result of the sadd operation
+      return (results?.[0]?.[1] as number) || 0;
+    } else {
+      return this.redisClient.sadd(key, ...members);
+    }
+  }
+
+  async smembers(key: string): Promise<string[]> {
+    return this.redisClient.smembers(key);
+  }
 }

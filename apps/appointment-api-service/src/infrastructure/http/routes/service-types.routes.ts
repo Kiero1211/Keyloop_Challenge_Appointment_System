@@ -5,7 +5,7 @@ import { DeleteServiceTypeUseCase } from '@/application/use-cases/crud/service-t
 import { createServiceTypeSchema, updateServiceTypeSchema } from '@/application/commands/service-type.command';
 import { tenantContext } from '@/domain/context/tenant-context';
 import { NotFoundException } from '@/domain/exceptions';
-import { ServiceType } from '@/domain/entities/service-type.entity';
+
 
 const router = Router();
 

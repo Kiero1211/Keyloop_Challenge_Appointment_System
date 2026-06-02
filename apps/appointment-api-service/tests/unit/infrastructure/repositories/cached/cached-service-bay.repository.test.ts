@@ -33,11 +33,14 @@ describe('CachedServiceBayRepository', () => {
       deleteMultiple: jest.fn(),
       ping: jest.fn(),
       setMultipleIfNotExists: jest.fn(),
+      sadd: jest.fn(),
+      smembers: jest.fn(),
     };
 
     mockCacheWrapperInstance = {
       get: jest.fn(),
       invalidate: jest.fn(),
+      getList: jest.fn().mockImplementation((tenantId, fetchFn) => fetchFn()),
     } as unknown as jest.Mocked<ReadThroughCacheWrapper<ServiceBay>>;
 
     (ReadThroughCacheWrapper as jest.Mock).mockImplementation(() => mockCacheWrapperInstance);
