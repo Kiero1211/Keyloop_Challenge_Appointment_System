@@ -73,10 +73,10 @@ describe('CachedServiceTypeRepository', () => {
   });
 
   describe('findAll', () => {
-    it('should pass through to base repository', async () => {
-      baseRepo.findAll.mockResolvedValue([]);
+    it('should delegate to baseRepository', async () => {
+      baseRepo.findAll.mockResolvedValue({ data: [], total: 0, page: 1, pageSize: 20 });
       await cachedRepo.findAll('tenant');
-      expect(baseRepo.findAll).toHaveBeenCalledWith('tenant');
+      expect(baseRepo.findAll).toHaveBeenCalledWith('tenant', 1, 20);
     });
   });
 });

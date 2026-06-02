@@ -57,6 +57,10 @@ export class CachedVehicleRepository implements IVehicleRepository {
     );
   }
 
+  async findAll(tenantId?: string, page: number = 1, pageSize: number = 20): Promise<{ data: Vehicle[]; total: number; page: number; pageSize: number }> {
+    return this.baseRepository.findAll(tenantId, page, pageSize);
+  }
+
   async create(vehicle: Vehicle): Promise<Vehicle> {
     return this.baseRepository.create(vehicle);
   }

@@ -18,7 +18,7 @@ describe('ListAppointmentsUseCase', () => {
   });
 
   it('should apply filters and pagination', async () => {
-    mockRepo.findAll.mockResolvedValue({ data: [], total: 0 });
+    mockRepo.findAll.mockResolvedValue({ data: [], total: 0, page: 1, pageSize: 20 });
     const filters = { date: '2026-06-01', status: 'Scheduled', technicianId: 't1', serviceBayId: 'b1' };
     
     await useCase.execute('tenant1', filters, 2, 50);

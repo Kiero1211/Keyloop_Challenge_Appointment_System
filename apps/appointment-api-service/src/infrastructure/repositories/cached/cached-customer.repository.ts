@@ -33,22 +33,8 @@ export class CachedCustomerRepository implements ICustomerRepository {
     return customer;
   }
 
-  async findAll(tenantId: string): Promise<Customer[]> {
-    return this.cacheWrapper.getList(
-      tenantId,
-      () => this.baseRepository.findAll(tenantId),
-      (record) => ({
-        id: record.id,
-        tenantId: record.tenantId,
-        firstName: record.firstName,
-        lastName: record.lastName,
-        email: record.email,
-        phone: record.phone || undefined,
-        deletedAt: record.deletedAt ? new Date(record.deletedAt) : null,
-        createdAt: new Date(record.createdAt),
-        updatedAt: new Date(record.updatedAt),
-      } as Customer)
-    );
+  async findAll(tenantId?: string, page: number = 1, pageSize: number = 20): Promise<{ data: Customer[]; total: number; page: number; pageSize: number }> {
+    return this.baseRepository.findAll(tenantId, page, pageSize);
   }
 
   async findByEmail(tenantId: string, email: string): Promise<Customer | null> {

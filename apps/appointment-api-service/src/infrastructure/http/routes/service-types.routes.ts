@@ -11,7 +11,7 @@ const router = Router();
 
 router.post('/', async (req, res, next) => {
   try {
-    const tenantId = tenantContext.getStore()!.tenantId;
+    const tenantId = tenantContext.getStore()!.tenantId as string;
     const command = createServiceTypeSchema.parse(req.body);
     const useCase = new CreateServiceTypeUseCase(container.serviceTypeRepository);
     const result = await useCase.execute(tenantId, command);
@@ -23,7 +23,7 @@ router.post('/', async (req, res, next) => {
 
 router.get('/', async (req, res, next) => {
   try {
-    const tenantId = tenantContext.getStore()!.tenantId;
+    const tenantId = tenantContext.getStore()!.tenantId as string;
     const page = req.query.page ? parseInt(req.query.page as string, 10) : 1;
     const pageSize = req.query.pageSize ? parseInt(req.query.pageSize as string, 10) : 20;
     const results = await container.serviceTypeRepository.findAll(tenantId, page, pageSize);
@@ -35,7 +35,7 @@ router.get('/', async (req, res, next) => {
 
 router.get('/:id', async (req, res, next) => {
   try {
-    const tenantId = tenantContext.getStore()!.tenantId;
+    const tenantId = tenantContext.getStore()!.tenantId as string;
     const result = await container.serviceTypeRepository.findById(tenantId, req.params.id);
     if (!result) throw new NotFoundException('Service Type not found');
     res.json(result);
@@ -46,7 +46,7 @@ router.get('/:id', async (req, res, next) => {
 
 router.put('/:id', async (req, res, next) => {
   try {
-    const tenantId = tenantContext.getStore()!.tenantId;
+    const tenantId = tenantContext.getStore()!.tenantId as string;
     const command = updateServiceTypeSchema.parse(req.body);
     const result = await container.serviceTypeRepository.update(tenantId, req.params.id, command);
     if (!result) throw new NotFoundException('Service Type not found');
@@ -58,7 +58,7 @@ router.put('/:id', async (req, res, next) => {
 
 router.delete('/:id', async (req, res, next) => {
   try {
-    const tenantId = tenantContext.getStore()!.tenantId;
+    const tenantId = tenantContext.getStore()!.tenantId as string;
     // In a real app we might inject this, but we'll instantiate here for simplicity
     const useCase = new DeleteServiceTypeUseCase(container.serviceTypeRepository, container.appointmentCrudRepository);
     await useCase.execute(tenantId, req.params.id);

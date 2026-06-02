@@ -21,6 +21,7 @@ describe('CachedVehicleRepository', () => {
       update: jest.fn(),
       softDelete: jest.fn(),
       hasActiveAppointments: jest.fn(),
+      findAll: jest.fn(),
     };
     cacheProvider = {
       exists: jest.fn(),

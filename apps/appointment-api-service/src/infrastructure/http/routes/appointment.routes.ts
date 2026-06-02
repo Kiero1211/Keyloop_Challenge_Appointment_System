@@ -17,7 +17,7 @@ const router = Router();
 
 router.post('/hold', async (req, res, next) => {
   try {
-    const tenantId = tenantContext.getStore()!.tenantId;
+    const tenantId = tenantContext.getStore()!.tenantId as string;
     const input = CreateHoldInputSchema.parse(req.body);
     const useCase = new CreateHoldUseCase(container.cacheProvider);
     const result = await useCase.execute(tenantId, input);
@@ -54,7 +54,7 @@ router.get('/', async (req, res, next) => {
     const page = parseInt(req.query.page as string) || 1;
     const pageSize = parseInt(req.query.pageSize as string) || 20;
 
-    const tenantId = tenantContext.getStore()!.tenantId;
+    const tenantId = tenantContext.getStore()!.tenantId as string;
     const useCase = new ListAppointmentsUseCase(container.appointmentCrudRepository);
     const results = await useCase.execute(tenantId, filters, page, pageSize);
     res.json(results);
@@ -65,7 +65,7 @@ router.get('/', async (req, res, next) => {
 
 router.get('/:id', async (req, res, next) => {
   try {
-    const tenantId = tenantContext.getStore()!.tenantId;
+    const tenantId = tenantContext.getStore()!.tenantId as string;
     const useCase = new GetAppointmentDetailUseCase(container.appointmentCrudRepository);
     const result = await useCase.execute(tenantId, req.params.id);
     res.json(result);
@@ -76,7 +76,7 @@ router.get('/:id', async (req, res, next) => {
 
 router.patch('/:id/status', async (req, res, next) => {
   try {
-    const tenantId = tenantContext.getStore()!.tenantId;
+    const tenantId = tenantContext.getStore()!.tenantId as string;
     const command = updateAppointmentStatusSchema.parse(req.body);
     const useCase = new UpdateAppointmentStatusUseCase(container.appointmentCrudRepository);
     const result = await useCase.execute(tenantId, req.params.id, command.status);
@@ -88,7 +88,7 @@ router.patch('/:id/status', async (req, res, next) => {
 
 router.delete('/:id', async (req, res, next) => {
   try {
-    const tenantId = tenantContext.getStore()!.tenantId;
+    const tenantId = tenantContext.getStore()!.tenantId as string;
     const useCase = new CancelAppointmentUseCase(container.appointmentCrudRepository);
     const result = await useCase.execute(tenantId, req.params.id);
     res.json(result);
