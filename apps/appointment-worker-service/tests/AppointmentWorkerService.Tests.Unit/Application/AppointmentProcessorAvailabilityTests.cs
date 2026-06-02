@@ -63,29 +63,31 @@ public class AppointmentProcessorAvailabilityTests
     );
 
     [Fact]
-    public async Task GivenMissingTechnicianId_WhenProcessAsync_ThenThrowsInvalidBookingRequest()
+    public async Task GivenMissingTechnicianId_WhenProcessAsync_ThenSavesFailedRecord()
     {
         var message = CreateMessage(techId: null);
         _validatorMock.Setup(x => x.ValidateAsync(message, It.IsAny<CancellationToken>()))
             .ReturnsAsync(new FluentValidation.Results.ValidationResult(new[] { new FluentValidation.Results.ValidationFailure("TechnicianId", "Error") }));
 
-        await Assert.ThrowsAsync<InvalidBookingRequestException>(() =>
-            _sut.ProcessAsync(message, "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa", CancellationToken.None));
+        await _sut.ProcessAsync(message, "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa", CancellationToken.None);
+
+        _apptRepoMock.Verify(x => x.AddAsync(It.Is<TrackingRecord>(r => r.Status == AppointmentStatus.Failed), It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [Fact]
-    public async Task GivenMissingServiceBayId_WhenProcessAsync_ThenThrowsInvalidBookingRequest()
+    public async Task GivenMissingServiceBayId_WhenProcessAsync_ThenSavesFailedRecord()
     {
         var message = CreateMessage(bayId: null);
         _validatorMock.Setup(x => x.ValidateAsync(message, It.IsAny<CancellationToken>()))
             .ReturnsAsync(new FluentValidation.Results.ValidationResult(new[] { new FluentValidation.Results.ValidationFailure("ServiceBayId", "Error") }));
 
-        await Assert.ThrowsAsync<InvalidBookingRequestException>(() =>
-            _sut.ProcessAsync(message, "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa", CancellationToken.None));
+        await _sut.ProcessAsync(message, "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa", CancellationToken.None);
+
+        _apptRepoMock.Verify(x => x.AddAsync(It.Is<TrackingRecord>(r => r.Status == AppointmentStatus.Failed), It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [Fact]
-    public async Task GivenTechnicianServiceThrowsInvalidRequest_WhenProcessAsync_ThenPropagates()
+    public async Task GivenTechnicianServiceThrowsInvalidRequest_WhenProcessAsync_ThenSavesFailedRecord()
     {
         var message = CreateMessage();
         _validatorMock.Setup(x => x.ValidateAsync(message, It.IsAny<CancellationToken>()))
@@ -93,12 +95,13 @@ public class AppointmentProcessorAvailabilityTests
         _techServiceMock.Setup(x => x.ValidateAndCheckAvailabilityAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<DateTimeOffset>(), It.IsAny<DateTimeOffset>(), It.IsAny<CancellationToken>()))
             .ThrowsAsync(new InvalidBookingRequestException("Tech not found"));
 
-        await Assert.ThrowsAsync<InvalidBookingRequestException>(() =>
-            _sut.ProcessAsync(message, "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa", CancellationToken.None));
+        await _sut.ProcessAsync(message, "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa", CancellationToken.None);
+
+        _apptRepoMock.Verify(x => x.AddAsync(It.Is<TrackingRecord>(r => r.Status == AppointmentStatus.Failed), It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [Fact]
-    public async Task GivenTechnicianServiceThrowsResourceOccupied_WhenProcessAsync_ThenPropagates()
+    public async Task GivenTechnicianServiceThrowsResourceOccupied_WhenProcessAsync_ThenSavesFailedRecord()
     {
         var message = CreateMessage();
         _validatorMock.Setup(x => x.ValidateAsync(message, It.IsAny<CancellationToken>()))
@@ -106,12 +109,13 @@ public class AppointmentProcessorAvailabilityTests
         _techServiceMock.Setup(x => x.ValidateAndCheckAvailabilityAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<DateTimeOffset>(), It.IsAny<DateTimeOffset>(), It.IsAny<CancellationToken>()))
             .ThrowsAsync(new ResourceCurrentlyOccupiedException("Tech occupied", It.IsAny<DateTimeOffset>(), It.IsAny<DateTimeOffset>()));
 
-        await Assert.ThrowsAsync<ResourceCurrentlyOccupiedException>(() =>
-            _sut.ProcessAsync(message, "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa", CancellationToken.None));
+        await _sut.ProcessAsync(message, "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa", CancellationToken.None);
+
+        _apptRepoMock.Verify(x => x.AddAsync(It.Is<TrackingRecord>(r => r.Status == AppointmentStatus.Failed), It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [Fact]
-    public async Task GivenBayServiceThrowsResourceOccupied_WhenProcessAsync_ThenPropagates()
+    public async Task GivenBayServiceThrowsResourceOccupied_WhenProcessAsync_ThenSavesFailedRecord()
     {
         var message = CreateMessage();
         _validatorMock.Setup(x => x.ValidateAsync(message, It.IsAny<CancellationToken>()))
@@ -121,8 +125,9 @@ public class AppointmentProcessorAvailabilityTests
         _bayServiceMock.Setup(x => x.ValidateAndCheckAvailabilityAsync(It.IsAny<string>(), It.IsAny<DateTimeOffset>(), It.IsAny<DateTimeOffset>(), It.IsAny<CancellationToken>()))
             .ThrowsAsync(new ResourceCurrentlyOccupiedException("Bay occupied", It.IsAny<DateTimeOffset>(), It.IsAny<DateTimeOffset>()));
 
-        await Assert.ThrowsAsync<ResourceCurrentlyOccupiedException>(() =>
-            _sut.ProcessAsync(message, "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa", CancellationToken.None));
+        await _sut.ProcessAsync(message, "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa", CancellationToken.None);
+
+        _apptRepoMock.Verify(x => x.AddAsync(It.Is<TrackingRecord>(r => r.Status == AppointmentStatus.Failed), It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [Fact]

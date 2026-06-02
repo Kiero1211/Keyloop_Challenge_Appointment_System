@@ -125,9 +125,13 @@ public class AppointmentAutoAssignConcurrencyTests : IClassFixture<DatabaseFixtu
         using var assertContext = _fixture.CreateContext(tenantId);
         var records = assertContext.Set<TrackingRecord>().Where(x => x.ServiceTypeId == serviceTypeId).ToList();
         
-        // Exactly one should have successfully been scheduled
-        Assert.Single(records);
-        Assert.Equal(techId, records[0].TechnicianId);
-        Assert.Equal(bayId, records[0].ServiceBayId);
+        // Exactly one should have successfully been scheduled, the rest should be Failed
+        var scheduledRecords = records.Where(r => r.Status == AppointmentStatus.Scheduled).ToList();
+        var failedRecords = records.Where(r => r.Status == AppointmentStatus.Failed).ToList();
+        
+        Assert.Single(scheduledRecords);
+        Assert.Equal(numberOfConcurrentRequests - 1, failedRecords.Count);
+        Assert.Equal(techId, scheduledRecords[0].TechnicianId);
+        Assert.Equal(bayId, scheduledRecords[0].ServiceBayId);
     }
 }
