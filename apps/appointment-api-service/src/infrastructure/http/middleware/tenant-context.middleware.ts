@@ -2,19 +2,19 @@ import { Request, Response, NextFunction } from 'express';
 import { TenantContext, tenantContext } from '@/domain/context/tenant-context';
 
 export const tenantContextMiddleware = (req: Request, res: Response, next: NextFunction) => {
-  const tenantIdHeader = req.headers['x-tenant-id'] as string;
+  const tenantIdHeader = req.headers['x-tenant-id'] as string | undefined;
   
-  if (!tenantIdHeader) {
-    return res.status(400).json({ error: 'Bad Request', message: 'Missing x-tenant-id header' });
-  }
-
   const user = (req as any).user;
   
   if (!user) {
     return res.status(401).json({ error: 'Unauthorized', message: 'User not authenticated' });
   }
 
-  if (tenantIdHeader !== user.tenantId && !user.isSuperAdmin) {
+  if (!tenantIdHeader && !user.isSuperAdmin) {
+    return res.status(400).json({ error: 'Bad Request', message: 'Missing x-tenant-id header' });
+  }
+
+  if (tenantIdHeader && tenantIdHeader !== user.tenantId && !user.isSuperAdmin) {
     return res.status(403).json({ error: 'Forbidden', message: 'Tenant access denied' });
   }
 

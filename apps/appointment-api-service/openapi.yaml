@@ -520,6 +520,15 @@ components:
 # Paths
 # ─────────────────────────────────────────────────────────────────────────────
 paths:
+  /health:
+    get:
+      tags: [System]
+      summary: Health check endpoint
+      security: []
+      responses:
+        "200":
+          description: System is healthy
+
 
   # ── Auth ────────────────────────────────────────────────────────────────────
   /auth/register:
@@ -761,6 +770,85 @@ paths:
         "403": { description: Not an Admin }
         "404": { description: Tenant not found }
 
+
+  /tenants/{tenantId}/users:
+    parameters:
+      - { name: tenantId, in: path, required: true, schema: { type: string, format: uuid } }
+    post:
+      tags: [Tenants]
+      summary: Assign a role to a user in this tenant
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [userId, role]
+              properties:
+                userId: { type: string, format: uuid }
+                role: { type: string, enum: [TenantUser, TenantManager] }
+      responses:
+        "204": { description: Role assigned successfully }
+        "403": { description: Forbidden }
+
+  /tenants/{tenantId}/users/{userId}/role:
+    parameters:
+      - { name: tenantId, in: path, required: true, schema: { type: string, format: uuid } }
+      - { name: userId, in: path, required: true, schema: { type: string, format: uuid } }
+    put:
+      tags: [Tenants]
+      summary: Promote a user's role
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [role]
+              properties:
+                role: { type: string, enum: [TenantManager] }
+      responses:
+        "204": { description: Role promoted successfully }
+        "403": { description: Forbidden }
+
+  /tenants/{tenantId}/audit-logs:
+    parameters:
+      - { name: tenantId, in: path, required: true, schema: { type: string, format: uuid } }
+    get:
+      tags: [Tenants]
+      summary: Retrieve audit logs for a tenant
+      security:
+        - BearerAuth: []
+      parameters:
+        - { name: entityType, in: query, schema: { type: string } }
+        - { name: entityId, in: query, schema: { type: string, format: uuid } }
+        - { name: action, in: query, schema: { type: string } }
+        - { name: userId, in: query, schema: { type: string, format: uuid } }
+        - { name: startDate, in: query, schema: { type: string, format: date-time } }
+        - { name: endDate, in: query, schema: { type: string, format: date-time } }
+        - { name: page, in: query, schema: { type: integer, default: 1 } }
+        - { name: pageSize, in: query, schema: { type: integer, default: 20 } }
+      responses:
+        "200":
+          description: Audit logs retrieved
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      type: object
+                  total: { type: integer }
+                  page: { type: integer }
+                  pageSize: { type: integer }
+        "403": { description: Forbidden }
+
   # ── Customers ───────────────────────────────────────────────────────────────
   /customers:
     parameters:
@@ -781,7 +869,9 @@ paths:
                 type: object
                 properties:
                   data: { type: array, items: { $ref: '#/components/schemas/CustomerResponse' } }
-                  meta: { $ref: '#/components/schemas/PaginationMeta' }
+                  total: { type: integer }
+                  page: { type: integer }
+                  pageSize: { type: integer }
         "400": { description: Missing x-tenant-id header }
         "403": { description: x-tenant-id does not match JWT }
     post:
@@ -866,7 +956,9 @@ paths:
                 type: object
                 properties:
                   data: { type: array, items: { $ref: '#/components/schemas/VehicleResponse' } }
-                  meta: { $ref: '#/components/schemas/PaginationMeta' }
+                  total: { type: integer }
+                  page: { type: integer }
+                  pageSize: { type: integer }
     post:
       tags: [Vehicles]
       summary: Create a vehicle
@@ -937,7 +1029,9 @@ paths:
                 type: object
                 properties:
                   data: { type: array, items: { $ref: '#/components/schemas/ServiceTypeResponse' } }
-                  meta: { $ref: '#/components/schemas/PaginationMeta' }
+                  total: { type: integer }
+                  page: { type: integer }
+                  pageSize: { type: integer }
     post:
       tags: [ServiceTypes]
       summary: Create a service type
@@ -1003,7 +1097,9 @@ paths:
                 type: object
                 properties:
                   data: { type: array, items: { $ref: '#/components/schemas/TechnicianResponse' } }
-                  meta: { $ref: '#/components/schemas/PaginationMeta' }
+                  total: { type: integer }
+                  page: { type: integer }
+                  pageSize: { type: integer }
     post:
       tags: [Technicians]
       summary: Create a technician
@@ -1052,24 +1148,10 @@ paths:
         "204": { description: Deleted }
 
   # ── TechnicianSkills ─────────────────────────────────────────────────────────
-  /technician-skills:
+  /technicians/{id}/skills:
     parameters:
       - $ref: '#/components/parameters/XTenantId'
-    get:
-      tags: [TechnicianSkills]
-      summary: List skill associations (optionally filter by technicianId)
-      security:
-        - BearerAuth: []
-      parameters:
-        - { name: technicianId, in: query, schema: { type: string, format: uuid } }
-      responses:
-        "200":
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/TechnicianSkillResponse'
+      - { name: id, in: path, required: true, schema: { type: string, format: uuid } }
     post:
       tags: [TechnicianSkills]
       summary: Add a skill to a technician
@@ -1086,10 +1168,11 @@ paths:
         "409": { description: Association already exists }
         "422": { description: Technician or ServiceType does not belong to this tenant }
 
-  /technician-skills/{id}:
+  /technicians/{id}/skills/{serviceTypeId}:
     parameters:
       - $ref: '#/components/parameters/XTenantId'
       - { name: id, in: path, required: true, schema: { type: string, format: uuid } }
+      - { name: serviceTypeId, in: path, required: true, schema: { type: string, format: uuid } }
     delete:
       tags: [TechnicianSkills]
       summary: Remove a skill from a technician
@@ -1116,7 +1199,9 @@ paths:
                 type: object
                 properties:
                   data: { type: array, items: { $ref: '#/components/schemas/ServiceBayResponse' } }
-                  meta: { $ref: '#/components/schemas/PaginationMeta' }
+                  total: { type: integer }
+                  page: { type: integer }
+                  pageSize: { type: integer }
     post:
       tags: [ServiceBays]
       summary: Create a service bay
@@ -1190,7 +1275,9 @@ paths:
                 type: object
                 properties:
                   data: { type: array, items: { $ref: '#/components/schemas/AppointmentResponse' } }
-                  meta: { $ref: '#/components/schemas/PaginationMeta' }
+                  total: { type: integer }
+                  page: { type: integer }
+                  pageSize: { type: integer }
     post:
       tags: [Appointments]
       summary: Create an appointment via async CQRS ingestion

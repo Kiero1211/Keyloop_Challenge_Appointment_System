@@ -28,11 +28,29 @@ export class DrizzleServiceTypeRepository implements IServiceTypeRepository {
     return (result as ServiceType) || null;
   }
 
-  async findAll(tenantId: string): Promise<ServiceType[]> {
-    const results = await db.query.serviceTypes.findMany({
-      where: and(eq(serviceTypes.tenantId, tenantId), isNull(serviceTypes.deletedAt)),
-    });
-    return results as ServiceType[];
+  async findAll(tenantId?: string, page: number = 1, pageSize: number = 20): Promise<{ data: ServiceType[]; total: number; page: number; pageSize: number }> {
+    const { count } = await import('drizzle-orm');
+    
+    const conditions = [isNull(serviceTypes.deletedAt)];
+    if (tenantId) {
+      conditions.push(eq(serviceTypes.tenantId, tenantId));
+    }
+
+    const totalResult = await db.select({ count: count() }).from(serviceTypes).where(and(...conditions));
+    const total = totalResult[0].count;
+    
+    const offset = (page - 1) * pageSize;
+    const results = await db.select().from(serviceTypes)
+      .where(and(...conditions))
+      .limit(pageSize)
+      .offset(offset);
+
+    return {
+      data: results as ServiceType[],
+      total,
+      page,
+      pageSize
+    };
   }
 
   async update(tenantId: string, id: string, data: Partial<ServiceType>): Promise<ServiceType | null> {

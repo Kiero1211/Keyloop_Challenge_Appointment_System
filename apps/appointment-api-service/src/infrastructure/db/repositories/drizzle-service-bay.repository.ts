@@ -27,11 +27,29 @@ export class DrizzleServiceBayRepository implements IServiceBayRepository {
     return (result as ServiceBay) || null;
   }
 
-  async findAll(tenantId: string): Promise<ServiceBay[]> {
-    const results = await db.query.serviceBays.findMany({
-      where: and(eq(serviceBays.tenantId, tenantId), isNull(serviceBays.deletedAt)),
-    });
-    return results as ServiceBay[];
+  async findAll(tenantId?: string, page: number = 1, pageSize: number = 20): Promise<{ data: ServiceBay[]; total: number; page: number; pageSize: number }> {
+    const { count } = await import('drizzle-orm');
+    
+    const conditions = [isNull(serviceBays.deletedAt)];
+    if (tenantId) {
+      conditions.push(eq(serviceBays.tenantId, tenantId));
+    }
+
+    const totalResult = await db.select({ count: count() }).from(serviceBays).where(and(...conditions));
+    const total = totalResult[0].count;
+    
+    const offset = (page - 1) * pageSize;
+    const results = await db.select().from(serviceBays)
+      .where(and(...conditions))
+      .limit(pageSize)
+      .offset(offset);
+
+    return {
+      data: results as ServiceBay[],
+      total,
+      page,
+      pageSize
+    };
   }
 
   async update(tenantId: string, id: string, data: Partial<ServiceBay>): Promise<ServiceBay | null> {

@@ -25,8 +25,10 @@ router.post('/', async (req, res, next) => {
 router.get('/', async (req, res, next) => {
   try {
     const tenantId = tenantContext.getStore()!.tenantId;
+    const page = req.query.page ? parseInt(req.query.page as string, 10) : 1;
+    const pageSize = req.query.pageSize ? parseInt(req.query.pageSize as string, 10) : 20;
     const useCase = new ListCustomersUseCase(container.customerRepository);
-    const results = await useCase.execute(tenantId);
+    const results = await useCase.execute(tenantId, page, pageSize);
     res.json(results);
   } catch (error) {
     next(error);

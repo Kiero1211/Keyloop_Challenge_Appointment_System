@@ -21,9 +21,15 @@ export class RegisterUseCase {
       throw new ConflictException('User with this email already exists');
     }
 
-    const tenant = await this.tenantRepository.findById(data.tenantId);
-    if (!tenant) {
-      throw new NotFoundException('Tenant not found');
+    let tenant: any = null;
+    let role = 'Guest';
+
+    if (data.tenantId) {
+      tenant = await this.tenantRepository.findById(data.tenantId);
+      if (!tenant) {
+        throw new NotFoundException('Tenant not found');
+      }
+      role = 'TenantUser';
     }
 
     const passwordHash = await bcrypt.hash(data.password, 10);
@@ -33,27 +39,29 @@ export class RegisterUseCase {
       passwordHash,
       firstName: data.firstName,
       lastName: data.lastName,
-      role: 'TenantUser', // Default role
+      role: role,
       isSuperAdmin: false,
     });
 
-    await this.userTenantRepository.create({
-      userId: user.id,
-      tenantId: tenant.id,
-      role: 'TenantUser',
-    });
+    if (tenant) {
+      await this.userTenantRepository.create({
+        userId: user.id,
+        tenantId: tenant.id,
+        role: role,
+      });
+    }
 
     const accessToken = this.jwtService.generateAccessToken({
       userId: user.id,
-      tenantId: tenant.id,
-      role: 'TenantUser',
+      tenantId: tenant?.id,
+      role: role,
       permissions: [],
       isSuperAdmin: false,
     });
 
     const refreshTokenString = this.jwtService.generateRefreshToken({
       userId: user.id,
-      tenantId: tenant.id,
+      tenantId: tenant?.id,
     });
 
     await this.refreshTokenRepository.create({
@@ -70,7 +78,7 @@ export class RegisterUseCase {
         email: user.email,
         firstName: user.firstName,
         lastName: user.lastName,
-        tenantId: tenant.id
+        tenantId: tenant?.id
       }
     };
   }

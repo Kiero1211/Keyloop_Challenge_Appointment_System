@@ -1,4 +1,5 @@
 import express from 'express';
+import cors from 'cors';
 import { appointmentRouter } from '@/infrastructure/http/routes/appointment.routes';
 import { healthRouter } from '@/infrastructure/http/routes/health.routes';
 import { serviceTypesRouter } from '@/infrastructure/http/routes/service-types.routes';
@@ -20,6 +21,7 @@ import { requestLoggerMiddleware } from '@/infrastructure/http/middleware/reques
 
 const app = express();
 
+app.use(cors());
 app.use(express.json());
 
 // Swagger Docs

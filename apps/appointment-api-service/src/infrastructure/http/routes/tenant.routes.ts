@@ -33,8 +33,10 @@ router.post('/', adminOnly, async (req, res, next) => {
 
 router.get('/', adminOnly, async (req, res, next) => {
   try {
+    const page = req.query.page ? parseInt(req.query.page as string, 10) : 1;
+    const pageSize = req.query.pageSize ? parseInt(req.query.pageSize as string, 10) : 20;
     const useCase = new ListTenantsUseCase(container.tenantRepository);
-    const results = await useCase.execute();
+    const results = await useCase.execute(page, pageSize);
     res.json(results);
   } catch (error) {
     next(error);

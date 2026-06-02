@@ -35,7 +35,9 @@ router.get('/', async (req, res, next) => {
     }
 
     const tenantId = tenantContext.getStore()!.tenantId;
-    const results = await container.technicianRepository.findAll(tenantId);
+    const page = req.query.page ? parseInt(req.query.page as string, 10) : 1;
+    const pageSize = req.query.pageSize ? parseInt(req.query.pageSize as string, 10) : 20;
+    const results = await container.technicianRepository.findAll(tenantId, page, pageSize);
     res.json(results);
   } catch (error) {
     next(error);
