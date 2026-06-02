@@ -12,7 +12,7 @@ const router = Router();
 
 router.post('/', async (req, res, next) => {
   try {
-    const tenantId = tenantContext.getStore()!.tenantId;
+    const tenantId = tenantContext.getStore()!.tenantId as string;
     const data = createVehicleSchema.parse(req.body);
     const useCase = new CreateVehicleUseCase(container.vehicleRepository, container.customerRepository);
     const result = await useCase.execute(tenantId, data);
@@ -24,10 +24,12 @@ router.post('/', async (req, res, next) => {
 
 router.get('/', async (req, res, next) => {
   try {
-    const tenantId = tenantContext.getStore()!.tenantId;
+    const tenantId = tenantContext.getStore()!.tenantId as string;
     const customerId = req.query.customerId as string | undefined;
+    const page = req.query.page ? parseInt(req.query.page as string, 10) : 1;
+    const pageSize = req.query.pageSize ? parseInt(req.query.pageSize as string, 10) : 20;
     const useCase = new ListVehiclesUseCase(container.vehicleRepository);
-    const results = await useCase.execute(tenantId, customerId);
+    const results = await useCase.execute(tenantId, customerId, page, pageSize);
     res.json(results);
   } catch (error) {
     next(error);
@@ -36,7 +38,7 @@ router.get('/', async (req, res, next) => {
 
 router.get('/:id', async (req, res, next) => {
   try {
-    const tenantId = tenantContext.getStore()!.tenantId;
+    const tenantId = tenantContext.getStore()!.tenantId as string;
     const useCase = new GetVehicleUseCase(container.vehicleRepository);
     const result = await useCase.execute(tenantId, req.params.id);
     res.json(result);
@@ -47,7 +49,7 @@ router.get('/:id', async (req, res, next) => {
 
 router.put('/:id', async (req, res, next) => {
   try {
-    const tenantId = tenantContext.getStore()!.tenantId;
+    const tenantId = tenantContext.getStore()!.tenantId as string;
     const data = updateVehicleSchema.parse(req.body);
     const useCase = new UpdateVehicleUseCase(container.vehicleRepository);
     const result = await useCase.execute(tenantId, req.params.id, data);
@@ -59,7 +61,7 @@ router.put('/:id', async (req, res, next) => {
 
 router.delete('/:id', async (req, res, next) => {
   try {
-    const tenantId = tenantContext.getStore()!.tenantId;
+    const tenantId = tenantContext.getStore()!.tenantId as string;
     const useCase = new DeleteVehicleUseCase(container.vehicleRepository);
     await useCase.execute(tenantId, req.params.id);
     res.status(204).send();

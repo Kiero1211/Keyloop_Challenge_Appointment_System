@@ -46,3 +46,12 @@ services:
       - DB_CONNECTION=Host=postgres;Database=appointments;Username=postgres;Password=postgres
     depends_on:
       - redis
+
+  api-client-ui:
+    build:
+      context: .
+      dockerfile: ./apps/api-client-ui/Dockerfile
+    ports:
+      - "8080:80"
+    depends_on:
+      - appointment-api-service

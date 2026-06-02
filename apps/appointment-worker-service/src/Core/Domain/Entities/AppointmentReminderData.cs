@@ -3,7 +3,7 @@ namespace AppointmentWorkerService.Core.Domain.Entities;
 public class AppointmentReminderData : IMustHaveTenant
 {
     public string TenantId { get; set; } = string.Empty;
-    public Guid AppointmentId { get; set; }
+    public string AppointmentId { get; set; } = string.Empty;
     public DateTimeOffset AppointmentStartTime { get; set; }
     public AppointmentStatus AppointmentStatus { get; set; }
     public string CustomerId { get; set; } = string.Empty;

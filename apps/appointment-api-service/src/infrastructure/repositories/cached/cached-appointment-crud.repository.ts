@@ -45,19 +45,11 @@ export class CachedAppointmentCrudRepository implements IAppointmentCrudReposito
   }
 
   async findAll(
-    tenantId: string,
-    filters: {
-      status?: string;
-      technicianId?: string;
-      serviceBayId?: string;
-      serviceTypeId?: string;
-      customerId?: string;
-      vehicleId?: string;
-      date?: string;
-    },
+    tenantId?: string,
+    filters?: any,
     page?: number,
     pageSize?: number
-  ): Promise<{ data: Appointment[]; total: number }> {
+  ): Promise<{ data: Appointment[]; total: number; page: number; pageSize: number }> {
     return this.baseRepository.findAll(tenantId, filters, page, pageSize);
   }
 

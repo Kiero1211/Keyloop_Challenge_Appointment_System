@@ -20,6 +20,7 @@ public class AppointmentReminderRepository : IAppointmentReminderRepository
         var threshold = now.AddHours(48); // We want to send reminders for appointments in the next 48 hours
 
         return await _context.AppointmentReminderView
+            .IgnoreQueryFilters()
             .Where(r => 
                 !r.ReminderSent && 
                 r.AppointmentStatus == AppointmentStatus.Scheduled &&

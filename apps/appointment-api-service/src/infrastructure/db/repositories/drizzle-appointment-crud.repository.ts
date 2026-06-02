@@ -51,42 +51,42 @@ export class DrizzleAppointmentCrudRepository implements IAppointmentCrudReposit
     return result[0];
   }
 
-  async findAll(tenantId: string, filters: any, page: number = 1, pageSize: number = 20): Promise<{ data: Appointment[], total: number }> {
-    const conditions = [eq(appointments.tenantId, tenantId), isNull(appointments.deletedAt)];
+  async findAll(tenantId: string | undefined, filters: any, page: number = 1, pageSize: number = 20): Promise<{ data: Appointment[], total: number, page: number, pageSize: number }> {
+    const { count, gte, lte } = await import('drizzle-orm');
+    const conditions = [isNull(appointments.deletedAt)];
+    if (tenantId) {
+      conditions.push(eq(appointments.tenantId, tenantId));
+    }
+
     if (filters.status) conditions.push(eq(appointments.status, filters.status));
     if (filters.technicianId) conditions.push(eq(appointments.technicianId, filters.technicianId));
     if (filters.serviceBayId) conditions.push(eq(appointments.serviceBayId, filters.serviceBayId));
-    // T106 date filter - assuming date is in YYYY-MM-DD format
-    // Support legacy date filter
-    if (filters.date && !filters.startTime && !filters.endTime) {
-      const startOfDay = new Date(`${filters.date}T00:00:00.000Z`);
-      const endOfDay = new Date(`${filters.date}T23:59:59.999Z`);
-      conditions.push(sql`${appointments.scheduledStartTime} >= ${startOfDay.toISOString()} AND ${appointments.scheduledStartTime} <= ${endOfDay.toISOString()}`);
+    if (filters.customerId) conditions.push(eq(appointments.customerId, filters.customerId));
+    if (filters.vehicleId) conditions.push(eq(appointments.vehicleId, filters.vehicleId));
+    if (filters.date) {
+      const startOfDay = new Date(filters.date);
+      startOfDay.setHours(0, 0, 0, 0);
+      const endOfDay = new Date(filters.date);
+      endOfDay.setHours(23, 59, 59, 999);
+      conditions.push(gte(appointments.scheduledStartTime, startOfDay), lte(appointments.scheduledStartTime, endOfDay));
     }
+    if (filters.startTime) conditions.push(gte(appointments.scheduledStartTime, new Date(filters.startTime)));
+    if (filters.endTime) conditions.push(lte(appointments.scheduledEndTime, new Date(filters.endTime)));
 
-    // Support new multi-day search
-    if (filters.startTime || filters.endTime) {
-      if (filters.startTime) {
-        const start = new Date(filters.startTime);
-        conditions.push(sql`${appointments.scheduledStartTime} >= ${start.toISOString()}`);
-      }
-      if (filters.endTime) {
-        const end = new Date(filters.endTime);
-        conditions.push(sql`${appointments.scheduledStartTime} <= ${end.toISOString()}`);
-      }
-    }
+    const whereClause = and(...conditions);
+    
+    const totalResult = await db.select({ count: count() }).from(appointments).where(whereClause);
+    const total = totalResult[0].count;
 
-    const limit = pageSize;
     const offset = (page - 1) * pageSize;
+    
+    const results = await db.select().from(appointments)
+      .where(whereClause)
+      .orderBy(appointments.scheduledStartTime)
+      .limit(pageSize)
+      .offset(offset);
 
-    const results = await db.query.appointments.findMany({
-      where: and(...conditions),
-      limit,
-      offset,
-    });
-
-    const [countResult] = await db.select({ count: sql`count(*)` }).from(appointments).where(and(...conditions));
-    return { data: results as Appointment[], total: Number(countResult.count) };
+    return { data: results as Appointment[], total, page, pageSize };
   }
 
   async updateStatus(tenantId: string, id: string, status: string): Promise<Appointment | null> {

@@ -80,7 +80,7 @@ describe('Vehicles API E2E', () => {
         .set('x-tenant-id', tenantId1);
 
       expect(response.status).toBe(200);
-      expect(response.body.length).toBeGreaterThan(0);
+      expect(response.body.data.length).toBeGreaterThan(0);
     });
   });
 

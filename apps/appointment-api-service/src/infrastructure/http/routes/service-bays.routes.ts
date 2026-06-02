@@ -10,7 +10,7 @@ const router = Router();
 
 router.post('/', async (req, res, next) => {
   try {
-    const tenantId = tenantContext.getStore()!.tenantId;
+    const tenantId = tenantContext.getStore()!.tenantId as string;
     const command = createServiceBaySchema.parse(req.body);
     const useCase = new CreateServiceBayUseCase(container.serviceBayRepository);
     const result = await useCase.execute(tenantId, command);
@@ -32,8 +32,10 @@ router.get('/', async (req, res, next) => {
       return;
     }
 
-    const tenantId = tenantContext.getStore()!.tenantId;
-    const results = await container.serviceBayRepository.findAll(tenantId);
+    const tenantId = tenantContext.getStore()!.tenantId as string;
+    const page = req.query.page ? parseInt(req.query.page as string, 10) : 1;
+    const pageSize = req.query.pageSize ? parseInt(req.query.pageSize as string, 10) : 20;
+    const results = await container.serviceBayRepository.findAll(tenantId, page, pageSize);
     res.json(results);
   } catch (error) {
     next(error);
@@ -42,7 +44,7 @@ router.get('/', async (req, res, next) => {
 
 router.get('/:id', async (req, res, next) => {
   try {
-    const tenantId = tenantContext.getStore()!.tenantId;
+    const tenantId = tenantContext.getStore()!.tenantId as string;
     const result = await container.serviceBayRepository.findById(tenantId, req.params.id);
     if (!result) throw new NotFoundException('Service Bay not found');
     res.json(result);
@@ -53,7 +55,7 @@ router.get('/:id', async (req, res, next) => {
 
 router.put('/:id', async (req, res, next) => {
   try {
-    const tenantId = tenantContext.getStore()!.tenantId;
+    const tenantId = tenantContext.getStore()!.tenantId as string;
     const command = updateServiceBaySchema.parse(req.body);
     const result = await container.serviceBayRepository.update(tenantId, req.params.id, command);
     if (!result) throw new NotFoundException('Service Bay not found');
@@ -65,7 +67,7 @@ router.put('/:id', async (req, res, next) => {
 
 router.delete('/:id', async (req, res, next) => {
   try {
-    const tenantId = tenantContext.getStore()!.tenantId;
+    const tenantId = tenantContext.getStore()!.tenantId as string;
     await container.serviceBayRepository.softDelete(tenantId, req.params.id);
     res.status(204).send();
   } catch (error) {

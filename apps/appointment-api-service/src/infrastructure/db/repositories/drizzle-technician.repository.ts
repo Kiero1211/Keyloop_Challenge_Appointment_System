@@ -29,11 +29,29 @@ export class DrizzleTechnicianRepository implements ITechnicianRepository {
     return (result as Technician) || null;
   }
 
-  async findAll(tenantId: string): Promise<Technician[]> {
-    const results = await db.query.technicians.findMany({
-      where: and(eq(technicians.tenantId, tenantId), isNull(technicians.deletedAt)),
-    });
-    return results as Technician[];
+  async findAll(tenantId?: string, page: number = 1, pageSize: number = 20): Promise<{ data: Technician[]; total: number; page: number; pageSize: number }> {
+    const { count } = await import('drizzle-orm');
+    
+    const conditions = [isNull(technicians.deletedAt)];
+    if (tenantId) {
+      conditions.push(eq(technicians.tenantId, tenantId));
+    }
+
+    const totalResult = await db.select({ count: count() }).from(technicians).where(and(...conditions));
+    const total = totalResult[0].count;
+    
+    const offset = (page - 1) * pageSize;
+    const results = await db.select().from(technicians)
+      .where(and(...conditions))
+      .limit(pageSize)
+      .offset(offset);
+
+    return {
+      data: results as Technician[],
+      total,
+      page,
+      pageSize
+    };
   }
 
   async update(tenantId: string, id: string, data: Partial<Technician>): Promise<Technician | null> {

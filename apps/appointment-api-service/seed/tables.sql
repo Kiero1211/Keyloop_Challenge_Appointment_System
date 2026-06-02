@@ -143,6 +143,16 @@ CREATE TABLE IF NOT EXISTS "vehicles" (
 	PRIMARY KEY ("tenant_id", "id")
 );
 
+
+CREATE TABLE IF NOT EXISTS "appointment_reminders" (
+	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
+	"tenant_id" uuid NOT NULL,
+	"appointment_id" uuid NOT NULL,
+	"sent_at" timestamp with time zone NOT NULL
+);
+
+CREATE INDEX IF NOT EXISTS "idx_appointment_reminders_tenant_appointment" ON "appointment_reminders" ("tenant_id", "appointment_id");
+
 -- Indices
 CREATE INDEX IF NOT EXISTS "idx_appointments_tenant_id" ON "appointments" ("tenant_id","id");
 CREATE INDEX IF NOT EXISTS "idx_appointments_tenant_tech_time" ON "appointments" ("tenant_id","technician_id","start_time","end_time");
@@ -219,3 +229,22 @@ BEGIN
     END LOOP;
 END $$;
 
+
+-- Appointment Reminders Table and View
+CREATE OR REPLACE VIEW "appointment_reminder_view" AS
+SELECT 
+    a.tenant_id,
+    a.id AS appointment_id,
+    a.start_time AS appointment_start_time,
+    a.status AS appointment_status,
+    c.id AS customer_id,
+    c.email AS customer_email,
+    c.first_name || ' ' || c.last_name AS customer_name,
+    v.id AS vehicle_id,
+    v.make AS vehicle_make,
+    v.model AS vehicle_model,
+    CASE WHEN ar.id IS NOT NULL THEN true ELSE false END AS reminder_sent
+FROM appointments a
+JOIN customers c ON a.tenant_id = c.tenant_id AND a.customer_id = c.id
+JOIN vehicles v ON a.tenant_id = v.tenant_id AND a.vehicle_id = v.id
+LEFT JOIN appointment_reminders ar ON a.tenant_id = ar.tenant_id AND a.id = ar.appointment_id;

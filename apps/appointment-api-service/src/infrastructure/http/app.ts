@@ -1,4 +1,5 @@
 import express from 'express';
+import cors from 'cors';
 import { appointmentRouter } from '@/infrastructure/http/routes/appointment.routes';
 import { healthRouter } from '@/infrastructure/http/routes/health.routes';
 import { serviceTypesRouter } from '@/infrastructure/http/routes/service-types.routes';
@@ -9,6 +10,7 @@ import { customersRouter } from '@/infrastructure/http/routes/customers.routes';
 import { vehiclesRouter } from '@/infrastructure/http/routes/vehicles.routes';
 import { tenantRouter } from '@/infrastructure/http/routes/tenant.routes';
 import { authRouter } from '@/infrastructure/http/routes/auth.routes';
+import { auditLogsRouter } from '@/infrastructure/http/routes/audit-logs.routes';
 import { tenantContextMiddleware } from '@/infrastructure/http/middleware/tenant-context.middleware';
 import swaggerUi from 'swagger-ui-express';
 import YAML from 'yamljs';
@@ -20,6 +22,7 @@ import { requestLoggerMiddleware } from '@/infrastructure/http/middleware/reques
 
 const app = express();
 
+app.use(cors());
 app.use(express.json());
 
 // Swagger Docs
@@ -83,6 +86,13 @@ app.use(
 );
 
 app.use('/api/v1/tenants', tenantRouter);
+
+app.use(
+  '/api/v1/audit-logs',
+  (req, res, next) => jwtAuthMiddleware(container.jwtService)(req, res, next),
+  tenantContextMiddleware,
+  auditLogsRouter
+);
 
 // Error handler (must be last)
 app.use(errorHandler);

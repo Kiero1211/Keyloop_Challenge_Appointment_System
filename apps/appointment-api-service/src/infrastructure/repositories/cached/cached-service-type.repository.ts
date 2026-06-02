@@ -31,20 +31,8 @@ export class CachedServiceTypeRepository implements IServiceTypeRepository {
     return serviceType;
   }
 
-  async findAll(tenantId: string): Promise<ServiceType[]> {
-    return this.cacheWrapper.getList(
-      tenantId,
-      () => this.baseRepository.findAll(tenantId),
-      (record) => ({
-        id: record.id,
-        tenantId: record.tenantId,
-        name: record.name,
-        estimatedDurationMinutes: parseInt(record.estimatedDurationMinutes as unknown as string, 10),
-        deletedAt: record.deletedAt ? new Date(record.deletedAt) : null,
-        createdAt: new Date(record.createdAt),
-        updatedAt: new Date(record.updatedAt),
-      } as ServiceType)
-    );
+  async findAll(tenantId?: string, page: number = 1, pageSize: number = 20): Promise<{ data: ServiceType[]; total: number; page: number; pageSize: number }> {
+    return this.baseRepository.findAll(tenantId, page, pageSize);
   }
 
   async create(serviceType: ServiceType): Promise<ServiceType> {

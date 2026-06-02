@@ -5,7 +5,7 @@ export const registerSchema = z.object({
   password: z.string().min(8, 'Password must be at least 8 characters'),
   firstName: z.string().min(1, 'First name is required'),
   lastName: z.string().min(1, 'Last name is required'),
-  tenantId: z.string().uuid('Invalid tenant ID'),
+  tenantId: z.string().uuid('Invalid tenant ID').optional(),
 });
 
 export const loginSchema = z.object({

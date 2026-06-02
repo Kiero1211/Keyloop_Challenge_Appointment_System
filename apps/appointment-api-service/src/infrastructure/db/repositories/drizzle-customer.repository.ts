@@ -23,11 +23,29 @@ export class DrizzleCustomerRepository implements ICustomerRepository {
     return (result as Customer) || null;
   }
 
-  async findAll(tenantId: string): Promise<Customer[]> {
-    const results = await db.query.customers.findMany({
-      where: and(eq(customers.tenantId, tenantId), isNull(customers.deletedAt)),
-    });
-    return results as Customer[];
+  async findAll(tenantId?: string, page: number = 1, pageSize: number = 20): Promise<{ data: Customer[]; total: number; page: number; pageSize: number }> {
+    const { count } = await import('drizzle-orm');
+    
+    const conditions = [isNull(customers.deletedAt)];
+    if (tenantId) {
+      conditions.push(eq(customers.tenantId, tenantId));
+    }
+
+    const totalResult = await db.select({ count: count() }).from(customers).where(and(...conditions));
+    const total = totalResult[0].count;
+    
+    const offset = (page - 1) * pageSize;
+    const results = await db.select().from(customers)
+      .where(and(...conditions))
+      .limit(pageSize)
+      .offset(offset);
+
+    return {
+      data: results as Customer[],
+      total,
+      page,
+      pageSize
+    };
   }
 
   async update(tenantId: string, id: string, data: Partial<Customer>): Promise<Customer | null> {

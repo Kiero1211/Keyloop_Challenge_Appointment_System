@@ -38,7 +38,7 @@ We look forward to seeing you!";
 
             var reminderRecord = new AppointmentReminder
             {
-                Id = Guid.NewGuid(),
+                Id = Guid.NewGuid().ToString(),
                 TenantId = reminderData.TenantId,
                 AppointmentId = reminderData.AppointmentId,
                 SentAt = DateTimeOffset.UtcNow

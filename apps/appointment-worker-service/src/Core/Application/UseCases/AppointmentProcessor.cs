@@ -155,8 +155,7 @@ public class AppointmentProcessor : IAppointmentProcessor
                 ServiceBayId = assignedBayId!,
                 StartTime = startUtc,
                 EndTime = endUtc,
-                Status = AppointmentStatus.Scheduled,
-                AutoAssigned = message.AutoAssigned
+                Status = AppointmentStatus.Scheduled
             };
 
             try
@@ -192,7 +191,6 @@ public class AppointmentProcessor : IAppointmentProcessor
                 StartTime = message.DesiredStartTime.ToUniversalTime(),
                 EndTime = message.ScheduledEndTime?.ToUniversalTime() ?? message.DesiredStartTime.ToUniversalTime().AddHours(1),
                 Status = AppointmentStatus.Failed,
-                AutoAssigned = message.AutoAssigned
             };
 
             try
