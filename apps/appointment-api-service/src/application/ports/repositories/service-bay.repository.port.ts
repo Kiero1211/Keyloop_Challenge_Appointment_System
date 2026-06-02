@@ -7,4 +7,5 @@ export interface IServiceBayRepository {
   findAll(tenantId: string): Promise<ServiceBay[]>;
   update(tenantId: string, id: string, data: Partial<ServiceBay>): Promise<ServiceBay | null>;
   softDelete(tenantId: string, id: string): Promise<boolean>;
+  findAvailable(tenantId: string, startTime: Date, endTime: Date): Promise<ServiceBay[]>;
 }

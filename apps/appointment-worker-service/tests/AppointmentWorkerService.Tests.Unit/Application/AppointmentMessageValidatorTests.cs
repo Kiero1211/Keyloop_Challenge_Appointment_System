@@ -21,7 +21,8 @@ public class AppointmentMessageValidatorTests
         ServiceBayId: "bay-123",
         TechnicianId: "tech-123",
         DesiredStartTime: DateTimeOffset.UtcNow.AddDays(1),
-        Source: "test"
+        Source: "test",
+        AutoAssigned: false
     );
 
     [Fact]

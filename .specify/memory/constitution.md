@@ -1,17 +1,14 @@
 <!--
 SYNC IMPACT REPORT
 ==================
-Version change: 1.0.0 → 1.1.0 (MINOR — new Principle VI added)
-Modified principles: None removed or redefined.
-Added sections:
-  - VI. Monorepo Structure & Docker Containerization (NEW)
+Version change: 1.1.0 → 1.1.1 (PATCH — Test execution clarification)
+Modified principles: 
+  - IV. Spec-Driven & Test-Driven Development (TDD) — NON-NEGOTIABLE (Added Test Execution Rules)
+Added sections: None
 Removed sections: None
 Templates requiring updates:
-  ✅ .specify/templates/plan-template.md — Project Structure section updated to reflect monorepo layout (apps/ + packages/ + docker-compose.yml).
-  ✅ .specify/templates/spec-template.md — No structural changes needed; scope boundaries unchanged.
-  ✅ .specify/templates/tasks-template.md — Phase 1 (Setup) now includes Dockerfile scaffolding per-service and root docker-compose.yml as mandatory foundation tasks.
-  ✅ .specify/templates/commands/*.md — No stale agent-specific references found.
-Follow-up TODOs: None. All placeholders resolved.
+  ✅ .specify/templates/tasks-template.md — Validation plan updated to reflect the new test execution rules.
+Follow-up TODOs: None.
 -->
 
 # Unified Service Scheduler — System Constitution
@@ -129,6 +126,9 @@ mandatory:
 - **Validation Guardrails**:
   - Node.js: HTTP boundary validation MUST use strict `Zod` schema definitions.
   - C# Worker: Consumer ingress MUST validate payloads using `FluentValidation`.
+- **Test Execution Rules**:
+  - **Node.js (API & Bay Services)**: When verifying tests, run through each unit, integration, and e2e test file to ensure there are no errors (e.g., explicitly testing the files or using `npx jest <file>`) instead of relying on broad scripts like `npm run test:unit`.
+  - **C# Worker**: Standard `dotnet test` execution is sufficient as the sandbox handles it reliably.
 
 **Rationale**: Predictability and verified correctness outweigh delivery speed. Untested code is
 treated as unshipped code.
@@ -272,4 +272,4 @@ within this repository. It applies equally to all agents (AI or human) contribut
 - **Runtime Development Guidance**: Use `.agents/rules/` workspace rules for runtime AI agent
   development constraints that align with this constitution.
 
-**Version**: 1.1.0 | **Ratified**: 2026-05-30 | **Last Amended**: 2026-05-30
+**Version**: 1.1.1 | **Ratified**: 2026-05-30 | **Last Amended**: 2026-06-02

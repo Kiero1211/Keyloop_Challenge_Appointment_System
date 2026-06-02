@@ -22,8 +22,18 @@ router.post('/', async (req, res, next) => {
   }
 });
 
+import { ListAvailableTechniciansUseCase } from '@/application/use-cases/crud/technician/list-available-technicians.use-case';
+
 router.get('/', async (req, res, next) => {
   try {
+    const { startTime, endTime } = req.query;
+    if (startTime && endTime) {
+      const useCase = new ListAvailableTechniciansUseCase(container.technicianRepository);
+      const results = await useCase.execute(startTime as string, endTime as string);
+      res.json(results);
+      return;
+    }
+
     const tenantId = tenantContext.getStore()!.tenantId;
     const results = await container.technicianRepository.findAll(tenantId);
     res.json(results);

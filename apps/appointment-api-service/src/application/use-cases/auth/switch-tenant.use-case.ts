@@ -1,5 +1,6 @@
 import { IUserTenantRepository } from '@/application/ports/repositories/user-tenant.repository.port';
 import { IRefreshTokenRepository } from '@/application/ports/repositories/refresh-token.repository.port';
+import { IUserRepository } from '@/application/ports/repositories/user.repository.port';
 import { JwtService } from '@/infrastructure/auth/jwt.service';
 import { UnauthorizedException } from '@/domain/exceptions';
 
@@ -7,6 +8,7 @@ export class SwitchTenantUseCase {
   constructor(
     private userTenantRepository: IUserTenantRepository,
     private refreshTokenRepository: IRefreshTokenRepository,
+    private userRepository: IUserRepository,
     private jwtService: JwtService
   ) {}
 
@@ -22,7 +24,10 @@ export class SwitchTenantUseCase {
       await this.refreshTokenRepository.revoke(refreshToken);
     }
 
-    // 3. Issue new tokens
+    // 3. Update last active tenant in user record
+    await this.userRepository.update(userId, { lastActiveTenantId: targetTenantId });
+
+    // 4. Issue new tokens
     const accessToken = this.jwtService.generateAccessToken({
       userId,
       tenantId: targetTenantId,

@@ -10,7 +10,7 @@ describe('SwitchTenantUseCase', () => {
   let mockJwtService: any;
 
   beforeEach(() => {
-    mockUserTenantRepo = { create: jest.fn(), findByUserId: jest.fn(), findByUserAndTenant: jest.fn() };
+    mockUserTenantRepo = { create: jest.fn(), findByUserId: jest.fn(), findByUserAndTenant: jest.fn(), updateRole: jest.fn() };
     mockRefreshTokenRepo = {
       create: jest.fn(),
       findByToken: jest.fn(),
@@ -19,7 +19,7 @@ describe('SwitchTenantUseCase', () => {
     };
     mockJwtService = { generateAccessToken: jest.fn(), generateRefreshToken: jest.fn() };
     
-    useCase = new SwitchTenantUseCase(mockUserTenantRepo, mockRefreshTokenRepo, mockJwtService);
+    useCase = new SwitchTenantUseCase(mockUserTenantRepo, mockRefreshTokenRepo, mockJwtService, mockJwtService);
   });
 
   it('should throw UnauthorizedException if not a member of target tenant', async () => {

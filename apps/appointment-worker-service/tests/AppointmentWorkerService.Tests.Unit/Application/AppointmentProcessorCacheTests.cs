@@ -23,6 +23,7 @@ public class AppointmentProcessorCacheTests
     private readonly Mock<ITechnicianService> _mockTechnicianService;
     private readonly Mock<IBayService> _mockBayService;
     private readonly Mock<IValidator<AppointmentMessage>> _mockValidator;
+    private readonly Mock<IDistributedLock> _mockDistributedLock;
     private readonly AppointmentProcessor _processor;
 
     public AppointmentProcessorCacheTests()
@@ -33,6 +34,9 @@ public class AppointmentProcessorCacheTests
         _mockTechnicianService = new Mock<ITechnicianService>();
         _mockBayService = new Mock<IBayService>();
         _mockValidator = new Mock<IValidator<AppointmentMessage>>();
+        _mockDistributedLock = new Mock<IDistributedLock>();
+
+        _mockDistributedLock.Setup(x => x.AcquireLockAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<TimeSpan>())).ReturnsAsync(true);
 
         _mockValidator.Setup(v => v.ValidateAsync(It.IsAny<AppointmentMessage>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(new ValidationResult());
@@ -43,7 +47,10 @@ public class AppointmentProcessorCacheTests
             _mockLogger.Object,
             _mockTechnicianService.Object,
             _mockBayService.Object,
-            _mockValidator.Object
+            _mockValidator.Object,
+            null!,
+            null!,
+            _mockDistributedLock.Object
         );
     }
 
@@ -59,7 +66,8 @@ public class AppointmentProcessorCacheTests
             "33333333-3333-3333-3333-333333333333",
             "55555555-5555-5555-5555-555555555555",
             DateTime.UtcNow,
-            "source-1"
+            "source-1",
+            false
         );
         var messageId = "msg-123";
 
@@ -88,7 +96,8 @@ public class AppointmentProcessorCacheTests
             "33333333-3333-3333-3333-333333333333",
             "55555555-5555-5555-5555-555555555555",
             DateTime.UtcNow,
-            "source-1"
+            "source-1",
+            false
         );
         var messageId = "msg-123";
 

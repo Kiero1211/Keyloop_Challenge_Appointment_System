@@ -54,7 +54,7 @@ public class AppointmentProcessor : IAppointmentProcessor
         }
 
         var startUtc = message.DesiredStartTime.ToUniversalTime();
-        var endUtc = startUtc.AddHours(1);
+        var endUtc = message.ScheduledEndTime?.ToUniversalTime() ?? startUtc.AddHours(1);
 
         string? assignedTechId = message.TechnicianId;
         string? assignedBayId = message.ServiceBayId;

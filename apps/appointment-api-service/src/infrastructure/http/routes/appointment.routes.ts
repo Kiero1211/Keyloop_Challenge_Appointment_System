@@ -45,6 +45,8 @@ router.get('/', async (req, res, next) => {
   try {
     const filters = {
       date: req.query.date as string,
+      startTime: req.query.startTime as string,
+      endTime: req.query.endTime as string,
       status: req.query.status as string,
       technicianId: req.query.technicianId as string,
       serviceBayId: req.query.serviceBayId as string,

@@ -12,6 +12,8 @@ export interface IAppointmentCrudRepository {
     customerId?: string;
     vehicleId?: string;
     date?: string;
+    startTime?: string;
+    endTime?: string;
   }, page?: number, pageSize?: number): Promise<{ data: Appointment[], total: number }>;
   updateStatus(tenantId: string, id: string, status: string): Promise<Appointment | null>;
   softDelete(tenantId: string, id: string): Promise<boolean>;

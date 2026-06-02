@@ -20,8 +20,18 @@ router.post('/', async (req, res, next) => {
   }
 });
 
+import { ListAvailableServiceBaysUseCase } from '@/application/use-cases/crud/service-bay/list-available-service-bays.use-case';
+
 router.get('/', async (req, res, next) => {
   try {
+    const { startTime, endTime } = req.query;
+    if (startTime && endTime) {
+      const useCase = new ListAvailableServiceBaysUseCase(container.serviceBayRepository);
+      const results = await useCase.execute(startTime as string, endTime as string);
+      res.json(results);
+      return;
+    }
+
     const tenantId = tenantContext.getStore()!.tenantId;
     const results = await container.serviceBayRepository.findAll(tenantId);
     res.json(results);

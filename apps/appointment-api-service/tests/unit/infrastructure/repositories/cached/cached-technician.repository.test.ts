@@ -21,6 +21,7 @@ describe('CachedTechnicianRepository', () => {
       findAll: jest.fn(),
       update: jest.fn(),
       softDelete: jest.fn(),
+      findAvailable: jest.fn(),
     };
     cacheProvider = {
       exists: jest.fn(),
