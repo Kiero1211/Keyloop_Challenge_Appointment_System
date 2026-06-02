@@ -12,6 +12,8 @@ import { DrizzleServiceTypeRepository } from '@/infrastructure/db/repositories/d
 import { DrizzleTechnicianRepository } from '@/infrastructure/db/repositories/drizzle-technician.repository';
 import { DrizzleTechnicianSkillRepository } from '@/infrastructure/db/repositories/drizzle-technician-skill.repository';
 import { DrizzleServiceBayRepository } from '@/infrastructure/db/repositories/drizzle-service-bay.repository';
+import { DrizzleAuditLogRepository } from '@/infrastructure/db/repositories/drizzle-audit-log.repository';
+import { db } from '@/infrastructure/db/client';
 import { IAppointmentCrudRepository } from '@/application/ports/repositories/appointment-crud.repository.port';
 
 import { DrizzleCustomerRepository } from '@/infrastructure/db/repositories/drizzle-customer.repository';
@@ -47,7 +49,7 @@ class DIContainer {
   public customerRepository!: ICustomerRepository;
   public vehicleRepository!: IVehicleRepository;
   public tenantRepository!: DrizzleTenantRepository;
-
+  public auditLogRepository!: DrizzleAuditLogRepository;
   async initialize(redisClientInstance?: Redis) {
     const redisUrl = process.env.REDIS_URL || 'redis://localhost:6379';
     
@@ -83,6 +85,7 @@ class DIContainer {
     this.customerRepository = new CachedCustomerRepository(new DrizzleCustomerRepository(), this.cacheProvider);
     this.vehicleRepository = new CachedVehicleRepository(new DrizzleVehicleRepository(), this.cacheProvider);
     this.tenantRepository = new DrizzleTenantRepository();
+    this.auditLogRepository = new DrizzleAuditLogRepository(db);
   }
 
   async destroy() {

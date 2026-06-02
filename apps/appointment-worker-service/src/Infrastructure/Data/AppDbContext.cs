@@ -16,6 +16,7 @@ public class AppDbContext : DbContext
     public DbSet<Technician> Technicians => Set<Technician>();
     public DbSet<ServiceBay> ServiceBays => Set<ServiceBay>();
     public DbSet<TechnicianSkill> TechnicianSkills => Set<TechnicianSkill>();
+    public DbSet<AuditLogEntry> AuditLogs => Set<AuditLogEntry>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -67,6 +68,20 @@ public class AppDbContext : DbContext
         // Configure TechnicianSkill primary key
         modelBuilder.Entity<TechnicianSkill>()
             .HasKey(ts => ts.Id);
+
+        // Configure AuditLogEntry
+        modelBuilder.Entity<AuditLogEntry>(entity =>
+        {
+            entity.ToTable("audit_logs");
+            
+            entity.HasKey(a => new { a.TenantId, a.Id }); // Composite key for partition
+
+            entity.Property(a => a.Result)
+                .HasColumnType("jsonb");
+
+            entity.Property(a => a.Timestamp)
+                .HasColumnType("timestamp with time zone");
+        });
     }
 
     private System.Linq.Expressions.LambdaExpression CreateTenantFilter(Type type)

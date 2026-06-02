@@ -184,3 +184,38 @@ BEGIN
         );
     END LOOP;
 END $$;
+
+-- Create Tables for Audit Logs
+
+CREATE TABLE IF NOT EXISTS "audit_logs" (
+	"id" uuid DEFAULT gen_random_uuid() NOT NULL,
+	"tenant_id" uuid NOT NULL,
+	"entity_type" text NOT NULL,
+	"entity_id" text NOT NULL,
+	"action" text NOT NULL,
+	"result" jsonb NOT NULL,
+	"timestamp" timestamp with time zone NOT NULL,
+	"user_id" text,
+	PRIMARY KEY ("tenant_id", "id")
+) PARTITION BY HASH ("tenant_id");
+
+-- Indices for Audit Logs
+CREATE INDEX IF NOT EXISTS "idx_audit_logs_tenant_entity" ON "audit_logs" ("tenant_id", "entity_type", "entity_id");
+CREATE INDEX IF NOT EXISTS "idx_audit_logs_tenant_timestamp" ON "audit_logs" ("tenant_id", "timestamp");
+
+-- Create 64 Partitions for audit_logs
+DO $$
+DECLARE
+    i INTEGER;
+    partition_name TEXT;
+BEGIN
+    FOR i IN 0..63 LOOP
+        partition_name := 'audit_logs_p' || LPAD(i::TEXT, 3, '0');
+        EXECUTE format(
+            'CREATE TABLE IF NOT EXISTS %I PARTITION OF audit_logs FOR VALUES WITH (MODULUS 64, REMAINDER %s);',
+            partition_name,
+            i
+        );
+    END LOOP;
+END $$;
+
