@@ -23,6 +23,7 @@
 
     "baseUrl": ".",
     "paths": {
+      "@/*": ["./src/*"],
       "@/domain/*": ["../../appointment-api-service/src/domain/*"]
     },
     "ignoreDeprecations": "6.0"

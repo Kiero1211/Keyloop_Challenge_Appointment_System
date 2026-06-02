@@ -15,7 +15,11 @@ describe('HealthCheckUseCase', () => {
       ping: jest.fn(),
       deleteMultiple: jest.fn(),
       setMultipleIfNotExists: jest.fn(),
+      zadd: jest.fn(),
+      zrem: jest.fn(),
+      zrangebyscore: jest.fn(),
       sadd: jest.fn(),
+      srem: jest.fn(),
       smembers: jest.fn(),
       expire: jest.fn(),
     };

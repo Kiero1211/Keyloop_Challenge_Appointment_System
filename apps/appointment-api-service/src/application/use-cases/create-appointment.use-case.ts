@@ -11,6 +11,7 @@ import { DesiredTime } from '@/domain/value-objects/desired-time';
 import { v4 as uuidv4 } from 'uuid';
 
 import { IServiceTypeRepository } from '@/application/ports/repositories/service-type.repository.port';
+import { activeAppointmentsSetKey, appointmentHashKey } from '@/domain/cache-keys';
 
 export class CreateAppointmentUseCase {
   constructor(
@@ -86,8 +87,10 @@ export class CreateAppointmentUseCase {
     const streamName = `appointments_stream_${partition}`;
 
     // Compile message payload
+    const createdAt = new Date().toISOString();
     const payload = {
       commandId: commandId.value,
+      appointmentId: commandId.value,
       tenantId,
       customerId: customerId.value,
       vehicleId: vehicleId.value,
@@ -97,13 +100,34 @@ export class CreateAppointmentUseCase {
       desiredStartTime: desiredStartTime.value,
       scheduledEndTime: scheduledEndTime.toISOString(),
       source: 'public',
-      status: 'Scheduled',
+      status: 'Pending',
       autoAssigned: command.autoAssigned,
-      createdAt: new Date().toISOString()
+      createdAt
     };
 
     // Publish to stream
     await this.messagePublisher.publish(streamName, payload);
+
+    const appointmentId = commandId.value;
+    const cacheKey = appointmentHashKey(tenantId, appointmentId);
+    await this.cacheProvider.hset(cacheKey, {
+      id: appointmentId,
+      tenant_id: tenantId,
+      customer_id: customerId.value,
+      vehicle_id: vehicleId.value,
+      service_type_id: serviceTypeId.value,
+      technician_id: command.technicianId ?? '',
+      service_bay_id: command.serviceBayId ?? '',
+      start_time: desiredStartTime.value,
+      end_time: scheduledEndTime.toISOString(),
+      status: 'Pending',
+      notes: '',
+      actual_start_time: '',
+      actual_end_time: '',
+      created_at: createdAt,
+      updated_at: createdAt,
+    });
+    await this.cacheProvider.sadd(activeAppointmentsSetKey(tenantId), [appointmentId]);
 
     // Delete holds
     if (keysToDelete.length > 0) {

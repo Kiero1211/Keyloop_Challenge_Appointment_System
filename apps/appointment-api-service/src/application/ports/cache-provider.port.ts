@@ -10,4 +10,8 @@ export interface ICacheProvider {
   setMultipleIfNotExists(items: { key: string; value: string }[], ttlSeconds: number): Promise<boolean>;
   sadd(key: string, members: string[], ttlSeconds?: number): Promise<number>;
   smembers(key: string): Promise<string[]>;
+  zadd(key: string, score: number, member: string): Promise<number>;
+  zrem(key: string, member: string): Promise<number>;
+  zrangebyscore(key: string, min: number, max: number): Promise<string[]>;
+  srem(key: string, member: string): Promise<number>;
 }

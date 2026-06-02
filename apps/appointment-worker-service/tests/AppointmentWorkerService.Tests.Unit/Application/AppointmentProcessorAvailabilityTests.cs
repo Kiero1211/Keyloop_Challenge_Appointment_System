@@ -147,7 +147,7 @@ public class AppointmentProcessorAvailabilityTests
     }
 
     [Fact]
-    public async Task GivenDbConcurrencyException_WhenProcessAsync_ThenSetsStatusToCancelled()
+    public async Task GivenDbConcurrencyException_WhenProcessAsync_ThenSetsStatusToFailed()
     {
         var message = CreateMessage();
         _validatorMock.Setup(x => x.ValidateAsync(message, It.IsAny<CancellationToken>()))
@@ -162,7 +162,12 @@ public class AppointmentProcessorAvailabilityTests
 
         await _sut.ProcessAsync(message, "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa", CancellationToken.None);
 
-        _cacheMock.Verify(x => x.SetAsync(It.IsAny<string>(), It.IsAny<object>(), It.IsAny<TimeSpan?>()), Times.Once);
+        _cacheMock.Verify(x => x.HashSetFieldsAsync(
+            It.IsAny<string>(),
+            It.IsAny<Dictionary<string, string>>(),
+            TimeSpan.FromHours(1)), Times.Once);
+        _cacheMock.Verify(x => x.SetRemoveAsync(It.IsAny<string>(), It.IsAny<string>()), Times.Once);
+        _cacheMock.Verify(x => x.StreamAcknowledgeAsync("appointments_stream", "worker_group", "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa"), Times.Once);
     }
 
     [Fact]

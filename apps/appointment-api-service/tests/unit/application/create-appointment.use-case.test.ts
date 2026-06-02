@@ -4,6 +4,7 @@ import { IMessagePublisher } from '@/application/ports/message-publisher.port';
 import { IServiceTypeRepository } from '@/application/ports/repositories/service-type.repository.port';
 import { tenantContext } from '@/domain/context/tenant-context';
 import { DomainValidationException, ConflictException } from '@/domain/exceptions';
+import { activeAppointmentsSetKey, appointmentHashKey } from '@/domain/cache-keys';
 
 jest.mock('@/domain/context/tenant-context', () => ({
   tenantContext: {
@@ -31,6 +32,10 @@ describe('CreateAppointmentUseCase', () => {
       sadd: jest.fn(),
       smembers: jest.fn(),
       expire: jest.fn(),
+      zadd: jest.fn(),
+      zrem: jest.fn(),
+      zrangebyscore: jest.fn(),
+      srem: jest.fn(),
     };
 
     messagePublisher = {
@@ -60,8 +65,6 @@ describe('CreateAppointmentUseCase', () => {
 
   it('should successfully create an appointment when valid', async () => {
     serviceTypeRepository.findById.mockResolvedValue({ id: 'st1', estimatedDurationMinutes: 60 } as any);
-    
-    // mock cacheProvider.get to return valid holds
     cacheProvider.get.mockResolvedValueOnce(JSON.stringify({ holdId: 'h1', technicianId: 't1' }));
     cacheProvider.get.mockResolvedValueOnce(JSON.stringify({ holdId: 'h2', serviceBayId: 'b1' }));
 
@@ -81,8 +84,30 @@ describe('CreateAppointmentUseCase', () => {
 
     expect(result.commandId).toBeDefined();
     expect(result.partition).toBe(0);
-    expect(messagePublisher.publish).toHaveBeenCalled();
-    expect(cacheProvider.hset).toHaveBeenCalled();
+    expect(messagePublisher.publish).toHaveBeenCalledWith(
+      'appointments_stream_0',
+      expect.objectContaining({
+        appointmentId: result.commandId,
+        status: 'Pending',
+      })
+    );
+    expect(cacheProvider.hset).toHaveBeenCalledWith(
+      appointmentHashKey('tenant-123', result.commandId),
+      expect.objectContaining({
+        id: result.commandId,
+        tenant_id: 'tenant-123',
+        customer_id: 'c1',
+        vehicle_id: 'v1',
+        service_type_id: 'st1',
+        technician_id: 't1',
+        service_bay_id: 'b1',
+        status: 'Pending',
+      })
+    );
+    expect(cacheProvider.sadd).toHaveBeenCalledWith(
+      activeAppointmentsSetKey('tenant-123'),
+      [result.commandId]
+    );
     expect(cacheProvider.deleteMultiple).toHaveBeenCalled();
   });
 

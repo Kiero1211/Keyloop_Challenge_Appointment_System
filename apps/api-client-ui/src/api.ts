@@ -55,6 +55,10 @@ export async function getAppointments(page = 1) {
   return apiFetch(`/api/v1/appointments?page=${page}`);
 }
 
+export async function getActiveAppointments() {
+  return apiFetch('/api/v1/appointments/active');
+}
+
 export async function getAuditLogs(page = 1) {
   // requires admin role
   const end_time = new Date().toISOString();
@@ -158,4 +162,9 @@ export async function holdAppointmentResource(payload: { technicianId?: string, 
     method: 'POST',
     body: JSON.stringify(payload),
   });
+}
+
+export async function getOccupiedSlots(resourceType: 'technicians' | 'service-bays', id: string, date?: string) {
+  const query = date ? `?date=${encodeURIComponent(date)}` : '';
+  return apiFetch(`/api/v1/${resourceType}/${id}/occupied${query}`);
 }

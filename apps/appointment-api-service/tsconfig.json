@@ -12,6 +12,7 @@
     "baseUrl": "./",
     "noImplicitAny": false,
     "paths": {
+      "@/tests/*": ["tests/*"],
       "@/*": ["src/*"]
     }
   },

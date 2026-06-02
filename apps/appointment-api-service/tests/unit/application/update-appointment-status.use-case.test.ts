@@ -1,10 +1,12 @@
 import { UpdateAppointmentStatusUseCase } from '@/application/use-cases/crud/appointment/update-appointment-status.use-case';
 import { IAppointmentCrudRepository } from '@/application/ports/repositories/appointment-crud.repository.port';
+import { ICacheProvider } from '@/application/ports/cache-provider.port';
 import { UnprocessableException, NotFoundException } from '@/domain/exceptions';
 
 describe('UpdateAppointmentStatusUseCase', () => {
   let useCase: UpdateAppointmentStatusUseCase;
   let mockRepo: jest.Mocked<IAppointmentCrudRepository>;
+  let mockCache: jest.Mocked<ICacheProvider>;
 
   beforeEach(() => {
     mockRepo = {
@@ -14,7 +16,24 @@ describe('UpdateAppointmentStatusUseCase', () => {
       updateStatus: jest.fn(),
       softDelete: jest.fn()
     } as any;
-    useCase = new UpdateAppointmentStatusUseCase(mockRepo);
+    mockCache = {
+      exists: jest.fn(),
+      get: jest.fn(),
+      hset: jest.fn(),
+      hgetall: jest.fn(),
+      del: jest.fn(),
+      deleteMultiple: jest.fn(),
+      ping: jest.fn(),
+      setMultipleIfNotExists: jest.fn(),
+      sadd: jest.fn(),
+      smembers: jest.fn(),
+      expire: jest.fn(),
+      zadd: jest.fn(),
+      zrem: jest.fn(),
+      zrangebyscore: jest.fn(),
+      srem: jest.fn(),
+    } as any;
+    useCase = new UpdateAppointmentStatusUseCase(mockRepo, mockCache);
   });
 
   it('should successfully transition Scheduled to InProgress', async () => {

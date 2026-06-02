@@ -18,10 +18,10 @@
 
 **⚠️ CRITICAL**: No user story work can begin until this phase is complete.
 
-- [ ] T001 Extend `ICacheProvider` port in `apps/appointment-api-service/src/application/ports/cache-provider.port.ts` — add `zadd(key, score, member)`, `zrem(key, member)`, `zrangebyscore(key, min, max)`, `srem(key, member)` method signatures
-- [ ] T002 Extend `ICacheProvider` interface in `apps/appointment-worker-service/src/Core/Application/Ports/ICacheProvider.cs` — add `HashSetFieldsAsync`, `SortedSetAddAsync`, `SortedSetRemoveAsync`, `SetAddAsync`, `SetRemoveAsync`, `SetMembersAsync` method signatures
-- [ ] T003 [P] Implement new Node.js port methods in `apps/appointment-api-service/src/infrastructure/cache/redis-cache.adapter.ts` — implement `zadd`, `zrem`, `zrangebyscore`, `srem` using `ioredis`
-- [ ] T004 [P] Implement new C# port methods in `apps/appointment-worker-service/src/Infrastructure/Cache/CacheProvider.cs` — implement `HashSetFieldsAsync`, `SortedSetAddAsync`, `SortedSetRemoveAsync`, `SetAddAsync`, `SetRemoveAsync`, `SetMembersAsync` using `StackExchange.Redis`
+- [X] T001 Extend `ICacheProvider` port in `apps/appointment-api-service/src/application/ports/cache-provider.port.ts` — add `zadd(key, score, member)`, `zrem(key, member)`, `zrangebyscore(key, min, max)`, `srem(key, member)` method signatures
+- [X] T002 Extend `ICacheProvider` interface in `apps/appointment-worker-service/src/Core/Application/Ports/ICacheProvider.cs` — add `HashSetFieldsAsync`, `SortedSetAddAsync`, `SortedSetRemoveAsync`, `SetAddAsync`, `SetRemoveAsync`, `SetMembersAsync` method signatures
+- [X] T003 [P] Implement new Node.js port methods in `apps/appointment-api-service/src/infrastructure/cache/redis-cache.adapter.ts` — implement `zadd`, `zrem`, `zrangebyscore`, `srem` using `ioredis`
+- [X] T004 [P] Implement new C# port methods in `apps/appointment-worker-service/src/Infrastructure/Cache/CacheProvider.cs` — implement `HashSetFieldsAsync`, `SortedSetAddAsync`, `SortedSetRemoveAsync`, `SetAddAsync`, `SetRemoveAsync`, `SetMembersAsync` using `StackExchange.Redis`
 
 **Checkpoint**: Both `ICacheProvider` contracts are extended and their adapters compile cleanly. All user story phases can now begin.
 
@@ -31,8 +31,8 @@
 
 **Purpose**: Define the canonical cache key builder/constants used across all new use cases in both services. Prevents key format drift between API and Worker.
 
-- [ ] T005 Create `apps/appointment-api-service/src/domain/cache-keys.ts` — export pure functions: `appointmentHashKey(tenantId, appointmentId)`, `activeAppointmentsSetKey(tenantId)`, `technicianOccupiedKey(tenantId, technicianId)`, `bayOccupiedKey(tenantId, bayId)`, `occupiedSlotHashKey(tenantId, appointmentId)` following the `tenant:{t}:{type}:{id}` convention
-- [ ] T006 Create `apps/appointment-worker-service/src/Core/Domain/CacheKeys.cs` — mirror the same key-builder static methods for use in the C# Worker
+- [X] T005 Create `apps/appointment-api-service/src/domain/cache-keys.ts` — export pure functions: `appointmentHashKey(tenantId, appointmentId)`, `activeAppointmentsSetKey(tenantId)`, `technicianOccupiedKey(tenantId, technicianId)`, `bayOccupiedKey(tenantId, bayId)`, `occupiedSlotHashKey(tenantId, appointmentId)` following the `tenant:{t}:{type}:{id}` convention
+- [X] T006 Create `apps/appointment-worker-service/src/Core/Domain/CacheKeys.cs` — mirror the same key-builder static methods for use in the C# Worker
 
 **Checkpoint**: Both services share the same logical key format via dedicated constant files. Ready for user story implementation.
 
@@ -48,19 +48,19 @@
 
 > **Write tests first — confirm they FAIL before writing implementation code**
 
-- [ ] T007 [P] [US1] Write unit test for updated `CreateAppointmentUseCase` in `apps/appointment-api-service/tests/unit/use-cases/create-appointment.use-case.test.ts` — assert `hset` called with `status=Pending` and all appointment fields, assert `sadd` called on active-index set key
-- [ ] T008 [P] [US1] Write unit test for `GetActiveAppointmentsUseCase` in `apps/appointment-api-service/tests/unit/use-cases/get-active-appointments.use-case.test.ts` — mock `ICacheProvider`; assert `smembers` → `hgetall` pipeline returns only Pending and Scheduled entries
-- [ ] T009 [P] [US1] Write unit test for updated `AppointmentProcessor` (C#) in `apps/appointment-worker-service/tests/Core/Application/UseCases/AppointmentProcessorTests.cs` — assert `HashSetFieldsAsync` called with `status=Scheduled` on success; assert `HashSetFieldsAsync` called with `status=Failed` + TTL=3600s on failure; assert `SetRemoveAsync` called on failure
+- [X] T007 [P] [US1] Write unit test for updated `CreateAppointmentUseCase` in `apps/appointment-api-service/tests/unit/use-cases/create-appointment.use-case.test.ts` — assert `hset` called with `status=Pending` and all appointment fields, assert `sadd` called on active-index set key
+- [X] T008 [P] [US1] Write unit test for `GetActiveAppointmentsUseCase` in `apps/appointment-api-service/tests/unit/use-cases/get-active-appointments.use-case.test.ts` — mock `ICacheProvider`; assert `smembers` → `hgetall` pipeline returns only Pending and Scheduled entries
+- [X] T009 [P] [US1] Write unit test for updated `AppointmentProcessor` (C#) in `apps/appointment-worker-service/tests/Core/Application/UseCases/AppointmentProcessorTests.cs` — assert `HashSetFieldsAsync` called with `status=Scheduled` on success; assert `HashSetFieldsAsync` called with `status=Failed` + TTL=3600s on failure; assert `SetRemoveAsync` called on failure
 
 ### Implementation for User Story 1
 
-- [ ] T010 [US1] Modify `apps/appointment-api-service/src/application/use-cases/create-appointment.use-case.ts` — after `messagePublisher.publish(...)`, call `cacheProvider.hset(appointmentHashKey(...), { id, tenantId, customerId, vehicleId, serviceTypeId, technicianId, serviceBayId, startTime, endTime, status: 'Pending', notes: '', createdAt, updatedAt })` and `cacheProvider.sadd(activeAppointmentsSetKey(tenantId), [appointmentId])` (depends on T001, T005)
-- [ ] T011 [US1] Create `apps/appointment-api-service/src/application/use-cases/get-active-appointments.use-case.ts` — reads active index set via `smembers`, fetches each hash via `hgetall`, filters `status IN [Pending, Scheduled]`, returns array (depends on T001, T005)
-- [ ] T012 [US1] Add `GET /active` route to `apps/appointment-api-service/src/infrastructure/http/routes/appointment.routes.ts` — instantiate `GetActiveAppointmentsUseCase`, validate tenant context, return JSON (depends on T011)
-- [ ] T013 [US1] Add `getActiveAppointments()` function to `apps/api-client-ui/src/api.ts` — calls `GET /api/v1/appointments/active`
-- [ ] T014 [US1] Modify `apps/appointment-worker-service/src/Core/Application/UseCases/AppointmentProcessor.cs` — on success: call `HashSetFieldsAsync(appointmentHashKey, { status: "Scheduled", notes, updatedAt })` using canonical key from `CacheKeys.cs`; remove the old non-conformant `{tenantId}:AppointmentDetail:{id}` write (depends on T002, T006)
-- [ ] T015 [US1] Modify `apps/appointment-worker-service/src/Core/Application/UseCases/AppointmentProcessor.cs` — on failure: call `HashSetFieldsAsync(appointmentHashKey, { status: "Failed", notes: exMessage, updatedAt }, ttl: 3600s)` and `SetRemoveAsync(activeSetKey, appointmentId)` (depends on T002, T006)
-- [ ] T016 [US1] Add active appointments polling to `apps/api-client-ui/src/App.tsx` — use `setInterval` (4 s) while the Appointments tab is active; display list with status badges; cleanup interval on unmount/tab-switch
+- [X] T010 [US1] Modify `apps/appointment-api-service/src/application/use-cases/create-appointment.use-case.ts` — after `messagePublisher.publish(...)`, call `cacheProvider.hset(appointmentHashKey(...), { id, tenantId, customerId, vehicleId, serviceTypeId, technicianId, serviceBayId, startTime, endTime, status: 'Pending', notes: '', createdAt, updatedAt })` and `cacheProvider.sadd(activeAppointmentsSetKey(tenantId), [appointmentId])` (depends on T001, T005)
+- [X] T011 [US1] Create `apps/appointment-api-service/src/application/use-cases/get-active-appointments.use-case.ts` — reads active index set via `smembers`, fetches each hash via `hgetall`, filters `status IN [Pending, Scheduled]`, returns array (depends on T001, T005)
+- [X] T012 [US1] Add `GET /active` route to `apps/appointment-api-service/src/infrastructure/http/routes/appointment.routes.ts` — instantiate `GetActiveAppointmentsUseCase`, validate tenant context, return JSON (depends on T011)
+- [X] T013 [US1] Add `getActiveAppointments()` function to `apps/api-client-ui/src/api.ts` — calls `GET /api/v1/appointments/active`
+- [X] T014 [US1] Modify `apps/appointment-worker-service/src/Core/Application/UseCases/AppointmentProcessor.cs` — on success: call `HashSetFieldsAsync(appointmentHashKey, { status: "Scheduled", notes, updatedAt })` using canonical key from `CacheKeys.cs`; remove the old non-conformant `{tenantId}:AppointmentDetail:{id}` write (depends on T002, T006)
+- [X] T015 [US1] Modify `apps/appointment-worker-service/src/Core/Application/UseCases/AppointmentProcessor.cs` — on failure: call `HashSetFieldsAsync(appointmentHashKey, { status: "Failed", notes: exMessage, updatedAt }, ttl: 3600s)` and `SetRemoveAsync(activeSetKey, appointmentId)` (depends on T002, T006)
+- [X] T016 [US1] Add active appointments polling to `apps/api-client-ui/src/App.tsx` — use `setInterval` (4 s) while the Appointments tab is active; display list with status badges; cleanup interval on unmount/tab-switch
 
 **Checkpoint**: Create an appointment via the UI, see "Pending" badge appear immediately, see it change to "Scheduled" within ~5 s without reload. The MVP is demonstrable.
 
@@ -74,17 +74,17 @@
 
 ### Tests for User Story 2
 
-- [ ] T017 [P] [US2] Write unit test for `GetTechnicianOccupiedSlotsUseCase` in `apps/appointment-api-service/tests/unit/use-cases/get-technician-occupied-slots.use-case.test.ts` — mock `ICacheProvider`; assert `zrangebyscore` called with correct day range; assert `hgetall` called for each slot member
-- [ ] T018 [P] [US2] Write unit test for `GetBayOccupiedSlotsUseCase` in `apps/appointment-api-service/tests/unit/use-cases/get-bay-occupied-slots.use-case.test.ts` — same pattern for bay
+- [X] T017 [P] [US2] Write unit test for `GetTechnicianOccupiedSlotsUseCase` in `apps/appointment-api-service/tests/unit/use-cases/get-technician-occupied-slots.use-case.test.ts` — mock `ICacheProvider`; assert `zrangebyscore` called with correct day range; assert `hgetall` called for each slot member
+- [X] T018 [P] [US2] Write unit test for `GetBayOccupiedSlotsUseCase` in `apps/appointment-api-service/tests/unit/use-cases/get-bay-occupied-slots.use-case.test.ts` — same pattern for bay
 
 ### Implementation for User Story 2
 
-- [ ] T019 [US2] Create `apps/appointment-api-service/src/application/use-cases/get-technician-occupied-slots.use-case.ts` — accepts `tenantId`, `technicianId`, optional `date`; calls `cacheProvider.zrangebyscore(technicianOccupiedKey(...), dayStart, dayEnd)` to get appointment IDs; fetches each `occupiedSlotHashKey` via `hgetall`; returns array of `{ appointmentId, startTime, endTime }` (depends on T001, T005)
-- [ ] T020 [US2] Create `apps/appointment-api-service/src/application/use-cases/get-bay-occupied-slots.use-case.ts` — same pattern for service bay (depends on T001, T005)
-- [ ] T021 [US2] Add `GET /:id/occupied` route to `apps/appointment-api-service/src/infrastructure/http/routes/technicians.routes.ts` — instantiate `GetTechnicianOccupiedSlotsUseCase`, pass `date` query param (depends on T019)
-- [ ] T022 [US2] Add `GET /:id/occupied` route to `apps/appointment-api-service/src/infrastructure/http/routes/service-bays.routes.ts` — instantiate `GetBayOccupiedSlotsUseCase`, pass `date` query param (depends on T020)
-- [ ] T023 [US2] Add `getOccupiedSlots(resourceType: 'technicians' | 'service-bays', id: string, date?: string)` to `apps/api-client-ui/src/api.ts`
-- [ ] T024 [US2] Update the technician and bay dropdowns in the create appointment modal in `apps/api-client-ui/src/components/CreateAppointmentModal.tsx` (or equivalent) — on service type / start time change, call the occupied-slots endpoint for each resource and filter out resources with an overlapping slot for the full service duration
+- [X] T019 [US2] Create `apps/appointment-api-service/src/application/use-cases/get-technician-occupied-slots.use-case.ts` — accepts `tenantId`, `technicianId`, optional `date`; calls `cacheProvider.zrangebyscore(technicianOccupiedKey(...), dayStart, dayEnd)` to get appointment IDs; fetches each `occupiedSlotHashKey` via `hgetall`; returns array of `{ appointmentId, startTime, endTime }` (depends on T001, T005)
+- [X] T020 [US2] Create `apps/appointment-api-service/src/application/use-cases/get-bay-occupied-slots.use-case.ts` — same pattern for service bay (depends on T001, T005)
+- [X] T021 [US2] Add `GET /:id/occupied` route to `apps/appointment-api-service/src/infrastructure/http/routes/technicians.routes.ts` — instantiate `GetTechnicianOccupiedSlotsUseCase`, pass `date` query param (depends on T019)
+- [X] T022 [US2] Add `GET /:id/occupied` route to `apps/appointment-api-service/src/infrastructure/http/routes/service-bays.routes.ts` — instantiate `GetBayOccupiedSlotsUseCase`, pass `date` query param (depends on T020)
+- [X] T023 [US2] Add `getOccupiedSlots(resourceType: 'technicians' | 'service-bays', id: string, date?: string)` to `apps/api-client-ui/src/api.ts`
+- [X] T024 [US2] Update the technician and bay dropdowns in the create appointment modal in `apps/api-client-ui/src/components/CreateAppointmentModal.tsx` (or equivalent) — on service type / start time change, call the occupied-slots endpoint for each resource and filter out resources with an overlapping slot for the full service duration
 
 **Checkpoint**: Open the create appointment modal, select a service type and start time — only unoccupied technicians and bays appear. When a concurrent booking is made, the dropdown re-filters on the next field change.
 
@@ -98,15 +98,15 @@
 
 ### Tests for User Story 4
 
-- [ ] T025 [P] [US4] Write integration test for `GET /api/v1/technicians/:id/occupied` in `apps/appointment-api-service/tests/integration/routes/technicians.occupied.test.ts` — seed Redis sorted set + companion hashes, call endpoint, verify response shape matches `contracts/openapi.yaml`
-- [ ] T026 [P] [US4] Write integration test for `GET /api/v1/service-bays/:id/occupied` in `apps/appointment-api-service/tests/integration/routes/service-bays.occupied.test.ts` — same pattern
+- [X] T025 [P] [US4] Write integration test for `GET /api/v1/technicians/:id/occupied` in `apps/appointment-api-service/tests/integration/routes/technicians.occupied.test.ts` — seed Redis sorted set + companion hashes, call endpoint, verify response shape matches `contracts/openapi.yaml`
+- [X] T026 [P] [US4] Write integration test for `GET /api/v1/service-bays/:id/occupied` in `apps/appointment-api-service/tests/integration/routes/service-bays.occupied.test.ts` — same pattern
 
 ### Implementation for User Story 4
 
-- [ ] T027 [US4] Add occupied time panel UI component to `apps/api-client-ui/src/components/OccupiedSlotsPanel.tsx` — accepts `resourceType` + `resourceId`; polls `getOccupiedSlots(...)` on 4 s interval while visible; renders a list of `{ appointmentId, startTime, endTime }` rows; stops polling on unmount (depends on T023)
-- [ ] T028 [US4] Wire `OccupiedSlotsPanel` into the create appointment modal in `apps/api-client-ui/src/components/CreateAppointmentModal.tsx` — render panel when a technician is selected; render panel when a bay is selected; panels update independently (depends on T027)
-- [ ] T029 [US4] Modify `apps/appointment-worker-service/src/Core/Application/UseCases/AppointmentProcessor.cs` — on success (Scheduled): call `SortedSetAddAsync(technicianOccupiedKey, appointmentId, startTimeUnixEpoch)`, `SortedSetAddAsync(bayOccupiedKey, appointmentId, startTimeUnixEpoch)`, and `HashSetFieldsAsync(occupiedSlotHashKey, { appointmentId, startTime, endTime })` for each (depends on T002, T006)
-- [ ] T030 [US4] Add `Completed`/`Cancelled` occupancy cleanup to `apps/appointment-worker-service/src/Core/Application/UseCases/AppointmentProcessor.cs` or a new `UpdateAppointmentStatusHandler` — call `SortedSetRemoveAsync(technicianOccupiedKey, appointmentId)`, `SortedSetRemoveAsync(bayOccupiedKey, appointmentId)`, `DeleteAsync(occupiedSlotHashKey)`, `SetRemoveAsync(activeSetKey, appointmentId)` (depends on T002, T006)
+- [X] T027 [US4] Add occupied time panel UI component to `apps/api-client-ui/src/components/OccupiedSlotsPanel.tsx` — accepts `resourceType` + `resourceId`; polls `getOccupiedSlots(...)` on 4 s interval while visible; renders a list of `{ appointmentId, startTime, endTime }` rows; stops polling on unmount (depends on T023)
+- [X] T028 [US4] Wire `OccupiedSlotsPanel` into the create appointment modal in `apps/api-client-ui/src/components/CreateAppointmentModal.tsx` — render panel when a technician is selected; render panel when a bay is selected; panels update independently (depends on T027)
+- [X] T029 [US4] Modify `apps/appointment-worker-service/src/Core/Application/UseCases/AppointmentProcessor.cs` — on success (Scheduled): call `SortedSetAddAsync(technicianOccupiedKey, appointmentId, startTimeUnixEpoch)`, `SortedSetAddAsync(bayOccupiedKey, appointmentId, startTimeUnixEpoch)`, and `HashSetFieldsAsync(occupiedSlotHashKey, { appointmentId, startTime, endTime })` for each (depends on T002, T006)
+- [X] T030 [US4] Add `Completed`/`Cancelled` occupancy cleanup to `apps/appointment-worker-service/src/Core/Application/UseCases/AppointmentProcessor.cs` or a new `UpdateAppointmentStatusHandler` — call `SortedSetRemoveAsync(technicianOccupiedKey, appointmentId)`, `SortedSetRemoveAsync(bayOccupiedKey, appointmentId)`, `DeleteAsync(occupiedSlotHashKey)`, `SetRemoveAsync(activeSetKey, appointmentId)` (depends on T002, T006)
 
 **Checkpoint**: Select a technician in the create appointment modal — occupied time windows appear in the panel. Create a new appointment for that technician — within 4 s the new slot appears in the panel.
 
@@ -120,8 +120,8 @@
 
 ### Implementation for User Story 3
 
-- [ ] T031 [US3] Add polling logic to the appointments section of `apps/api-client-ui/src/App.tsx` — replace or supplement the static `getAppointments()` call with a 4 s `setInterval` calling `getActiveAppointments()`; merge with or replace the existing appointments list; clean up on unmount (depends on T013, T016)
-- [ ] T032 [US3] Add visual status badge differentiation to the appointments list in `apps/api-client-ui/src/App.tsx` or `apps/api-client-ui/src/components/DataTable.tsx` — colour-coded `Pending` (amber), `Scheduled` (green), `Failed` (red) badges
+- [X] T031 [US3] Add polling logic to the appointments section of `apps/api-client-ui/src/App.tsx` — replace or supplement the static `getAppointments()` call with a 4 s `setInterval` calling `getActiveAppointments()`; merge with or replace the existing appointments list; clean up on unmount (depends on T013, T016)
+- [X] T032 [US3] Add visual status badge differentiation to the appointments list in `apps/api-client-ui/src/App.tsx` or `apps/api-client-ui/src/components/DataTable.tsx` — colour-coded `Pending` (amber), `Scheduled` (green), `Failed` (red) badges
 
 **Checkpoint**: With docker compose running, create an appointment in one tab and see the dashboard update in < 5 s in another tab without any user interaction.
 
@@ -131,8 +131,8 @@
 
 **Purpose**: Ensure Redis occupancy and appointment hash caches are correctly populated when the API service restarts cold (Redis empty).
 
-- [ ] T033 Create `apps/appointment-api-service/src/infrastructure/startup/startup-seed.service.ts` — on startup, query `appointmentCrudRepository` for all `Scheduled` appointments; for each: write appointment hash, add to active index set, `ZADD` technician and bay sorted sets, `HSET` companion slot hashes
-- [ ] T034 Register `StartupSeedService` in `apps/appointment-api-service/src/infrastructure/http/app.ts` — call `await startupSeedService.seed()` before the Express server begins accepting requests (depends on T033)
+- [X] T033 Create `apps/appointment-api-service/src/infrastructure/startup/startup-seed.service.ts` — on startup, query `appointmentCrudRepository` for all `Scheduled` appointments; for each: write appointment hash, add to active index set, `ZADD` technician and bay sorted sets, `HSET` companion slot hashes
+- [X] T034 Register `StartupSeedService` in `apps/appointment-api-service/src/infrastructure/http/app.ts` — call `await startupSeedService.seed()` before the Express server begins accepting requests (depends on T033)
 
 ---
 
@@ -140,17 +140,17 @@
 
 **Purpose**: Verify the new `ICacheProvider` methods in both adapters work correctly against a real Redis instance.
 
-- [ ] T035 [P] Write integration tests for `RedisCacheAdapter` new methods in `apps/appointment-api-service/tests/integration/cache/redis-cache-adapter.test.ts` — test `zadd`, `zrem`, `zrangebyscore`, `srem` using Testcontainers Redis; run with `npx jest tests/integration/cache/redis-cache-adapter.test.ts`
-- [ ] T036 [P] Write integration tests for `CacheProvider.cs` new methods in `apps/appointment-worker-service/tests/Infrastructure/Cache/CacheProviderTests.cs` — test `HashSetFieldsAsync`, `SortedSetAddAsync`, `SortedSetRemoveAsync`, `SetAddAsync`, `SetRemoveAsync`, `SetMembersAsync` using Testcontainers Redis; run with `dotnet test`
+- [X] T035 [P] Write integration tests for `RedisCacheAdapter` new methods in `apps/appointment-api-service/tests/integration/cache/redis-cache-adapter.test.ts` — test `zadd`, `zrem`, `zrangebyscore`, `srem` using Testcontainers Redis; run with `npx jest tests/integration/cache/redis-cache-adapter.test.ts`
+- [X] T036 [P] Write integration tests for `CacheProvider.cs` new methods in `apps/appointment-worker-service/tests/Infrastructure/Cache/CacheProviderTests.cs` — test `HashSetFieldsAsync`, `SortedSetAddAsync`, `SortedSetRemoveAsync`, `SetAddAsync`, `SetRemoveAsync`, `SetMembersAsync` using Testcontainers Redis; run with `dotnet test`
 
 ---
 
 ## Phase 9: Polish & Cross-Cutting Concerns
 
-- [ ] T037 [P] Update OpenAPI spec in `apps/appointment-api-service` (if one exists) with the three new endpoint definitions from `contracts/openapi.yaml`
-- [ ] T038 [P] Verify all new Redis keys follow the `tenant:{id}:{type}:{id}` format documented in the constitution — grep `apps/` for any non-conformant key strings
+- [X] T037 [P] Update OpenAPI spec in `apps/appointment-api-service` (if one exists) with the three new endpoint definitions from `contracts/openapi.yaml`
+- [X] T038 [P] Verify all new Redis keys follow the `tenant:{id}:{type}:{id}` format documented in the constitution — grep `apps/` for any non-conformant key strings
 - [ ] T039 Run end-to-end validation per `quickstart.md` — `docker compose up -d`, create appointment, verify Pending hash, verify Scheduled transition, verify occupied sorted set, verify occupied-times endpoint, verify Failed TTL
-- [ ] T040 [P] Clean up deprecated `{tenantId}:AppointmentDetail:{id}` key writes from `AppointmentProcessor.cs` if not already removed in T014/T015
+- [X] T040 [P] Clean up deprecated `{tenantId}:AppointmentDetail:{id}` key writes from `AppointmentProcessor.cs` if not already removed in T014/T015
 
 ---
 

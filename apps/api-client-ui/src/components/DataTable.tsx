@@ -27,6 +27,31 @@ export function DataTable({ data, error, loading, onEdit, onDelete }: DataTableP
   // extract columns from the first object
   const columns = Object.keys(data[0]);
 
+  const renderValue = (column: string, value: any) => {
+    if (column === 'status' && typeof value === 'string') {
+      const palette: Record<string, { background: string; color: string }> = {
+        Pending: { background: '#f59e0b', color: '#fff' },
+        Scheduled: { background: '#16a34a', color: '#fff' },
+        Failed: { background: '#dc2626', color: '#fff' },
+        InProgress: { background: '#2563eb', color: '#fff' },
+        Completed: { background: '#64748b', color: '#fff' },
+        Cancelled: { background: '#7c3aed', color: '#fff' },
+      };
+      const style = palette[value] || { background: '#e5e7eb', color: '#111827' };
+      return (
+        <span style={{ display: 'inline-block', padding: '4px 10px', borderRadius: '999px', background: style.background, color: style.color, fontWeight: 600 }}>
+          {value}
+        </span>
+      );
+    }
+
+    if (typeof value === 'object') {
+      return JSON.stringify(value);
+    }
+
+    return String(value);
+  };
+
   return (
     <div style={{ overflowX: 'auto' }}>
       <table style={{ width: '100%', borderCollapse: 'collapse', background: '#fff' }}>
@@ -49,7 +74,7 @@ export function DataTable({ data, error, loading, onEdit, onDelete }: DataTableP
             <tr key={idx}>
               {columns.map(col => (
                 <td key={col} style={{ border: '1px solid #ccc', padding: '8px' }}>
-                  {typeof row[col] === 'object' ? JSON.stringify(row[col]) : String(row[col])}
+                  {renderValue(col, row[col])}
                 </td>
               ))}
               {(onEdit || onDelete) && (

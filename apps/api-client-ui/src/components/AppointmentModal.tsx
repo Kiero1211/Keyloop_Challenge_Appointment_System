@@ -5,8 +5,16 @@ import {
   getServiceTypes, 
   getTechnicians, 
   getServiceBays, 
-  holdAppointmentResource 
-} from '../api';
+  holdAppointmentResource,
+  getOccupiedSlots
+} from '@/api';
+import { OccupiedSlotsPanel } from '@/components/OccupiedSlotsPanel';
+
+function slotsOverlap(slotStart: string, slotEnd: string, start: Date, end: Date) {
+  const occupiedStart = new Date(slotStart).getTime();
+  const occupiedEnd = new Date(slotEnd).getTime();
+  return occupiedStart < end.getTime() && occupiedEnd > start.getTime();
+}
 
 interface AppointmentModalProps {
   isOpen: boolean;
@@ -24,6 +32,8 @@ export function AppointmentModal({ isOpen, onClose, onSubmit }: AppointmentModal
   const [serviceTypes, setServiceTypes] = useState<any[]>([]);
   const [technicians, setTechnicians] = useState<any[]>([]);
   const [serviceBays, setServiceBays] = useState<any[]>([]);
+  const [availableTechnicians, setAvailableTechnicians] = useState<any[]>([]);
+  const [availableServiceBays, setAvailableServiceBays] = useState<any[]>([]);
 
   // Form State
   const [customerId, setCustomerId] = useState('');
@@ -55,6 +65,8 @@ export function AppointmentModal({ isOpen, onClose, onSubmit }: AppointmentModal
         setServiceTypes(getList(stRes));
         setTechnicians(getList(techRes));
         setServiceBays(getList(bayRes));
+        setAvailableTechnicians(getList(techRes));
+        setAvailableServiceBays(getList(bayRes));
       }).catch(err => {
         console.error("Failed to load options", err);
       }).finally(() => {
@@ -71,6 +83,8 @@ export function AppointmentModal({ isOpen, onClose, onSubmit }: AppointmentModal
       setServiceBayId('');
       setTechnicianHolId('');
       setServiceBayHoldId('');
+      setAvailableTechnicians([]);
+      setAvailableServiceBays([]);
     }
   }, [isOpen]);
 
@@ -105,6 +119,86 @@ export function AppointmentModal({ isOpen, onClose, onSubmit }: AppointmentModal
       setServiceBayHoldId('');
     }
   };
+
+  useEffect(() => {
+    if (!isOpen) return;
+
+    if (!serviceTypeId || !desiredStartTime) {
+      setAvailableTechnicians(technicians);
+      setAvailableServiceBays(serviceBays);
+      return;
+    }
+
+    const selectedServiceType = serviceTypes.find(st => st.id === serviceTypeId);
+    const durationMinutes = selectedServiceType?.estimatedDurationMinutes;
+    if (!durationMinutes) {
+      setAvailableTechnicians(technicians);
+      setAvailableServiceBays(serviceBays);
+      return;
+    }
+
+    const start = new Date(desiredStartTime);
+    if (Number.isNaN(start.getTime())) {
+      setAvailableTechnicians(technicians);
+      setAvailableServiceBays(serviceBays);
+      return;
+    }
+
+    const end = new Date(start.getTime() + durationMinutes * 60000);
+    const day = desiredStartTime.split('T')[0];
+    let active = true;
+
+    const refreshAvailability = async () => {
+      try {
+        const [techSlots, baySlots] = await Promise.all([
+          Promise.all(technicians.map(async tech => ({
+            id: tech.id,
+            occupiedSlots: (await getOccupiedSlots('technicians', tech.id, day)).occupiedSlots || [],
+          }))),
+          Promise.all(serviceBays.map(async bay => ({
+            id: bay.id,
+            occupiedSlots: (await getOccupiedSlots('service-bays', bay.id, day)).occupiedSlots || [],
+          }))),
+        ]);
+
+        if (!active) return;
+
+        const filteredTechnicians = technicians.filter(tech => {
+          const slots = techSlots.find(entry => entry.id === tech.id)?.occupiedSlots || [];
+          return !slots.some((slot: any) => slotsOverlap(slot.startTime, slot.endTime, start, end));
+        });
+
+        const filteredServiceBays = serviceBays.filter(bay => {
+          const slots = baySlots.find(entry => entry.id === bay.id)?.occupiedSlots || [];
+          return !slots.some((slot: any) => slotsOverlap(slot.startTime, slot.endTime, start, end));
+        });
+
+        setAvailableTechnicians(filteredTechnicians);
+        setAvailableServiceBays(filteredServiceBays);
+
+        if (technicianId && !filteredTechnicians.some(tech => tech.id === technicianId)) {
+          setTechnicianId('');
+          setTechnicianHolId('');
+        }
+
+        if (serviceBayId && !filteredServiceBays.some(bay => bay.id === serviceBayId)) {
+          setServiceBayId('');
+          setServiceBayHoldId('');
+        }
+      } catch (error) {
+        console.error('Failed to refresh resource availability', error);
+        if (active) {
+          setAvailableTechnicians(technicians);
+          setAvailableServiceBays(serviceBays);
+        }
+      }
+    };
+
+    void refreshAvailability();
+    return () => {
+      active = false;
+    };
+  }, [isOpen, serviceTypeId, desiredStartTime, technicians, serviceBays, serviceTypes, technicianId, serviceBayId]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -223,7 +317,7 @@ export function AppointmentModal({ isOpen, onClose, onSubmit }: AppointmentModal
                 style={{ padding: '8px' }}
               >
                 <option value="" disabled>-- Select Technician --</option>
-                {technicians.map(t => <option key={t.id} value={t.id}>{t.firstName} {t.lastName}</option>)}
+                {availableTechnicians.map(t => <option key={t.id} value={t.id}>{t.firstName} {t.lastName}</option>)}
               </select>
             </div>
 
@@ -237,9 +331,27 @@ export function AppointmentModal({ isOpen, onClose, onSubmit }: AppointmentModal
                 style={{ padding: '8px' }}
               >
                 <option value="" disabled>-- Select Service Bay --</option>
-                {serviceBays.map(sb => <option key={sb.id} value={sb.id}>{sb.name}</option>)}
+                {availableServiceBays.map(sb => <option key={sb.id} value={sb.id}>{sb.name}</option>)}
               </select>
             </div>
+
+            {!autoAssigned && technicianId && (
+              <OccupiedSlotsPanel
+                resourceType="technicians"
+                resourceId={technicianId}
+                date={desiredStartTime ? desiredStartTime.split('T')[0] : undefined}
+                title="Technician occupied windows"
+              />
+            )}
+
+            {!autoAssigned && serviceBayId && (
+              <OccupiedSlotsPanel
+                resourceType="service-bays"
+                resourceId={serviceBayId}
+                date={desiredStartTime ? desiredStartTime.split('T')[0] : undefined}
+                title="Service bay occupied windows"
+              />
+            )}
 
             <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px', marginTop: '20px' }}>
               <button 

@@ -4,6 +4,7 @@ import { CreateServiceBayUseCase } from '@/application/use-cases/crud/service-ba
 import { createServiceBaySchema, updateServiceBaySchema } from '@/application/commands/service-bay.command';
 import { tenantContext } from '@/domain/context/tenant-context';
 import { NotFoundException } from '@/domain/exceptions';
+import { GetBayOccupiedSlotsUseCase } from '@/application/use-cases/get-bay-occupied-slots.use-case';
 
 
 const router = Router();
@@ -37,6 +38,17 @@ router.get('/', async (req, res, next) => {
     const pageSize = req.query.pageSize ? parseInt(req.query.pageSize as string, 10) : 20;
     const results = await container.serviceBayRepository.findAll(tenantId, page, pageSize);
     res.json(results);
+  } catch (error) {
+    next(error);
+  }
+});
+
+router.get('/:id/occupied', async (req, res, next) => {
+  try {
+    const tenantId = tenantContext.getStore()!.tenantId as string;
+    const useCase = new GetBayOccupiedSlotsUseCase(container.cacheProvider);
+    const result = await useCase.execute(tenantId, req.params.id, req.query.date as string | undefined);
+    res.json(result);
   } catch (error) {
     next(error);
   }

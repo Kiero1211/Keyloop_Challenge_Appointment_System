@@ -6,6 +6,7 @@ describe('IUserRepository Port', () => {
       create: jest.fn(),
       findById: jest.fn(),
       findByEmail: jest.fn().mockResolvedValue({ id: '1', email: 'test@example.com' }),
+      findByTenantId: jest.fn(),
       update: jest.fn(),
       updateLastLogin: jest.fn(),
     };
@@ -19,6 +20,7 @@ describe('IUserRepository Port', () => {
       create: jest.fn().mockResolvedValue({ id: '2' }),
       findById: jest.fn(),
       findByEmail: jest.fn(),
+      findByTenantId: jest.fn(),
       update: jest.fn(),
       updateLastLogin: jest.fn(),
     } as any;

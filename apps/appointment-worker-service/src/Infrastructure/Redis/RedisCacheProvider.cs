@@ -93,6 +93,58 @@ namespace AppointmentWorkerService.Infrastructure.Redis
             await Task.WhenAll(tasks);
         }
 
+        public async Task HashSetFieldsAsync(string key, Dictionary<string, string> fields, TimeSpan? ttl = null)
+        {
+            if (fields.Count == 0) return;
+
+            var db = _redis.GetDatabase();
+            var hashEntries = fields.Select(kvp => new HashEntry(kvp.Key, kvp.Value)).ToArray();
+            var batch = db.CreateBatch();
+            var tasks = new List<Task>
+            {
+                batch.HashSetAsync(key, hashEntries)
+            };
+
+            if (ttl.HasValue && ttl.Value > TimeSpan.Zero)
+            {
+                tasks.Add(batch.KeyExpireAsync(key, ttl.Value));
+            }
+
+            batch.Execute();
+            await Task.WhenAll(tasks);
+        }
+
+        public async Task SortedSetAddAsync(string key, string member, double score)
+        {
+            var db = _redis.GetDatabase();
+            await db.SortedSetAddAsync(key, member, score);
+        }
+
+        public async Task SortedSetRemoveAsync(string key, string member)
+        {
+            var db = _redis.GetDatabase();
+            await db.SortedSetRemoveAsync(key, member);
+        }
+
+        public async Task SetAddAsync(string key, string member)
+        {
+            var db = _redis.GetDatabase();
+            await db.SetAddAsync(key, member);
+        }
+
+        public async Task SetRemoveAsync(string key, string member)
+        {
+            var db = _redis.GetDatabase();
+            await db.SetRemoveAsync(key, member);
+        }
+
+        public async Task<IEnumerable<string>> SetMembersAsync(string key)
+        {
+            var db = _redis.GetDatabase();
+            var values = await db.SetMembersAsync(key);
+            return values.Select(v => v.ToString());
+        }
+
         public async Task DeleteAsync(string key)
         {
             var db = _redis.GetDatabase();

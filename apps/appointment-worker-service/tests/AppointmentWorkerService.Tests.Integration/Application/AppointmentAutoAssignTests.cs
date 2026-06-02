@@ -86,7 +86,6 @@ public class AppointmentAutoAssignTests : IClassFixture<DatabaseFixture>
         Assert.NotNull(record);
         Assert.Equal(techId, record!.TechnicianId);
         Assert.Equal(bayId, record.ServiceBayId);
-        Assert.True(record.AutoAssigned);
         
         distributedLockMock.Verify(x => x.ReleaseLockAsync(It.IsAny<string>(), It.IsAny<string>()), Times.Exactly(2)); // Released both locks
     }

@@ -32,7 +32,11 @@ describe('CachedServiceTypeRepository', () => {
       deleteMultiple: jest.fn(),
       ping: jest.fn(),
       setMultipleIfNotExists: jest.fn(),
+      zadd: jest.fn(),
+      zrem: jest.fn(),
+      zrangebyscore: jest.fn(),
       sadd: jest.fn(),
+      srem: jest.fn(),
       smembers: jest.fn(),
     };
 
