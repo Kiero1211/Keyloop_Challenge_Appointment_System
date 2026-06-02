@@ -63,4 +63,42 @@ export class ReadThroughCacheWrapper<T> {
     const key = this.getCacheKey(tenantId, id);
     await this.cacheProvider.del(key);
   }
+
+  async getList(
+    tenantId: string,
+    fetchFromDb: () => Promise<T[]>,
+    deserializer?: (record: Record<string, string>) => T,
+    idExtractor?: (entity: T) => string,
+    setKeyOverride?: string
+  ): Promise<T[]> {
+    const setKey = setKeyOverride || `tenant:${tenantId}:${this.entityName}s`;
+    const members = await this.cacheProvider.smembers(setKey);
+
+    if (members && members.length > 0) {
+      const results: T[] = [];
+      for (const id of members) {
+        const key = this.getCacheKey(tenantId, id);
+        const cached = await this.cacheProvider.hgetall(key);
+        if (cached && Object.keys(cached).length > 0) {
+          results.push(deserializer ? deserializer(cached) : this.deserialize(cached));
+        }
+      }
+      
+      if (results.length === members.length) {
+        return results;
+      }
+    }
+
+    const entities = await fetchFromDb();
+    if (entities.length > 0) {
+      const ids = entities.map(e => idExtractor ? idExtractor(e) : (e as any).id);
+      await this.cacheProvider.sadd(setKey, ids, this.ttlSeconds);
+      
+      await Promise.all(entities.map(entity => {
+        const key = this.getCacheKey(tenantId, idExtractor ? idExtractor(entity) : (entity as any).id);
+        return this.cacheProvider.hset(key, this.serialize(entity), this.ttlSeconds);
+      }));
+    }
+    return entities;
+  }
 }

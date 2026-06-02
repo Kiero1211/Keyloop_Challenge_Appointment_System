@@ -36,7 +36,25 @@ export class CachedVehicleRepository implements IVehicleRepository {
   }
 
   async findByCustomer(tenantId: string, customerId: string): Promise<Vehicle[]> {
-    return this.baseRepository.findByCustomer(tenantId, customerId);
+    return this.cacheWrapper.getList(
+      tenantId,
+      () => this.baseRepository.findByCustomer(tenantId, customerId),
+      (record) => ({
+        id: record.id,
+        tenantId: record.tenantId,
+        customerId: record.customerId,
+        make: record.make,
+        model: record.model,
+        year: parseInt(record.year as unknown as string, 10),
+        licensePlate: record.licensePlate || undefined,
+        vin: record.vin || undefined,
+        deletedAt: record.deletedAt ? new Date(record.deletedAt) : null,
+        createdAt: new Date(record.createdAt),
+        updatedAt: new Date(record.updatedAt),
+      } as Vehicle),
+      undefined,
+      `tenant:${tenantId}:Customer:${customerId}:Vehicles`
+    );
   }
 
   async create(vehicle: Vehicle): Promise<Vehicle> {

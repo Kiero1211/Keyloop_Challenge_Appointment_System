@@ -28,6 +28,8 @@ describe('CreateAppointmentUseCase', () => {
       deleteMultiple: jest.fn(),
       ping: jest.fn(),
       setMultipleIfNotExists: jest.fn(),
+      sadd: jest.fn(),
+      smembers: jest.fn(),
       expire: jest.fn(),
     };
 

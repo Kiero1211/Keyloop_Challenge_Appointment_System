@@ -31,7 +31,18 @@ export class CachedServiceBayRepository implements IServiceBayRepository {
   }
 
   async findAll(tenantId: string): Promise<ServiceBay[]> {
-    return this.baseRepository.findAll(tenantId);
+    return this.cacheWrapper.getList(
+      tenantId,
+      () => this.baseRepository.findAll(tenantId),
+      (record) => ({
+        id: record.id,
+        tenantId: record.tenantId,
+        name: record.name,
+        deletedAt: record.deletedAt ? new Date(record.deletedAt) : null,
+        createdAt: new Date(record.createdAt),
+        updatedAt: new Date(record.updatedAt),
+      } as ServiceBay)
+    );
   }
 
   async create(serviceBay: ServiceBay): Promise<ServiceBay> {

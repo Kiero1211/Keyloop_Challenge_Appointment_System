@@ -6,7 +6,7 @@ export interface Appointment {
   serviceTypeId: string;
   technicianId: string;
   serviceBayId: string;
-  status: 'Scheduled' | 'InProgress' | 'Completed' | 'Cancelled';
+  status: 'Scheduled' | 'InProgress' | 'Completed' | 'Cancelled' | 'Failed';
   scheduledStartTime: Date;
   scheduledEndTime: Date;
   actualStartTime?: Date | null;

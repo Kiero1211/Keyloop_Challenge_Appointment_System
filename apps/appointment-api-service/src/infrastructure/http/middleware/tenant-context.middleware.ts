@@ -1,5 +1,4 @@
 import { Request, Response, NextFunction } from 'express';
-import { AsyncLocalStorage } from 'async_hooks';
 import { TenantContext, tenantContext } from '@/domain/context/tenant-context';
 
 export const tenantContextMiddleware = (req: Request, res: Response, next: NextFunction) => {

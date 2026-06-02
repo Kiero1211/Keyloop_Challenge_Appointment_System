@@ -2,7 +2,8 @@ import { Request, Response, NextFunction } from 'express';
 import { DomainValidationException, DuplicateAppointmentException, UnauthorizedException, ForbiddenException, NotFoundException, ConflictException, UnprocessableException } from '@/domain/exceptions';
 import { ZodError } from 'zod';
 
-export const errorHandlerMiddleware = (err: Error, req: Request, res: Response, next: NextFunction) => {
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+export const errorHandler = (err: any, req: Request, res: Response, next: NextFunction) => {
   if (err instanceof ZodError) {
     return res.status(400).json({
       error: 'Validation Error',

@@ -13,7 +13,7 @@ import { tenantContextMiddleware } from '@/infrastructure/http/middleware/tenant
 import swaggerUi from 'swagger-ui-express';
 import YAML from 'yamljs';
 import path from 'path';
-import { errorHandlerMiddleware } from '@/infrastructure/http/middleware/error-handler.middleware';
+import { errorHandler } from '@/infrastructure/http/middleware/error-handler.middleware';
 import { jwtAuthMiddleware } from '@/infrastructure/http/middleware/jwt-auth.middleware';
 import { container } from '@/infrastructure/di/container';
 import { requestLoggerMiddleware } from '@/infrastructure/http/middleware/request-logger.middleware';
@@ -85,6 +85,6 @@ app.use(
 app.use('/api/v1/tenants', tenantRouter);
 
 // Error handler (must be last)
-app.use(errorHandlerMiddleware);
+app.use(errorHandler);
 
 export { app };

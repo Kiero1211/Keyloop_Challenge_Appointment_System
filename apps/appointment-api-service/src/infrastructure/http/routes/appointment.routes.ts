@@ -4,7 +4,7 @@ import { createAppointmentSchema } from '@/application/commands/create-appointme
 
 import { CreateHoldUseCase } from '@/application/use-cases/create-hold.use-case';
 import { CreateHoldInputSchema } from '@/domain/entities/temporary-hold';
-import { ConflictException } from '@/domain/exceptions';
+
 import { tenantContext } from '@/domain/context/tenant-context';
 
 import { CancelAppointmentUseCase } from '@/application/use-cases/crud/appointment/cancel-appointment.use-case';

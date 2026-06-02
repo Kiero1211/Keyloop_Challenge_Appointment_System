@@ -34,7 +34,21 @@ export class CachedTechnicianRepository implements ITechnicianRepository {
   }
 
   async findAll(tenantId: string): Promise<Technician[]> {
-    return this.baseRepository.findAll(tenantId);
+    return this.cacheWrapper.getList(
+      tenantId,
+      () => this.baseRepository.findAll(tenantId),
+      (record) => ({
+        id: record.id,
+        tenantId: record.tenantId,
+        firstName: record.firstName,
+        lastName: record.lastName,
+        email: record.email,
+        isActive: record.isActive === 'true',
+        deletedAt: record.deletedAt ? new Date(record.deletedAt) : null,
+        createdAt: new Date(record.createdAt),
+        updatedAt: new Date(record.updatedAt),
+      } as Technician)
+    );
   }
 
   async create(technician: Technician): Promise<Technician> {
