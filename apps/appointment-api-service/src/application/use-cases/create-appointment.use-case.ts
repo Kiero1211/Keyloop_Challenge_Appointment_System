@@ -10,10 +10,13 @@ import { ServiceTypeId } from '@/domain/value-objects/service-type-id';
 import { DesiredTime } from '@/domain/value-objects/desired-time';
 import { v4 as uuidv4 } from 'uuid';
 
+import { IServiceTypeRepository } from '@/application/ports/repositories/service-type.repository.port';
+
 export class CreateAppointmentUseCase {
   constructor(
     private readonly cacheProvider: ICacheProvider,
     private readonly messagePublisher: IMessagePublisher,
+    private readonly serviceTypeRepository: IServiceTypeRepository,
     private readonly partitionHasher: (tenantId: string, vehicleId: string) => number
   ) {}
 
@@ -31,6 +34,15 @@ export class CreateAppointmentUseCase {
     const vehicleId = new VehicleId(command.vehicleId);
     const serviceTypeId = new ServiceTypeId(command.serviceTypeId);
     const desiredStartTime = new DesiredTime(command.desiredStartTime);
+
+    // Fetch ServiceType to get estimatedDurationMinutes
+    const serviceType = await this.serviceTypeRepository.findById(tenantId, serviceTypeId.value);
+    if (!serviceType) {
+      throw new DomainValidationException('ServiceType not found');
+    }
+    
+    // Calculate scheduledEndTime
+    const scheduledEndTime = new Date(new Date(desiredStartTime.value).getTime() + serviceType.estimatedDurationMinutes * 60000);
 
     // Validate hold
     const holdErrorMsg = 'The booking session has expired. Please re-create the booking session.';
@@ -71,7 +83,7 @@ export class CreateAppointmentUseCase {
     }
 
     const partition = this.partitionHasher(tenantId, vehicleId.value);
-    const streamName = `appointments_stream_${partition}`;
+    const streamName = `tenant:${tenantId}:appointments_stream_${partition}`;
 
     // Compile message payload
     const payload = {
@@ -83,6 +95,7 @@ export class CreateAppointmentUseCase {
       technicianId: command.technicianId,
       serviceBayId: command.serviceBayId,
       desiredStartTime: desiredStartTime.value,
+      scheduledEndTime: scheduledEndTime.toISOString(),
       source: 'public',
       status: 'Scheduled',
       autoAssigned: command.autoAssigned,

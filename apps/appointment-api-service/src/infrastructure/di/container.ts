@@ -56,9 +56,12 @@ class DIContainer {
     this.cacheProvider = new RedisCacheAdapter(this.redisClient);
     this.messagePublisher = new RedisStreamPublisher(this.redisClient);
 
+    this.serviceTypeRepository = new CachedServiceTypeRepository(new DrizzleServiceTypeRepository(), this.cacheProvider);
+    
     this.createAppointmentUseCase = new CreateAppointmentUseCase(
       this.cacheProvider,
       this.messagePublisher,
+      this.serviceTypeRepository,
       PartitionHasher.hash.bind(PartitionHasher)
     );
 
@@ -74,7 +77,6 @@ class DIContainer {
     this.userTenantRepository = new DrizzleUserTenantRepository();
     
     this.appointmentCrudRepository = new CachedAppointmentCrudRepository(new DrizzleAppointmentCrudRepository(), this.cacheProvider);
-    this.serviceTypeRepository = new CachedServiceTypeRepository(new DrizzleServiceTypeRepository(), this.cacheProvider);
     this.technicianRepository = new CachedTechnicianRepository(new DrizzleTechnicianRepository(), this.cacheProvider);
     this.technicianSkillRepository = new DrizzleTechnicianSkillRepository();
     this.serviceBayRepository = new CachedServiceBayRepository(new DrizzleServiceBayRepository(), this.cacheProvider);

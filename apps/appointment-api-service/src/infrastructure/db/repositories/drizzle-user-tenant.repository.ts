@@ -20,4 +20,12 @@ export class DrizzleUserTenantRepository implements IUserTenantRepository {
       .where(and(eq(userTenants.userId, userId), eq(userTenants.tenantId, tenantId)));
     return result[0] ? (result[0] as UserTenant) : null;
   }
+
+  async updateRole(userId: string, tenantId: string, role: string): Promise<UserTenant> {
+    const [updated] = await db.update(userTenants)
+      .set({ role, updatedAt: new Date() })
+      .where(and(eq(userTenants.userId, userId), eq(userTenants.tenantId, tenantId)))
+      .returning();
+    return updated as UserTenant;
+  }
 }

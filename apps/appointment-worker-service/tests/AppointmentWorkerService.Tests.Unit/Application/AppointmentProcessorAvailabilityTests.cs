@@ -22,6 +22,7 @@ public class AppointmentProcessorAvailabilityTests
     private readonly Mock<IBayService> _bayServiceMock;
     private readonly Mock<IValidator<AppointmentMessage>> _validatorMock;
     private readonly Mock<ILogger<AppointmentProcessor>> _loggerMock;
+    private readonly Mock<IDistributedLock> _lockMock;
     private readonly AppointmentProcessor _sut;
 
     public AppointmentProcessorAvailabilityTests()
@@ -32,6 +33,9 @@ public class AppointmentProcessorAvailabilityTests
         _bayServiceMock = new Mock<IBayService>();
         _validatorMock = new Mock<IValidator<AppointmentMessage>>();
         _loggerMock = new Mock<ILogger<AppointmentProcessor>>();
+        _lockMock = new Mock<IDistributedLock>();
+        
+        _lockMock.Setup(x => x.AcquireLockAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<TimeSpan>())).ReturnsAsync(true);
 
         _sut = new AppointmentProcessor(
             _apptRepoMock.Object,
@@ -39,7 +43,10 @@ public class AppointmentProcessorAvailabilityTests
             _loggerMock.Object,
             _techServiceMock.Object,
             _bayServiceMock.Object,
-            _validatorMock.Object
+            _validatorMock.Object,
+            null!,
+            null!,
+            _lockMock.Object
         );
     }
 
@@ -51,7 +58,8 @@ public class AppointmentProcessorAvailabilityTests
         ServiceBayId: bayId,
         TechnicianId: techId,
         DesiredStartTime: DateTimeOffset.UtcNow.AddDays(1),
-        Source: "test"
+        Source: "test",
+        AutoAssigned: false
     );
 
     [Fact]

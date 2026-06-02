@@ -11,6 +11,14 @@ describe("Appointment API E2E", () => {
   let token: string;
   let tenantId: string;
 
+  let customer: any;
+  let vehicle: any;
+  let serviceType: any;
+  let tech1: any;
+  let tech2: any;
+  let bay1: any;
+  let bay2: any;
+
   beforeAll(async () => {
     redisContainer = await new GenericContainer("redis:7-alpine")
       .withExposedPorts(6379)
@@ -49,6 +57,15 @@ describe("Appointment API E2E", () => {
 
   beforeEach(async () => {
     await redisClient.flushdb();
+    
+    const { factories } = await import("../helpers/factories");
+    customer = await factories.customer(tenantId);
+    vehicle = await factories.vehicle(tenantId, customer.id);
+    serviceType = await factories.serviceType(tenantId);
+    tech1 = await factories.technician(tenantId);
+    tech2 = await factories.technician(tenantId);
+    bay1 = await factories.serviceBay(tenantId);
+    bay2 = await factories.serviceBay(tenantId);
   });
 
   describe("POST /api/v1/appointments", () => {
@@ -57,8 +74,8 @@ describe("Appointment API E2E", () => {
     it("should accept a valid appointment with a valid hold and return 202", async () => {
       // First create a hold
       const holdPayload = {
-        technicianId: "tech-1",
-        serviceBayId: "bay-1",
+        technicianId: tech1.id,
+        serviceBayId: bay1.id,
       };
       const holdResponse = await request(app)
         .post("/api/v1/appointments/hold")
@@ -69,11 +86,11 @@ describe("Appointment API E2E", () => {
       const payload = {
         technicianHolId: holdResponse.body.holdId,
         serviceBayHoldId: holdResponse.body.holdId,
-        customerId: "cust-1",
-        vehicleId: "veh-1",
-        serviceTypeId: "srv-1",
-        technicianId: "tech-1",
-        serviceBayId: "bay-1",
+        customerId: customer.id,
+        vehicleId: vehicle.id,
+        serviceTypeId: serviceType.id,
+        technicianId: tech1.id,
+        serviceBayId: bay1.id,
         desiredStartTime: new Date(Date.now() + 86400000).toISOString(), // Tomorrow
       };
       holdId = holdResponse.body.holdId;
@@ -106,8 +123,8 @@ describe("Appointment API E2E", () => {
         .post("/api/v1/appointments")
         .set("Authorization", `Bearer ${token}`)
         .send({
-          customerId: "cust-1",
-          vehicleId: "veh-1",
+          customerId: customer.id,
+          vehicleId: vehicle.id,
         });
 
       expect(response.status).toBe(400);
@@ -118,11 +135,11 @@ describe("Appointment API E2E", () => {
       const payload = {
         technicianHolId: holdId,
         serviceBayHoldId: holdId,
-        customerId: "cust-1",
-        vehicleId: "veh-1",
-        serviceTypeId: "srv-1",
-        technicianId: "tech-1",
-        serviceBayId: "bay-1",
+        customerId: customer.id,
+        vehicleId: vehicle.id,
+        serviceTypeId: serviceType.id,
+        technicianId: tech1.id,
+        serviceBayId: bay1.id,
         desiredStartTime: new Date(Date.now() + 86400000).toISOString(),
       };
 
@@ -144,16 +161,16 @@ describe("Appointment API E2E", () => {
         .post("/api/v1/appointments/hold")
         .set("Authorization", `Bearer ${token}`)
         .set("x-tenant-id", tenantId)
-        .send({ technicianId: "tech-1", serviceBayId: "bay-1" });
+        .send({ technicianId: tech1.id, serviceBayId: bay1.id });
 
       const payload1 = {
         technicianHolId: hold1Response.body.holdId,
         serviceBayHoldId: hold1Response.body.holdId,
-        customerId: "cust-1",
-        vehicleId: "veh-1",
-        serviceTypeId: "srv-1",
-        technicianId: "tech-1",
-        serviceBayId: "bay-1",
+        customerId: customer.id,
+        vehicleId: vehicle.id,
+        serviceTypeId: serviceType.id,
+        technicianId: tech1.id,
+        serviceBayId: bay1.id,
         desiredStartTime: new Date(Date.now() + 86400000).toISOString(),
       };
 
@@ -173,16 +190,16 @@ describe("Appointment API E2E", () => {
         .post("/api/v1/appointments/hold")
         .set("Authorization", `Bearer ${token}`)
         .set("x-tenant-id", tenantId)
-        .send({ technicianId: "tech-2", serviceBayId: "bay-2" });
+        .send({ technicianId: tech2.id, serviceBayId: bay2.id });
 
       const payload2 = {
         technicianHolId: hold2Response.body.holdId,
         serviceBayHoldId: hold2Response.body.holdId,
-        customerId: "cust-1",
-        vehicleId: "veh-1",
-        serviceTypeId: "srv-1",
-        technicianId: "tech-2",
-        serviceBayId: "bay-2",
+        customerId: customer.id,
+        vehicleId: vehicle.id,
+        serviceTypeId: serviceType.id,
+        technicianId: tech2.id,
+        serviceBayId: bay2.id,
         desiredStartTime: new Date(Date.now() + 86400000).toISOString(),
       };
 
@@ -198,8 +215,8 @@ describe("Appointment API E2E", () => {
   describe("POST /api/v1/appointments/hold", () => {
     it("should create a temporary hold and return 201", async () => {
       const payload = {
-        technicianId: "tech-1",
-        serviceBayId: "bay-1",
+        technicianId: tech1.id,
+        serviceBayId: bay1.id,
       };
 
       const response = await request(app)
@@ -215,8 +232,8 @@ describe("Appointment API E2E", () => {
 
     it("should reject concurrent hold for same technician/bay (409)", async () => {
       const payload = {
-        technicianId: "tech-1",
-        serviceBayId: "bay-1",
+        technicianId: tech1.id,
+        serviceBayId: bay1.id,
       };
 
       await request(app)

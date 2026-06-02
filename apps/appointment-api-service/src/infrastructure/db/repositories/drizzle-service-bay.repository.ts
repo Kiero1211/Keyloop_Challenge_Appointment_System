@@ -49,4 +49,33 @@ export class DrizzleServiceBayRepository implements IServiceBayRepository {
       .returning();
     return !!result;
   }
+
+  async findAvailable(tenantId: string, startTime: Date, endTime: Date): Promise<ServiceBay[]> {
+    const { appointments } = await import('@/infrastructure/db/schema');
+    const { lt, gt, ne, notExists } = await import('drizzle-orm');
+
+    const overlappingAppointments = db.select()
+      .from(appointments)
+      .where(
+        and(
+          eq(appointments.tenantId, tenantId),
+          eq(appointments.serviceBayId, serviceBays.id),
+          ne(appointments.status, 'Cancelled'),
+          lt(appointments.scheduledStartTime, endTime),
+          gt(appointments.scheduledEndTime, startTime)
+        )
+      );
+
+    const results = await db.select()
+      .from(serviceBays)
+      .where(
+        and(
+          eq(serviceBays.tenantId, tenantId),
+          isNull(serviceBays.deletedAt),
+          notExists(overlappingAppointments)
+        )
+      );
+
+    return results as ServiceBay[];
+  }
 }

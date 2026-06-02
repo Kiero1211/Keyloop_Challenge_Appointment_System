@@ -9,4 +9,5 @@ public record AppointmentMessage(
     string? TechnicianId,
     DateTimeOffset DesiredStartTime,
     string Source,
-    bool AutoAssigned);
+    bool AutoAssigned,
+    DateTimeOffset? ScheduledEndTime = null);

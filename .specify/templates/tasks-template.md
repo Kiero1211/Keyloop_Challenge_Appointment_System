@@ -250,3 +250,4 @@ With multiple developers:
 - Commit after each task or logical group
 - Stop at any checkpoint to validate story independently
 - Avoid: vague tasks, same file conflicts, cross-story dependencies that break independence
+- **Test Execution**: For Node.js services (API/Bay), run through each unit, integration, and e2e test file explicitly to ensure there are no errors, rather than relying on broad scripts like `npm run test:unit`. For C# worker service, `dotnet test` is sufficient.

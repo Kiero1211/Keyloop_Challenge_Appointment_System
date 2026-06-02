@@ -60,4 +60,8 @@ export class CachedTechnicianRepository implements ITechnicianRepository {
     }
     return result;
   }
+
+  async findAvailable(tenantId: string, startTime: Date, endTime: Date): Promise<Technician[]> {
+    return this.baseRepository.findAvailable(tenantId, startTime, endTime);
+  }
 }

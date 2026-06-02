@@ -21,7 +21,7 @@ describe('RegisterUseCase', () => {
       update: jest.fn(),
       updateLastLogin: jest.fn()
     };
-    mockUserTenantRepo = { create: jest.fn(), findByUserId: jest.fn(), findByUserAndTenant: jest.fn() };
+    mockUserTenantRepo = { create: jest.fn(), findByUserId: jest.fn(), findByUserAndTenant: jest.fn(), updateRole: jest.fn() };
     mockTenantRepo = { create: jest.fn(), findById: jest.fn(), findByName: jest.fn(), findAll: jest.fn(), update: jest.fn(), deactivate: jest.fn() };
     mockRefreshTokenRepo = {
       create: jest.fn(),

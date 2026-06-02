@@ -7,4 +7,5 @@ export interface ITechnicianRepository {
   findAll(tenantId: string): Promise<Technician[]>;
   update(tenantId: string, id: string, data: Partial<Technician>): Promise<Technician | null>;
   softDelete(tenantId: string, id: string): Promise<boolean>;
+  findAvailable(tenantId: string, startTime: Date, endTime: Date): Promise<Technician[]>;
 }

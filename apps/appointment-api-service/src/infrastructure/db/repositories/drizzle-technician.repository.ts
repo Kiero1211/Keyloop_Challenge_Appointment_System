@@ -51,4 +51,34 @@ export class DrizzleTechnicianRepository implements ITechnicianRepository {
       .returning();
     return !!result;
   }
+
+  async findAvailable(tenantId: string, startTime: Date, endTime: Date): Promise<Technician[]> {
+    const { appointments } = await import('@/infrastructure/db/schema');
+    const { lt, gt, ne, notExists } = await import('drizzle-orm');
+
+    const overlappingAppointments = db.select()
+      .from(appointments)
+      .where(
+        and(
+          eq(appointments.tenantId, tenantId),
+          eq(appointments.technicianId, technicians.id),
+          ne(appointments.status, 'Cancelled'),
+          lt(appointments.scheduledStartTime, endTime),
+          gt(appointments.scheduledEndTime, startTime)
+        )
+      );
+
+    const results = await db.select()
+      .from(technicians)
+      .where(
+        and(
+          eq(technicians.tenantId, tenantId),
+          eq(technicians.isActive, true),
+          isNull(technicians.deletedAt),
+          notExists(overlappingAppointments)
+        )
+      );
+
+    return results as Technician[];
+  }
 }

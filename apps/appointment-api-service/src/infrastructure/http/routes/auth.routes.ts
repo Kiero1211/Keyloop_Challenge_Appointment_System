@@ -76,6 +76,7 @@ router.post('/switch-tenant', (req, res, next) => jwtAuthMiddleware(container.jw
     const useCase = new SwitchTenantUseCase(
       container.userTenantRepository,
       container.refreshTokenRepository,
+      container.userRepository,
       container.jwtService
     );
     

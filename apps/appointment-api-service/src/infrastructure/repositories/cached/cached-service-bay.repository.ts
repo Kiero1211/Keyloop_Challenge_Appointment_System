@@ -57,4 +57,8 @@ export class CachedServiceBayRepository implements IServiceBayRepository {
     }
     return result;
   }
+
+  async findAvailable(tenantId: string, startTime: Date, endTime: Date): Promise<ServiceBay[]> {
+    return this.baseRepository.findAvailable(tenantId, startTime, endTime);
+  }
 }

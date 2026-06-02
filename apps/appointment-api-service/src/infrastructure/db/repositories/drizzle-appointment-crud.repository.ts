@@ -57,10 +57,23 @@ export class DrizzleAppointmentCrudRepository implements IAppointmentCrudReposit
     if (filters.technicianId) conditions.push(eq(appointments.technicianId, filters.technicianId));
     if (filters.serviceBayId) conditions.push(eq(appointments.serviceBayId, filters.serviceBayId));
     // T106 date filter - assuming date is in YYYY-MM-DD format
-    if (filters.date) {
+    // Support legacy date filter
+    if (filters.date && !filters.startTime && !filters.endTime) {
       const startOfDay = new Date(`${filters.date}T00:00:00.000Z`);
       const endOfDay = new Date(`${filters.date}T23:59:59.999Z`);
       conditions.push(sql`${appointments.scheduledStartTime} >= ${startOfDay.toISOString()} AND ${appointments.scheduledStartTime} <= ${endOfDay.toISOString()}`);
+    }
+
+    // Support new multi-day search
+    if (filters.startTime || filters.endTime) {
+      if (filters.startTime) {
+        const start = new Date(filters.startTime);
+        conditions.push(sql`${appointments.scheduledStartTime} >= ${start.toISOString()}`);
+      }
+      if (filters.endTime) {
+        const end = new Date(filters.endTime);
+        conditions.push(sql`${appointments.scheduledStartTime} <= ${end.toISOString()}`);
+      }
     }
 
     const limit = pageSize;
