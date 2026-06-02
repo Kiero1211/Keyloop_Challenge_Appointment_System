@@ -19,4 +19,12 @@ public class TechnicianRepository : ITechnicianRepository
     {
         return await _dbContext.Technicians.AnyAsync(t => t.Id == technicianId, ct);
     }
+
+    public async Task<List<string>> GetTechniciansBySkillAsync(string serviceTypeId, CancellationToken ct = default)
+    {
+        return await _dbContext.Set<TechnicianSkill>()
+            .Where(ts => ts.ServiceTypeId == serviceTypeId)
+            .Select(ts => ts.TechnicianId)
+            .ToListAsync(ct);
+    }
 }

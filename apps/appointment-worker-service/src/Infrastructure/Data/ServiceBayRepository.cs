@@ -19,4 +19,9 @@ public class ServiceBayRepository : IServiceBayRepository
     {
         return await _dbContext.ServiceBays.AnyAsync(b => b.Id == serviceBayId, ct);
     }
+
+    public async Task<List<string>> GetAllBaysAsync(CancellationToken ct = default)
+    {
+        return await _dbContext.ServiceBays.Select(b => b.Id).ToListAsync(ct);
+    }
 }

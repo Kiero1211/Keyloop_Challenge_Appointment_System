@@ -28,7 +28,8 @@ public class DatabaseFixture : IAsyncLifetime
             .Options;
 
         var tenantServiceMock = new Mock<ITenantService>();
-        tenantServiceMock.Setup(m => m.GetTenantId()).Returns("default-tenant");
+        var defaultTenant = Guid.NewGuid().ToString();
+        tenantServiceMock.Setup(m => m.GetTenantId()).Returns(defaultTenant);
 
         using var context = new AppDbContext(options, tenantServiceMock.Object);
         await context.Database.EnsureCreatedAsync();
@@ -39,8 +40,10 @@ public class DatabaseFixture : IAsyncLifetime
         await _postgreSqlContainer.DisposeAsync();
     }
 
-    public AppDbContext CreateContext(string tenantId = "default-tenant")
+    public AppDbContext CreateContext(string? tenantId = null)
     {
+        tenantId ??= Guid.NewGuid().ToString();
+        
         var options = new DbContextOptionsBuilder<AppDbContext>()
             .UseNpgsql(_postgreSqlContainer.GetConnectionString())
             .Options;

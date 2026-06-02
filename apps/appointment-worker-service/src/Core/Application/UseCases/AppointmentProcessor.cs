@@ -16,6 +16,10 @@ public class AppointmentProcessor : IAppointmentProcessor
     private readonly ITechnicianService _technicianService;
     private readonly IBayService _bayService;
     private readonly FluentValidation.IValidator<AppointmentMessage> _validator;
+    
+    private readonly ITechnicianRepository _technicianRepository;
+    private readonly IServiceBayRepository _bayRepository;
+    private readonly IDistributedLock _distributedLock;
 
     public AppointmentProcessor(
         IAppointmentRepository appointmentRepository,
@@ -23,7 +27,10 @@ public class AppointmentProcessor : IAppointmentProcessor
         ILogger<AppointmentProcessor> logger,
         ITechnicianService technicianService = null!,
         IBayService bayService = null!,
-        FluentValidation.IValidator<AppointmentMessage> validator = null!)
+        FluentValidation.IValidator<AppointmentMessage> validator = null!,
+        ITechnicianRepository technicianRepository = null!,
+        IServiceBayRepository bayRepository = null!,
+        IDistributedLock distributedLock = null!)
     {
         _appointmentRepository = appointmentRepository;
         _cacheProvider = cacheProvider;
@@ -31,6 +38,9 @@ public class AppointmentProcessor : IAppointmentProcessor
         _technicianService = technicianService;
         _bayService = bayService;
         _validator = validator;
+        _technicianRepository = technicianRepository;
+        _bayRepository = bayRepository;
+        _distributedLock = distributedLock;
     }
 
     public async Task ProcessAsync(AppointmentMessage message, string messageId, CancellationToken cancellationToken = default)
@@ -46,14 +56,91 @@ public class AppointmentProcessor : IAppointmentProcessor
         var startUtc = message.DesiredStartTime.ToUniversalTime();
         var endUtc = startUtc.AddHours(1);
 
-        if (message.TechnicianId != null)
-        {
-            await _technicianService.ValidateAndCheckAvailabilityAsync(message.TechnicianId, message.ServiceTypeId, startUtc, endUtc, cancellationToken);
-        }
+        string? assignedTechId = message.TechnicianId;
+        string? assignedBayId = message.ServiceBayId;
+        
+        var techLock = string.Empty;
+        var bayLock = string.Empty;
 
-        if (message.ServiceBayId != null)
+        if (message.AutoAssigned)
         {
-            await _bayService.ValidateAndCheckAvailabilityAsync(message.ServiceBayId, startUtc, endUtc, cancellationToken);
+            var techIds = await _technicianRepository.GetTechniciansBySkillAsync(message.ServiceTypeId, cancellationToken);
+            var bayIds = await _bayRepository.GetAllBaysAsync(cancellationToken);
+
+            foreach (var techId in techIds)
+            {
+                var hasOverlap = await _appointmentRepository.HasTechnicianOverlapAsync(techId, startUtc, endUtc, cancellationToken);
+                if (hasOverlap) continue;
+
+                foreach (var bayId in bayIds)
+                {
+                    var bayOverlap = await _appointmentRepository.HasBayOverlapAsync(bayId, startUtc, endUtc, cancellationToken);
+                    if (bayOverlap) continue;
+
+                    techLock = $"tenant:{message.TenantId}:lock:tech:{techId}:{startUtc.Ticks}";
+                    bayLock = $"tenant:{message.TenantId}:lock:bay:{bayId}:{startUtc.Ticks}";
+
+                    var techLocked = await _distributedLock.AcquireLockAsync(techLock, messageId, TimeSpan.FromSeconds(30));
+                    if (!techLocked) continue;
+
+                    var bayLocked = await _distributedLock.AcquireLockAsync(bayLock, messageId, TimeSpan.FromSeconds(30));
+                    if (!bayLocked)
+                    {
+                        await _distributedLock.ReleaseLockAsync(techLock, messageId);
+                        continue;
+                    }
+
+                    // Re-check overlap after acquiring lock
+                    hasOverlap = await _appointmentRepository.HasTechnicianOverlapAsync(techId, startUtc, endUtc, cancellationToken);
+                    bayOverlap = await _appointmentRepository.HasBayOverlapAsync(bayId, startUtc, endUtc, cancellationToken);
+
+                    if (hasOverlap || bayOverlap)
+                    {
+                        await _distributedLock.ReleaseLockAsync(techLock, messageId);
+                        await _distributedLock.ReleaseLockAsync(bayLock, messageId);
+                        continue;
+                    }
+
+                    assignedTechId = techId;
+                    assignedBayId = bayId;
+                    break;
+                }
+                if (assignedTechId != null) break;
+            }
+
+            if (assignedTechId == null || assignedBayId == null)
+            {
+                // Task T011 will route this to DLQ, for now throw exception to cause retry/failure
+                throw new ResourceCurrentlyOccupiedException("AutoAssignment", startUtc, endUtc);
+            }
+        }
+        else
+        {
+            if (message.TechnicianId != null && message.ServiceBayId != null)
+            {
+                techLock = $"tenant:{message.TenantId}:lock:tech:{message.TechnicianId}:{startUtc.Ticks}";
+                bayLock = $"tenant:{message.TenantId}:lock:bay:{message.ServiceBayId}:{startUtc.Ticks}";
+
+                var techLocked = await _distributedLock.AcquireLockAsync(techLock, messageId, TimeSpan.FromSeconds(30));
+                if (!techLocked) throw new ResourceCurrentlyOccupiedException("Technician", startUtc, endUtc);
+
+                var bayLocked = await _distributedLock.AcquireLockAsync(bayLock, messageId, TimeSpan.FromSeconds(30));
+                if (!bayLocked)
+                {
+                    await _distributedLock.ReleaseLockAsync(techLock, messageId);
+                    throw new ResourceCurrentlyOccupiedException("ServiceBay", startUtc, endUtc);
+                }
+            }
+
+            if (message.TechnicianId != null)
+            {
+                await _technicianService.ValidateAndCheckAvailabilityAsync(message.TechnicianId, message.ServiceTypeId, startUtc, endUtc, cancellationToken);
+            }
+
+            if (message.ServiceBayId != null)
+            {
+                await _bayService.ValidateAndCheckAvailabilityAsync(message.ServiceBayId, startUtc, endUtc, cancellationToken);
+            }
         }
 
         var record = new TrackingRecord
@@ -63,11 +150,12 @@ public class AppointmentProcessor : IAppointmentProcessor
             VehicleId = message.VehicleId,
             CustomerId = message.CustomerId,
             ServiceTypeId = message.ServiceTypeId,
-            TechnicianId = message.TechnicianId,
-            ServiceBayId = message.ServiceBayId,
+            TechnicianId = assignedTechId!,
+            ServiceBayId = assignedBayId!,
             StartTime = startUtc,
             EndTime = endUtc,
-            Status = AppointmentStatus.Scheduled
+            Status = AppointmentStatus.Scheduled,
+            AutoAssigned = message.AutoAssigned
         };
 
         try
@@ -96,6 +184,14 @@ public class AppointmentProcessor : IAppointmentProcessor
         {
             _logger.LogError(ex, "Failed to process appointment message {MessageId}", messageId);
             throw;
+        }
+        finally
+        {
+            if (assignedTechId != null && assignedBayId != null)
+            {
+                await _distributedLock.ReleaseLockAsync(techLock, messageId);
+                await _distributedLock.ReleaseLockAsync(bayLock, messageId);
+            }
         }
     }
 }

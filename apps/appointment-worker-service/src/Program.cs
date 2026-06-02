@@ -45,6 +45,12 @@ public class Program
                 services.AddScoped<ITechnicianService, TechnicianService>();
                 services.AddScoped<IBayService, BayService>();
                 
+                services.AddSingleton<AppointmentWorkerService.Core.Application.Ports.IDistributedLock>(sp => 
+                {
+                    var provider = sp.GetRequiredService<RedisConnectionProvider>();
+                    return new AppointmentWorkerService.Infrastructure.Locking.RedisDistributedLock(provider.GetConnection());
+                });
+
                 services.AddScoped<IAppointmentProcessor, AppointmentProcessor>();
                 
                 services.AddValidatorsFromAssemblyContaining<AppointmentWorkerService.Core.Application.Validators.AppointmentMessageValidator>();
