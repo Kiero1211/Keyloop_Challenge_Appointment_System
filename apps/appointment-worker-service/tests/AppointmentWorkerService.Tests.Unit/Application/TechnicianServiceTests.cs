@@ -32,57 +32,57 @@ public class TechnicianServiceTests
     public async Task GivenTechnicianNotFound_ThenThrowsInvalidBookingRequest()
     {
         // Arrange
-        _techRepoMock.Setup(x => x.ExistsAsync("tech-1", It.IsAny<CancellationToken>()))
+        _techRepoMock.Setup(x => x.ExistsAsync("33333333-3333-3333-3333-333333333333", It.IsAny<CancellationToken>()))
             .ReturnsAsync(false);
 
         // Act & Assert
         await Assert.ThrowsAsync<InvalidBookingRequestException>(() =>
-            _sut.ValidateAndCheckAvailabilityAsync("tech-1", "svc-1", DateTimeOffset.UtcNow, DateTimeOffset.UtcNow.AddHours(1), CancellationToken.None));
+            _sut.ValidateAndCheckAvailabilityAsync("33333333-3333-3333-3333-333333333333", "77777777-7777-7777-7777-777777777777", DateTimeOffset.UtcNow, DateTimeOffset.UtcNow.AddHours(1), CancellationToken.None));
     }
 
     [Fact]
     public async Task GivenTechnicianLacksSkill_ThenThrowsInvalidBookingRequest()
     {
         // Arrange
-        _techRepoMock.Setup(x => x.ExistsAsync("tech-1", It.IsAny<CancellationToken>()))
+        _techRepoMock.Setup(x => x.ExistsAsync("33333333-3333-3333-3333-333333333333", It.IsAny<CancellationToken>()))
             .ReturnsAsync(true);
-        _skillRepoMock.Setup(x => x.HasSkillAsync("tech-1", "svc-1", It.IsAny<CancellationToken>()))
+        _skillRepoMock.Setup(x => x.HasSkillAsync("33333333-3333-3333-3333-333333333333", "77777777-7777-7777-7777-777777777777", It.IsAny<CancellationToken>()))
             .ReturnsAsync(false);
 
         // Act & Assert
         await Assert.ThrowsAsync<InvalidBookingRequestException>(() =>
-            _sut.ValidateAndCheckAvailabilityAsync("tech-1", "svc-1", DateTimeOffset.UtcNow, DateTimeOffset.UtcNow.AddHours(1), CancellationToken.None));
+            _sut.ValidateAndCheckAvailabilityAsync("33333333-3333-3333-3333-333333333333", "77777777-7777-7777-7777-777777777777", DateTimeOffset.UtcNow, DateTimeOffset.UtcNow.AddHours(1), CancellationToken.None));
     }
 
     [Fact]
     public async Task GivenTechnicianHasActiveOverlap_ThenThrowsResourceCurrentlyOccupied()
     {
         // Arrange
-        _techRepoMock.Setup(x => x.ExistsAsync("tech-1", It.IsAny<CancellationToken>()))
+        _techRepoMock.Setup(x => x.ExistsAsync("33333333-3333-3333-3333-333333333333", It.IsAny<CancellationToken>()))
             .ReturnsAsync(true);
-        _skillRepoMock.Setup(x => x.HasSkillAsync("tech-1", "svc-1", It.IsAny<CancellationToken>()))
+        _skillRepoMock.Setup(x => x.HasSkillAsync("33333333-3333-3333-3333-333333333333", "77777777-7777-7777-7777-777777777777", It.IsAny<CancellationToken>()))
             .ReturnsAsync(true);
-        _apptRepoMock.Setup(x => x.HasTechnicianOverlapAsync("tech-1", It.IsAny<DateTimeOffset>(), It.IsAny<DateTimeOffset>(), It.IsAny<CancellationToken>()))
+        _apptRepoMock.Setup(x => x.HasTechnicianOverlapAsync("33333333-3333-3333-3333-333333333333", It.IsAny<DateTimeOffset>(), It.IsAny<DateTimeOffset>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(true);
 
         // Act & Assert
         await Assert.ThrowsAsync<ResourceCurrentlyOccupiedException>(() =>
-            _sut.ValidateAndCheckAvailabilityAsync("tech-1", "svc-1", DateTimeOffset.UtcNow, DateTimeOffset.UtcNow.AddHours(1), CancellationToken.None));
+            _sut.ValidateAndCheckAvailabilityAsync("33333333-3333-3333-3333-333333333333", "77777777-7777-7777-7777-777777777777", DateTimeOffset.UtcNow, DateTimeOffset.UtcNow.AddHours(1), CancellationToken.None));
     }
 
     [Fact]
     public async Task GivenTechnicianAvailable_ThenCompletesWithoutException()
     {
         // Arrange
-        _techRepoMock.Setup(x => x.ExistsAsync("tech-1", It.IsAny<CancellationToken>()))
+        _techRepoMock.Setup(x => x.ExistsAsync("33333333-3333-3333-3333-333333333333", It.IsAny<CancellationToken>()))
             .ReturnsAsync(true);
-        _skillRepoMock.Setup(x => x.HasSkillAsync("tech-1", "svc-1", It.IsAny<CancellationToken>()))
+        _skillRepoMock.Setup(x => x.HasSkillAsync("33333333-3333-3333-3333-333333333333", "77777777-7777-7777-7777-777777777777", It.IsAny<CancellationToken>()))
             .ReturnsAsync(true);
-        _apptRepoMock.Setup(x => x.HasTechnicianOverlapAsync("tech-1", It.IsAny<DateTimeOffset>(), It.IsAny<DateTimeOffset>(), It.IsAny<CancellationToken>()))
+        _apptRepoMock.Setup(x => x.HasTechnicianOverlapAsync("33333333-3333-3333-3333-333333333333", It.IsAny<DateTimeOffset>(), It.IsAny<DateTimeOffset>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(false);
 
         // Act
-        await _sut.ValidateAndCheckAvailabilityAsync("tech-1", "svc-1", DateTimeOffset.UtcNow, DateTimeOffset.UtcNow.AddHours(1), CancellationToken.None);
+        await _sut.ValidateAndCheckAvailabilityAsync("33333333-3333-3333-3333-333333333333", "77777777-7777-7777-7777-777777777777", DateTimeOffset.UtcNow, DateTimeOffset.UtcNow.AddHours(1), CancellationToken.None);
 
         // Assert
         Assert.True(true); // Completed without throwing

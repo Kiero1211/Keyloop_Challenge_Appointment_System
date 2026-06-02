@@ -30,39 +30,39 @@ public class BayServiceTests
     public async Task GivenBayNotFound_ThenThrowsInvalidBookingRequest()
     {
         // Arrange
-        _bayRepoMock.Setup(x => x.ExistsAsync("bay-1", It.IsAny<CancellationToken>()))
+        _bayRepoMock.Setup(x => x.ExistsAsync("55555555-5555-5555-5555-555555555555", It.IsAny<CancellationToken>()))
             .ReturnsAsync(false);
 
         // Act & Assert
         await Assert.ThrowsAsync<InvalidBookingRequestException>(() =>
-            _sut.ValidateAndCheckAvailabilityAsync("bay-1", DateTimeOffset.UtcNow, DateTimeOffset.UtcNow.AddHours(1), CancellationToken.None));
+            _sut.ValidateAndCheckAvailabilityAsync("55555555-5555-5555-5555-555555555555", DateTimeOffset.UtcNow, DateTimeOffset.UtcNow.AddHours(1), CancellationToken.None));
     }
 
     [Fact]
     public async Task GivenBayHasActiveOverlap_ThenThrowsResourceCurrentlyOccupied()
     {
         // Arrange
-        _bayRepoMock.Setup(x => x.ExistsAsync("bay-1", It.IsAny<CancellationToken>()))
+        _bayRepoMock.Setup(x => x.ExistsAsync("55555555-5555-5555-5555-555555555555", It.IsAny<CancellationToken>()))
             .ReturnsAsync(true);
-        _apptRepoMock.Setup(x => x.HasBayOverlapAsync("bay-1", It.IsAny<DateTimeOffset>(), It.IsAny<DateTimeOffset>(), It.IsAny<CancellationToken>()))
+        _apptRepoMock.Setup(x => x.HasBayOverlapAsync("55555555-5555-5555-5555-555555555555", It.IsAny<DateTimeOffset>(), It.IsAny<DateTimeOffset>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(true);
 
         // Act & Assert
         await Assert.ThrowsAsync<ResourceCurrentlyOccupiedException>(() =>
-            _sut.ValidateAndCheckAvailabilityAsync("bay-1", DateTimeOffset.UtcNow, DateTimeOffset.UtcNow.AddHours(1), CancellationToken.None));
+            _sut.ValidateAndCheckAvailabilityAsync("55555555-5555-5555-5555-555555555555", DateTimeOffset.UtcNow, DateTimeOffset.UtcNow.AddHours(1), CancellationToken.None));
     }
 
     [Fact]
     public async Task GivenBayAvailable_ThenCompletesWithoutException()
     {
         // Arrange
-        _bayRepoMock.Setup(x => x.ExistsAsync("bay-1", It.IsAny<CancellationToken>()))
+        _bayRepoMock.Setup(x => x.ExistsAsync("55555555-5555-5555-5555-555555555555", It.IsAny<CancellationToken>()))
             .ReturnsAsync(true);
-        _apptRepoMock.Setup(x => x.HasBayOverlapAsync("bay-1", It.IsAny<DateTimeOffset>(), It.IsAny<DateTimeOffset>(), It.IsAny<CancellationToken>()))
+        _apptRepoMock.Setup(x => x.HasBayOverlapAsync("55555555-5555-5555-5555-555555555555", It.IsAny<DateTimeOffset>(), It.IsAny<DateTimeOffset>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(false);
 
         // Act
-        await _sut.ValidateAndCheckAvailabilityAsync("bay-1", DateTimeOffset.UtcNow, DateTimeOffset.UtcNow.AddHours(1), CancellationToken.None);
+        await _sut.ValidateAndCheckAvailabilityAsync("55555555-5555-5555-5555-555555555555", DateTimeOffset.UtcNow, DateTimeOffset.UtcNow.AddHours(1), CancellationToken.None);
 
         // Assert
         Assert.True(true); // Completed without throwing

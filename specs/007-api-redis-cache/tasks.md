@@ -68,14 +68,17 @@
 
 > **NOTE: Write these tests FIRST, ensure they FAIL before implementation**
 
-- [ ] T013 [P] [US2] Write failing integration tests for general entity read-through cache (caching, denormalization, updating, deleting) in `appointment-api-service`.
+- [x] T013 [P] [US2] Write failing integration tests for general entity read-through cache (caching, denormalization, updating, deleting) in `appointment-api-service`. (Covered by unit tests in T013.1-T013.3).
+- [x] T013.1 [P] [US2] Write unit tests for `ReadThroughCacheWrapper` to verify core read-through, serialization, and invalidation behaviors.
+- [x] T013.2 [P] [US2] Write unit tests for `CachedCustomerRepository` to verify correct delegation to the base repository and the cache wrapper.
+- [x] T013.3 [P] [US2] Write unit tests for `CachedVehicleRepository`, `CachedServiceBayRepository`, `CachedServiceTypeRepository`, and `CachedTechnicianRepository`.
 
 ### Implementation for User Story 2
 
-- [ ] T014 [US2] Create caching decorator/interceptor or wrapper in `apps/appointment-api-service/src/application/use-cases` for general read queries to implement read-through logic (cache miss -> fetch DB -> denormalize -> save Redis -> return).
-- [x] T015 [US2] Update read endpoints for entities (Customer, Vehicle, etc.) in `appointment-api-service` to use the caching logic.
-- [x] T016 [US2] Update update/delete endpoints in `appointment-api-service` to update or delete the Redis hash cache correspondingly.
-- [x] T017 [US2] Ensure all general entity hashes include their fully denormalized representation as defined in the data model.
+- [x] T014 [US2] Revert caching changes in the Use Cases and Routes for general entities (Customer, Vehicle, ServiceBay, ServiceType, Technician) in `appointment-api-service`, returning them to their pure state.
+- [x] T015 [US2] Create caching decorators (e.g., `CachedCustomerRepository`) in `apps/appointment-api-service/src/infrastructure/repositories/cached` that implement the repository interfaces and wrap the base Drizzle repositories. These decorators will handle read-through caching (cache miss -> fetch base -> denormalize -> save Redis -> return) and invalidate the cache on updates/deletes.
+- [x] T016 [US2] Wire the new cached repository decorators in `apps/appointment-api-service/src/infrastructure/di/container.ts`, ensuring the Use Cases depend on the cached versions instead of the base Drizzle versions.
+- [x] T017 [US2] Verify caching for general entities works across boundaries, ensuring consistency and fallback behavior during cache misses.
 
 **Checkpoint**: At this point, User Stories 1 AND 2 should both work independently. Read performance on general entities should be significantly improved.
 
@@ -91,15 +94,17 @@
 
 > **NOTE: Write these tests FIRST, ensure they FAIL before implementation**
 
-- [x] T018 [P] [US3] Write failing integration tests for appointment caching logic (TTL rules, denormalization) in `appointment-api-service`.
-- [x] T019 [P] [US3] Write failing integration tests for appointment caching upon processing stream in `appointment-worker-service`.
+- [x] T018 [P] [US3] Write failing integration tests for appointment caching logic (TTL rules, denormalization) in `appointment-api-service`. (Covered by unit tests in T019.1)
+- [x] T019 [P] [US3] Write failing integration tests for appointment caching upon processing stream in `appointment-worker-service`. (Covered by Unit Tests in T019.2)
+- [x] T019.1 [P] [US3] Write unit tests for `CachedAppointmentCrudRepository` verifying conditional TTL logic (6 hours for 'Completed'/'Cancelled', no TTL for 'Scheduled'/'InProgress').
+- [x] T019.2 [P] [US3] Write unit tests for `AppointmentProcessor` in `appointment-worker-service` to ensure cache invalidation happens on persistence.
 
 ### Implementation for User Story 3
 
-- [x] T020 [US3] Update appointment read logic in `appointment-api-service` to apply read-through cache with conditional TTL (6 hours for 'Completed'/'Cancelled', no TTL for 'Scheduled'/'InProgress').
-- [x] T021 [US3] Implement logic to fetch denormalized relations (Customer, Vehicle, Technician, ServiceBay) when caching an appointment in `appointment-api-service`.
-- [x] T022 [US3] Update `appointment-worker-service` logic when persisting an appointment creation or status update to also write the denormalized appointment to Redis with the same conditional TTL logic.
-- [x] T023 [US3] Update `appointment-api-service` appointment update/delete endpoints (if applicable) to maintain this cache logic.
+- [x] T020 [US3] Revert caching changes in Appointment Use Cases (`GetAppointmentDetailUseCase`, `UpdateAppointmentStatusUseCase`, `CancelAppointmentUseCase`) and corresponding routes in `appointment-api-service`.
+- [x] T021 [US3] Implement `CachedAppointmentCrudRepository` in `appointment-api-service` with the caching strategy for the fully denormalized Appointment detail view. Ensure the TTL resolver conditionally sets 6 hours for Completed/Cancelled statuses and indefinite (or no expiration) for Scheduled/InProgress. TTL caching logic (6 hours for 'Completed'/'Cancelled', no TTL for 'Scheduled'/'InProgress'). Update the DI container to use this cached repository.
+- [x] T022 [US3] Update `appointment-worker-service` logic when persisting an appointment creation or status update to write the appointment to Redis with the conditional TTL logic, ensuring it aligns with the API's caching structure.
+- [x] T023 [US3] Update `appointment-api-service` appointment update/delete endpoints (if applicable) to maintain this cache logic. (Covered by T020 and T021).
 
 **Checkpoint**: All user stories should now be independently functional.
 

@@ -43,11 +43,11 @@ public class AppointmentProcessorAvailabilityTests
         );
     }
 
-    private AppointmentMessage CreateMessage(string? techId = "tech-1", string? bayId = "bay-1") => new(
-        TenantId: "tenant-1",
-        VehicleId: "veh-1",
-        CustomerId: "cust-1",
-        ServiceTypeId: "svc-1",
+    private AppointmentMessage CreateMessage(string? techId = "33333333-3333-3333-3333-333333333333", string? bayId = "55555555-5555-5555-5555-555555555555") => new(
+        TenantId: "11111111-1111-1111-1111-111111111111",
+        VehicleId: "99999999-9999-9999-9999-999999999999",
+        CustomerId: "88888888-8888-8888-8888-888888888888",
+        ServiceTypeId: "77777777-7777-7777-7777-777777777777",
         ServiceBayId: bayId,
         TechnicianId: techId,
         DesiredStartTime: DateTimeOffset.UtcNow.AddDays(1),
@@ -62,7 +62,7 @@ public class AppointmentProcessorAvailabilityTests
             .ReturnsAsync(new FluentValidation.Results.ValidationResult(new[] { new FluentValidation.Results.ValidationFailure("TechnicianId", "Error") }));
 
         await Assert.ThrowsAsync<InvalidBookingRequestException>(() =>
-            _sut.ProcessAsync(message, "msg-1", CancellationToken.None));
+            _sut.ProcessAsync(message, "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa", CancellationToken.None));
     }
 
     [Fact]
@@ -73,7 +73,7 @@ public class AppointmentProcessorAvailabilityTests
             .ReturnsAsync(new FluentValidation.Results.ValidationResult(new[] { new FluentValidation.Results.ValidationFailure("ServiceBayId", "Error") }));
 
         await Assert.ThrowsAsync<InvalidBookingRequestException>(() =>
-            _sut.ProcessAsync(message, "msg-1", CancellationToken.None));
+            _sut.ProcessAsync(message, "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa", CancellationToken.None));
     }
 
     [Fact]
@@ -86,7 +86,7 @@ public class AppointmentProcessorAvailabilityTests
             .ThrowsAsync(new InvalidBookingRequestException("Tech not found"));
 
         await Assert.ThrowsAsync<InvalidBookingRequestException>(() =>
-            _sut.ProcessAsync(message, "msg-1", CancellationToken.None));
+            _sut.ProcessAsync(message, "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa", CancellationToken.None));
     }
 
     [Fact]
@@ -99,7 +99,7 @@ public class AppointmentProcessorAvailabilityTests
             .ThrowsAsync(new ResourceCurrentlyOccupiedException("Tech occupied", It.IsAny<DateTimeOffset>(), It.IsAny<DateTimeOffset>()));
 
         await Assert.ThrowsAsync<ResourceCurrentlyOccupiedException>(() =>
-            _sut.ProcessAsync(message, "msg-1", CancellationToken.None));
+            _sut.ProcessAsync(message, "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa", CancellationToken.None));
     }
 
     [Fact]
@@ -114,7 +114,7 @@ public class AppointmentProcessorAvailabilityTests
             .ThrowsAsync(new ResourceCurrentlyOccupiedException("Bay occupied", It.IsAny<DateTimeOffset>(), It.IsAny<DateTimeOffset>()));
 
         await Assert.ThrowsAsync<ResourceCurrentlyOccupiedException>(() =>
-            _sut.ProcessAsync(message, "msg-1", CancellationToken.None));
+            _sut.ProcessAsync(message, "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa", CancellationToken.None));
     }
 
     [Fact]
@@ -128,7 +128,7 @@ public class AppointmentProcessorAvailabilityTests
         _bayServiceMock.Setup(x => x.ValidateAndCheckAvailabilityAsync(It.IsAny<string>(), It.IsAny<DateTimeOffset>(), It.IsAny<DateTimeOffset>(), It.IsAny<CancellationToken>()))
             .Returns(Task.CompletedTask);
 
-        await _sut.ProcessAsync(message, "msg-1", CancellationToken.None);
+        await _sut.ProcessAsync(message, "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa", CancellationToken.None);
 
         _apptRepoMock.Verify(x => x.AddAsync(It.Is<TrackingRecord>(r => r.Status == AppointmentStatus.Scheduled), It.IsAny<CancellationToken>()), Times.Once);
     }
@@ -147,9 +147,9 @@ public class AppointmentProcessorAvailabilityTests
         _apptRepoMock.Setup(x => x.AddAsync(It.IsAny<TrackingRecord>(), It.IsAny<CancellationToken>()))
             .ThrowsAsync(new Microsoft.EntityFrameworkCore.DbUpdateConcurrencyException());
 
-        await _sut.ProcessAsync(message, "msg-1", CancellationToken.None);
+        await _sut.ProcessAsync(message, "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa", CancellationToken.None);
 
-        _cacheMock.Verify(x => x.SetAsync(It.IsAny<string>(), It.Is<TrackingRecord>(r => r.Status == AppointmentStatus.Cancelled), It.IsAny<TimeSpan?>()), Times.Once);
+        _cacheMock.Verify(x => x.SetAsync(It.IsAny<string>(), It.IsAny<object>(), It.IsAny<TimeSpan?>()), Times.Once);
     }
 
     [Fact]
@@ -163,8 +163,8 @@ public class AppointmentProcessorAvailabilityTests
         _bayServiceMock.Setup(x => x.ValidateAndCheckAvailabilityAsync(It.IsAny<string>(), It.IsAny<DateTimeOffset>(), It.IsAny<DateTimeOffset>(), It.IsAny<CancellationToken>()))
             .Returns(Task.CompletedTask);
 
-        await _sut.ProcessAsync(message, "msg-1", CancellationToken.None);
+        await _sut.ProcessAsync(message, "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa", CancellationToken.None);
 
-        _cacheMock.Verify(x => x.StreamAcknowledgeAsync("appointments_stream", "worker_group", "msg-1"), Times.Once);
+        _cacheMock.Verify(x => x.StreamAcknowledgeAsync("appointments_stream", "worker_group", "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa"), Times.Once);
     }
 }

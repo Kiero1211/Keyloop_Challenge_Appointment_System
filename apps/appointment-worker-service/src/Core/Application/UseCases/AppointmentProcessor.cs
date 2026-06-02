@@ -76,7 +76,7 @@ public class AppointmentProcessor : IAppointmentProcessor
             _logger.LogInformation("Successfully saved appointment {Id} with status {Status}", record.Id, record.Status);
             
             // Push status to Redis (No TTL for Scheduled)
-            await _cacheProvider.SetAsync($"appointment:{record.Id}", record, null);
+            await _cacheProvider.SetAsync($"{record.TenantId}:AppointmentDetail:{record.Id}", new { appointment = record }, null);
             
             // Mark as acknowledged in stream
             await _cacheProvider.StreamAcknowledgeAsync("appointments_stream", "worker_group", messageId);
@@ -87,7 +87,7 @@ public class AppointmentProcessor : IAppointmentProcessor
             record.Status = AppointmentStatus.Cancelled;
             
             // Update cache with rejected status (6 hours TTL for Cancelled)
-            await _cacheProvider.SetAsync($"appointment:{record.Id}", record, TimeSpan.FromHours(6));
+            await _cacheProvider.SetAsync($"{record.TenantId}:AppointmentDetail:{record.Id}", new { appointment = record }, TimeSpan.FromHours(6));
             
             // Acknowledge stream message to avoid infinite retry loop
             await _cacheProvider.StreamAcknowledgeAsync("appointments_stream", "worker_group", messageId);
