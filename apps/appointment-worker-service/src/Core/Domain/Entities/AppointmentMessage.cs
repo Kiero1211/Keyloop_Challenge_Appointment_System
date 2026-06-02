@@ -8,4 +8,5 @@ public record AppointmentMessage(
     string? ServiceBayId,
     string? TechnicianId,
     DateTimeOffset DesiredStartTime,
-    string Source);
+    string Source,
+    bool AutoAssigned);

@@ -20,6 +20,7 @@ public class TrackingRecord : IMustHaveTenant
     public DateTimeOffset StartTime { get; set; }
     public DateTimeOffset EndTime { get; set; }
     public AppointmentStatus Status { get; set; } = AppointmentStatus.Scheduled;
+    public bool AutoAssigned { get; set; }
     public uint Version { get; set; }
 }
 
