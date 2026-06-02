@@ -10,6 +10,7 @@ import { customersRouter } from '@/infrastructure/http/routes/customers.routes';
 import { vehiclesRouter } from '@/infrastructure/http/routes/vehicles.routes';
 import { tenantRouter } from '@/infrastructure/http/routes/tenant.routes';
 import { authRouter } from '@/infrastructure/http/routes/auth.routes';
+import { auditLogsRouter } from '@/infrastructure/http/routes/audit-logs.routes';
 import { tenantContextMiddleware } from '@/infrastructure/http/middleware/tenant-context.middleware';
 import swaggerUi from 'swagger-ui-express';
 import YAML from 'yamljs';
@@ -85,6 +86,13 @@ app.use(
 );
 
 app.use('/api/v1/tenants', tenantRouter);
+
+app.use(
+  '/api/v1/audit-logs',
+  (req, res, next) => jwtAuthMiddleware(container.jwtService)(req, res, next),
+  tenantContextMiddleware,
+  auditLogsRouter
+);
 
 // Error handler (must be last)
 app.use(errorHandler);

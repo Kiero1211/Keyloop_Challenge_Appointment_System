@@ -13,6 +13,7 @@ export function Register({ onToggleToLogin }: RegisterProps) {
   const [password, setPassword] = useState('');
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
+  const [tenantId, setTenantId] = useState('');
   
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
@@ -34,7 +35,8 @@ export function Register({ onToggleToLogin }: RegisterProps) {
           email: email.trim(), 
           password,
           firstName: firstName.trim(),
-          lastName: lastName.trim()
+          lastName: lastName.trim(),
+          ...(tenantId.trim() ? { tenantId: tenantId.trim() } : {})
         })
       });
 
@@ -44,7 +46,10 @@ export function Register({ onToggleToLogin }: RegisterProps) {
 
       const data = await res.json();
       if (data.accessToken) {
-        login(data.accessToken);
+        if (data.refreshToken) {
+          localStorage.setItem('refreshToken', data.refreshToken);
+        }
+        login(data.accessToken, data.user?.tenantId || null, data.user?.isSuperAdmin || false);
       } else {
         setError('No token returned');
       }
@@ -92,6 +97,13 @@ export function Register({ onToggleToLogin }: RegisterProps) {
           placeholder="Password" 
           style={{ padding: '8px' }}
           required
+        />
+        <input 
+          type="text" 
+          value={tenantId}
+          onChange={(e) => setTenantId(e.target.value)}
+          placeholder="Tenant ID (Optional)" 
+          style={{ padding: '8px' }}
         />
         <button type="submit" style={{ padding: '8px 16px', cursor: 'pointer' }} disabled={loading}>
           {loading ? 'Registering...' : 'Register'}

@@ -37,7 +37,10 @@ export function Login({ onToggleToRegister }: LoginProps) {
 
       const data = await res.json();
       if (data.accessToken) {
-        login(data.accessToken);
+        if (data.refreshToken) {
+          localStorage.setItem('refreshToken', data.refreshToken);
+        }
+        login(data.accessToken, data.user?.tenantId || null, data.user?.isSuperAdmin || false);
       } else {
         setError('No token returned');
       }

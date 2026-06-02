@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import type { ChangeEvent } from 'react';
 import { useAuth } from '../useAuth';
-import { apiFetch } from '../api';
+import { apiFetch, switchTenantApi } from '../api';
 
 interface Tenant {
   id: string;
@@ -9,7 +9,7 @@ interface Tenant {
 }
 
 export function TenantSelector() {
-  const { tenant_id, setTenant } = useAuth();
+  const { tenant_id, setTenant, isSuperAdmin, login } = useAuth();
   const [tenants, setTenants] = useState<Tenant[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -31,10 +31,28 @@ export function TenantSelector() {
       });
   }, []);
 
-  const handleChange = (e: ChangeEvent<HTMLSelectElement>) => {
+  const handleChange = async (e: ChangeEvent<HTMLSelectElement>) => {
     const value = e.target.value;
     if (value) {
-      setTenant(value);
+      if (isSuperAdmin) {
+        setTenant(value);
+      } else {
+        try {
+          const refreshToken = localStorage.getItem('refreshToken');
+          if (!refreshToken) throw new Error('No refresh token available');
+          const data = await switchTenantApi(value, refreshToken);
+          if (data.accessToken) {
+            if (data.refreshToken) {
+              localStorage.setItem('refreshToken', data.refreshToken);
+            }
+            login(data.accessToken, value, isSuperAdmin);
+          }
+        } catch (err) {
+          console.error('Failed to switch tenant via API:', err);
+          // Fallback just in case
+          setTenant(value);
+        }
+      }
     }
   };
 

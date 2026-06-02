@@ -4,9 +4,11 @@ interface DataTableProps {
   data: any[];
   error?: Error | null;
   loading: boolean;
+  onEdit?: (row: any) => void;
+  onDelete?: (row: any) => void;
 }
 
-export function DataTable({ data, error, loading }: DataTableProps) {
+export function DataTable({ data, error, loading, onEdit, onDelete }: DataTableProps) {
   if (loading) {
     return <p>Loading data...</p>;
   }
@@ -35,6 +37,11 @@ export function DataTable({ data, error, loading }: DataTableProps) {
                 {col}
               </th>
             ))}
+            {(onEdit || onDelete) && (
+              <th style={{ border: '1px solid #ccc', padding: '8px', textAlign: 'left', width: '120px' }}>
+                Actions
+              </th>
+            )}
           </tr>
         </thead>
         <tbody>
@@ -45,6 +52,20 @@ export function DataTable({ data, error, loading }: DataTableProps) {
                   {typeof row[col] === 'object' ? JSON.stringify(row[col]) : String(row[col])}
                 </td>
               ))}
+              {(onEdit || onDelete) && (
+                <td style={{ border: '1px solid #ccc', padding: '8px', textAlign: 'center' }}>
+                  {onEdit && (
+                    <button onClick={() => onEdit(row)} style={{ marginRight: '8px', cursor: 'pointer' }}>
+                      Edit
+                    </button>
+                  )}
+                  {onDelete && (
+                    <button onClick={() => onDelete(row)} style={{ cursor: 'pointer', color: 'red' }}>
+                      Delete
+                    </button>
+                  )}
+                </td>
+              )}
             </tr>
           ))}
         </tbody>

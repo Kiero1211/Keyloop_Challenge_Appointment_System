@@ -60,8 +60,9 @@ describe('Audit Logs API E2E', () => {
 
   it('should return audit logs for a tenant', async () => {
     const response = await request(app)
-      .get(`/api/v1/tenants/${tenantId}/audit-logs?start_time=2024-01-01T00:00:00Z&end_time=2024-01-03T00:00:00Z`)
-      .set('Authorization', `Bearer ${adminToken}`);
+      .get(`/api/v1/audit-logs?start_time=2024-01-01T00:00:00Z&end_time=2024-01-03T00:00:00Z`)
+      .set('Authorization', `Bearer ${adminToken}`)
+      .set('x-tenant-id', tenantId);
 
     expect(response.status).toBe(200);
     const body = response.body;
@@ -74,8 +75,9 @@ describe('Audit Logs API E2E', () => {
 
   it('should filter by entity type', async () => {
     const response = await request(app)
-      .get(`/api/v1/tenants/${tenantId}/audit-logs?start_time=2024-01-01T00:00:00Z&end_time=2024-01-03T00:00:00Z&entity_type=ServiceBay`)
-      .set('Authorization', `Bearer ${adminToken}`);
+      .get(`/api/v1/audit-logs?start_time=2024-01-01T00:00:00Z&end_time=2024-01-03T00:00:00Z&entity_type=ServiceBay`)
+      .set('Authorization', `Bearer ${adminToken}`)
+      .set('x-tenant-id', tenantId);
 
     expect(response.status).toBe(200);
     const body = response.body;

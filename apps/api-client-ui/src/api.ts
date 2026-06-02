@@ -39,6 +39,10 @@ export async function getTenants(page = 1) {
   return apiFetch(`/api/v1/auth/tenants?page=${page}`);
 }
 
+export async function getAllTenants(page = 1) {
+  return apiFetch(`/api/v1/tenants?page=${page}`);
+}
+
 export async function getTechnicians(page = 1) {
   return apiFetch(`/api/v1/technicians?page=${page}`);
 }
@@ -52,6 +56,99 @@ export async function getAppointments(page = 1) {
 }
 
 export async function getAuditLogs(page = 1) {
-  const tenantId = localStorage.getItem('tenant_id');
-  return apiFetch(`/api/v1/tenants/${tenantId}/audit-logs?page=${page}`);
+  // requires admin role
+  const end_time = new Date().toISOString();
+  const start_time = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString();
+  return apiFetch(`/api/v1/audit-logs?page=${page}&start_time=${start_time}&end_time=${end_time}`);
+}
+
+export async function getCustomers(page = 1) {
+  return apiFetch(`/api/v1/customers?page=${page}`);
+}
+
+export async function getVehicles(page = 1) {
+  return apiFetch(`/api/v1/vehicles?page=${page}`);
+}
+
+export async function getServiceTypes(page = 1) {
+  return apiFetch(`/api/v1/service-types?page=${page}`);
+}
+
+const entityPathMap: Record<string, string> = {
+  'Technicians': '/api/v1/technicians',
+  'ServiceBays': '/api/v1/service-bays',
+  'Appointments': '/api/v1/appointments',
+  'Tenants': '/api/v1/tenants',
+  'Customers': '/api/v1/customers',
+  'Vehicles': '/api/v1/vehicles',
+  'ServiceTypes': '/api/v1/service-types',
+};
+
+export async function createEntity(entityType: string, payload: any) {
+  const path = entityPathMap[entityType];
+  if (!path) throw new Error(`Unknown entity type: ${entityType}`);
+  
+  return apiFetch(path, {
+    method: 'POST',
+    body: JSON.stringify(payload),
+  });
+}
+
+export async function updateEntity(entityType: string, id: string, payload: any) {
+  let path = entityPathMap[entityType];
+  if (!path) throw new Error(`Unknown entity type: ${entityType}`);
+  
+  if (entityType === 'Appointments') {
+    // Appointments only support patching status
+    path = `${path}/${id}/status`;
+    return apiFetch(path, {
+      method: 'PATCH',
+      body: JSON.stringify(payload),
+    });
+  }
+
+  return apiFetch(`${path}/${id}`, {
+    method: 'PUT',
+    body: JSON.stringify(payload),
+  });
+}
+
+export async function deleteEntity(entityType: string, id: string) {
+  const path = entityPathMap[entityType];
+  if (!path) throw new Error(`Unknown entity type: ${entityType}`);
+  
+  return apiFetch(`${path}/${id}`, {
+    method: 'DELETE',
+  });
+}
+
+export async function switchTenantApi(targetTenantId: string, refreshToken: string) {
+  const response = await fetch(`${API_BASE_URL}/api/v1/auth/switch-tenant`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${localStorage.getItem('token')}`
+    },
+    body: JSON.stringify({ targetTenantId, refreshToken }),
+  });
+  if (!response.ok) throw new Error('Failed to switch tenant');
+  return response.json();
+}
+
+export async function assignUserToTenant(tenantId: string, userId: string, role: string) {
+  return apiFetch(`/api/v1/tenants/${tenantId}/users`, {
+    method: 'POST',
+    body: JSON.stringify({ userId, role }),
+  });
+}
+
+export async function promoteUserToManager(tenantId: string, userId: string) {
+  return apiFetch(`/api/v1/tenants/${tenantId}/users/${userId}/role`, {
+    method: 'PUT',
+    body: JSON.stringify({ role: 'TenantManager' }),
+  });
+}
+
+export async function getTenantUsers(tenantId: string) {
+  return apiFetch(`/api/v1/tenants/${tenantId}/users`);
 }
