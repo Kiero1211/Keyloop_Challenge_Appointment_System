@@ -83,7 +83,7 @@ export class CreateAppointmentUseCase {
     }
 
     const partition = this.partitionHasher(tenantId, vehicleId.value);
-    const streamName = `tenant:${tenantId}:appointments_stream_${partition}`;
+    const streamName = `appointments_stream_${partition}`;
 
     // Compile message payload
     const payload = {
@@ -101,16 +101,6 @@ export class CreateAppointmentUseCase {
       autoAssigned: command.autoAssigned,
       createdAt: new Date().toISOString()
     };
-
-    // Save tracking hash
-    const idempotencyKey = `tenant:${tenantId}:appointment:${vehicleId.value}:Scheduled`;
-    const stringPayload: Record<string, string> = {};
-    for (const [key, value] of Object.entries(payload)) {
-      if (value !== undefined && value !== null) {
-        stringPayload[key] = value.toString();
-      }
-    }
-    await this.cacheProvider.hset(idempotencyKey, stringPayload);
 
     // Publish to stream
     await this.messagePublisher.publish(streamName, payload);

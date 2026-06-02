@@ -26,7 +26,7 @@ public class SendAppointmentRemindersUseCaseTests
     {
         // Arrange
         var tenantId = "tenant-1";
-        var appointmentId = Guid.NewGuid();
+        var appointmentId = Guid.NewGuid().ToString();
         var dueReminders = new List<AppointmentReminderData>
         {
             new AppointmentReminderData

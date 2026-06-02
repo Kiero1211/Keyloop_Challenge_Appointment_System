@@ -3,6 +3,7 @@ import type { EntityType } from '../types';
 import { getTechnicians, getServiceBays, getAppointments, getAuditLogs, getAllTenants, getCustomers, getVehicles, getServiceTypes, createEntity, updateEntity, deleteEntity, assignUserToTenant, promoteUserToManager, getTenantUsers } from '../api';
 import { DataTable } from './DataTable';
 import { CrudModal } from './CrudModal';
+import { AppointmentModal } from './AppointmentModal';
 import { entitySchemas } from '../formSchemas';
 import { useAuth } from '../useAuth';
 
@@ -297,14 +298,22 @@ export function Dashboard() {
         </>
       )}
 
-      <CrudModal
-        isOpen={modalOpen}
-        onClose={() => setModalOpen(false)}
-        onSubmit={handleModalSubmit}
-        title={modalMode === 'create' ? `Create ${currentEntity}` : `Edit ${currentEntity}`}
-        schema={getSchema()}
-        initialData={selectedRow}
-      />
+      {currentEntity === 'Appointments' && modalMode === 'create' ? (
+        <AppointmentModal
+          isOpen={modalOpen}
+          onClose={() => setModalOpen(false)}
+          onSubmit={handleModalSubmit}
+        />
+      ) : (
+        <CrudModal
+          isOpen={modalOpen}
+          onClose={() => setModalOpen(false)}
+          onSubmit={handleModalSubmit}
+          title={modalMode === 'create' ? `Create ${currentEntity}` : `Edit ${currentEntity}`}
+          schema={getSchema()}
+          initialData={selectedRow}
+        />
+      )}
     </div>
   );
 }

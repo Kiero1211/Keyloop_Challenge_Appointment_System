@@ -92,7 +92,7 @@ router.get(
   (req, res, next) => jwtAuthMiddleware(container.jwtService)(req, res, next),
   async (req, res, next) => {
     try {
-      const useCase = new GetMyTenantsUseCase(container.userTenantRepository);
+      const useCase = new GetMyTenantsUseCase(container.userTenantRepository, container.tenantRepository);
       const result = await useCase.execute((req as any).user.userId);
       res.json(result);
     } catch (error) {

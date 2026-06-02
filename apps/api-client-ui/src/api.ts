@@ -152,3 +152,10 @@ export async function promoteUserToManager(tenantId: string, userId: string) {
 export async function getTenantUsers(tenantId: string) {
   return apiFetch(`/api/v1/tenants/${tenantId}/users`);
 }
+
+export async function holdAppointmentResource(payload: { technicianId?: string, serviceBayId?: string }) {
+  return apiFetch('/api/v1/appointments/hold', {
+    method: 'POST',
+    body: JSON.stringify(payload),
+  });
+}

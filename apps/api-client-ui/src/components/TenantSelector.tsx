@@ -21,7 +21,7 @@ export function TenantSelector() {
       .then((data: any) => {
         // Handle if response is array or an object wrapping array
         const list = Array.isArray(data) ? data : data.items || data.tenants || [];
-        setTenants(list);
+        setTenants(list.map((t: any) => ({ id: t.tenantId, name: t.tenantName })) || []);
       })
       .catch((err) => {
         console.error('Failed to fetch tenants:', err);
@@ -33,6 +33,7 @@ export function TenantSelector() {
 
   const handleChange = async (e: ChangeEvent<HTMLSelectElement>) => {
     const value = e.target.value;
+    if (value.length == 0) return;
     if (value) {
       if (isSuperAdmin) {
         setTenant(value);
@@ -64,14 +65,11 @@ export function TenantSelector() {
       ) : (
         <select value={tenant_id || ''} onChange={handleChange} style={{ padding: '8px', width: '200px' }}>
           <option value="" disabled>-- Select a Tenant --</option>
-          {tenants.map(t => (
+          {tenants.length > 0 && tenants.map(t => (
             <option key={t.id} value={t.id}>
               {t.name} ({t.id})
             </option>
           ))}
-          {/* Fallback option if empty or if needed */}
-          <option value="tenant-1">Tenant 1</option>
-          <option value="tenant-2">Tenant 2</option>
         </select>
       )}
     </div>
