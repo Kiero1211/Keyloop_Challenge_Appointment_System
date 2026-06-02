@@ -28,9 +28,15 @@ public class Program
                 var connectionString = hostContext.Configuration["DB_CONNECTION"] ?? "Host=localhost;Database=appointments;Username=postgres;Password=postgres";
                 var redisConnection = hostContext.Configuration["REDIS_CONNECTION"] ?? "localhost:6379";
 
-                services.AddDbContext<AppDbContext>(options =>
+                services.AddScoped<AuditLogInterceptor>();
+
+                services.AddDbContext<AppDbContext>((sp, options) =>
+                {
+                    var interceptor = sp.GetRequiredService<AuditLogInterceptor>();
                     options.UseNpgsql(connectionString)
-                           .UseSnakeCaseNamingConvention());
+                           .UseSnakeCaseNamingConvention()
+                           .AddInterceptors(interceptor);
+                });
 
                 services.AddSingleton(new RedisConnectionProvider(redisConnection));
                 services.AddSingleton<ICacheProvider, CacheProvider>();
@@ -41,6 +47,7 @@ public class Program
                 services.AddScoped<ITechnicianRepository, TechnicianRepository>();
                 services.AddScoped<IServiceBayRepository, ServiceBayRepository>();
                 services.AddScoped<ITechnicianSkillRepository, TechnicianSkillRepository>();
+                services.AddScoped<IAuditLogRepository, AuditLogRepository>();
                 
                 services.AddScoped<ITechnicianService, TechnicianService>();
                 services.AddScoped<IBayService, BayService>();

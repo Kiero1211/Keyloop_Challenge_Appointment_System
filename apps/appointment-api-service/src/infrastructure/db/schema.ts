@@ -1,4 +1,4 @@
-import { pgTable, uuid, text, boolean, timestamp, integer, uniqueIndex, index } from 'drizzle-orm/pg-core';
+import { pgTable, uuid, text, boolean, timestamp, integer, uniqueIndex, index, jsonb } from 'drizzle-orm/pg-core';
 import { relations, sql } from 'drizzle-orm';
 
 export const users = pgTable('users', {
@@ -179,4 +179,18 @@ export const tenantsRelations = relations(tenants, ({ many }) => ({
   technicians: many(technicians),
   serviceBays: many(serviceBays),
   appointments: many(appointments),
+}));
+
+export const auditLogs = pgTable('audit_logs', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  tenantId: uuid('tenant_id').notNull().references(() => tenants.id),
+  entityType: text('entity_type').notNull(),
+  entityId: text('entity_id').notNull(),
+  action: text('action').notNull(),
+  result: jsonb('result').notNull(),
+  timestamp: timestamp('timestamp', { withTimezone: true }).notNull(),
+  userId: text('user_id'),
+}, (table) => ({
+  tenantEntityIdx: index('idx_audit_logs_tenant_entity').on(table.tenantId, table.entityType, table.entityId),
+  tenantTimestampIdx: index('idx_audit_logs_tenant_timestamp').on(table.tenantId, table.timestamp),
 }));

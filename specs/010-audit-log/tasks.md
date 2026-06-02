@@ -26,7 +26,7 @@
 
 **⚠️ CRITICAL**: No user story work can begin until this phase is complete
 
-- [ ] T002 Update database schema to add `audit_logs` partitioned table in `db/init/01-table.sql` (Addresses User Story 3)
+- [X] T002 Update database schema to add `audit_logs` partitioned table in `db/init/01-table.sql` (Addresses User Story 3)
 
 **Checkpoint**: Foundation ready - user story implementation can now begin in parallel
 
@@ -42,15 +42,15 @@
 
 > **NOTE: Write these tests FIRST, ensure they FAIL before implementation**
 
-- [ ] T003 [P] [US1] Integration test for Audit Log creation in `apps/appointment-worker-service/tests/AppointmentWorkerService.Tests.Integration/Infrastructure/AuditLogRepositoryTests.cs`
+- [X] T003 [P] [US1] Integration test for Audit Log creation in `apps/appointment-worker-service/tests/AppointmentWorkerService.Tests.Integration/Infrastructure/AuditLogRepositoryTests.cs`
 
 ### Implementation for User Story 1
 
-- [ ] T004 [P] [US1] Create `AuditLogEntry` entity in `apps/appointment-worker-service/src/Core/Domain/Entities/AuditLogEntry.cs`
-- [ ] T005 [P] [US1] Create `IAuditLogRepository` interface in `apps/appointment-worker-service/src/Core/Application/Ports/Repositories/IAuditLogRepository.cs`
-- [ ] T006 [US1] Implement `AuditLogRepository` adapter in `apps/appointment-worker-service/src/Infrastructure/Data/AuditLogRepository.cs`
-- [ ] T007 [US1] Configure EF Core mapping for `AuditLogEntry` in `apps/appointment-worker-service/src/Infrastructure/Data/AppDbContext.cs`
-- [ ] T008 [US1] Update `AppointmentRepository` or add a `SaveChangesInterceptor` to save Audit Log entries along with Appointments in `apps/appointment-worker-service/src/Infrastructure/Data/AppointmentRepository.cs`
+- [X] T004 [P] [US1] Create `AuditLogEntry` entity in `apps/appointment-worker-service/src/Core/Domain/Entities/AuditLogEntry.cs`
+- [X] T005 [P] [US1] Create `IAuditLogRepository` interface in `apps/appointment-worker-service/src/Core/Application/Ports/Repositories/IAuditLogRepository.cs`
+- [X] T006 [US1] Implement `AuditLogRepository` adapter in `apps/appointment-worker-service/src/Infrastructure/Data/AuditLogRepository.cs`
+- [X] T007 [US1] Configure EF Core mapping for `AuditLogEntry` in `apps/appointment-worker-service/src/Infrastructure/Data/AppDbContext.cs`
+- [X] T008 [US1] Update `AppointmentRepository` or add a `SaveChangesInterceptor` to save Audit Log entries along with Appointments in `apps/appointment-worker-service/src/Infrastructure/Data/AppointmentRepository.cs`
 
 **Checkpoint**: At this point, User Story 1 should be fully functional and testable independently
 
@@ -64,14 +64,14 @@
 
 ### Tests for User Story 2 ⚠️
 
-- [ ] T009 [P] [US2] Integration test for GetAuditLogs endpoint in `apps/appointment-api-service/tests/integration/tenant/audit-logs.test.ts`
+- [x] T009 [P] [US2] Integration test for GetAuditLogs endpoint in `apps/appointment-api-service/tests/integration/tenant/audit-logs.test.ts`
 
 ### Implementation for User Story 2
 
-- [ ] T010 [P] [US2] Add API contracts from `contracts/audit-log-api.ts` into shared types or API service models (e.g. Zod schemas).
-- [ ] T011 [US2] Implement `DrizzleAuditLogRepository` adapter in `apps/appointment-api-service/src/infrastructure/db/repositories/drizzle-audit-log.repository.ts`
-- [ ] T012 [US2] Create `GetAuditLogsUseCase` in `apps/appointment-api-service/src/application/use-cases/tenant/get-audit-logs.use-case.ts`
-- [ ] T013 [US2] Register new endpoint in `apps/appointment-api-service/src/infrastructure/http/routes/tenant.routes.ts`
+- [x] T010 [P] [US2] Add API contracts from `contracts/audit-log-api.ts` into shared types or API service models (e.g. Zod schemas).
+- [x] T011 [US2] Implement `DrizzleAuditLogRepository` adapter in `apps/appointment-api-service/src/infrastructure/db/repositories/drizzle-audit-log.repository.ts`
+- [x] T012 [US2] Create `GetAuditLogsUseCase` in `apps/appointment-api-service/src/application/use-cases/tenant/get-audit-logs.use-case.ts`
+- [x] T013 [US2] Register new endpoint in `apps/appointment-api-service/src/infrastructure/http/routes/tenant.routes.ts`
 
 **Checkpoint**: At this point, User Stories 1 AND 2 should both work independently
 
@@ -81,7 +81,7 @@
 
 **Purpose**: Improvements that affect multiple user stories
 
-- [ ] T014 Run quickstart.md validation to ensure everything works end to end.
+- [x] T014 Run quickstart.md validation to ensure everything works end to end.
 
 ---
 

@@ -11,7 +11,8 @@ import { jwtAuthMiddleware } from '@/infrastructure/http/middleware/jwt-auth.mid
 import { adminOnlyMiddleware } from '@/infrastructure/http/middleware/admin-only.middleware';
 import { AssignGuestUseCase } from '@/application/use-cases/tenant/assign-guest.use-case';
 import { PromoteUserUseCase } from '@/application/use-cases/tenant/promote-user.use-case';
-
+import { GetAuditLogsUseCase } from '@/application/use-cases/tenant/get-audit-logs.use-case';
+import { getAuditLogsQuerySchema } from '@/application/queries/audit-logs.query';
 const router = Router();
 
 router.use((req, res, next) => jwtAuthMiddleware(container.jwtService)(req, res, next));
@@ -111,6 +112,19 @@ router.put('/:id/users/:userId/role', adminOnly, async (req, res, next) => {
     const useCase = new PromoteUserUseCase(container.userTenantRepository);
     await useCase.execute(targetUserId, targetTenantId);
     res.status(204).send();
+  } catch (error) {
+    next(error);
+  }
+});
+
+router.get('/:id/audit-logs', adminOnly, async (req, res, next) => {
+  try {
+    const targetTenantId = req.params.id;
+    const query = getAuditLogsQuerySchema.parse(req.query);
+
+    const useCase = new GetAuditLogsUseCase(container.auditLogRepository);
+    const result = await useCase.execute(targetTenantId, query);
+    res.json(result);
   } catch (error) {
     next(error);
   }

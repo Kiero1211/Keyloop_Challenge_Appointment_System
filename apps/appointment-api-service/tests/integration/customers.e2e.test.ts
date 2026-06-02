@@ -3,7 +3,7 @@ import { app } from '@/infrastructure/http/app';
 import { db } from '@/infrastructure/db/client';
 import { factories } from '../helpers/factories';
 import { container } from '@/infrastructure/di/container';
-import { customers } from '@/infrastructure/db/schema';
+import { customers, vehicles } from '@/infrastructure/db/schema';
 
 describe('Customers API E2E', () => {
   let tenantId1: string;
@@ -27,6 +27,7 @@ describe('Customers API E2E', () => {
   });
 
   afterAll(async () => {
+    await db.delete(vehicles);
     await db.delete(customers);
     await container.destroy();
   });
