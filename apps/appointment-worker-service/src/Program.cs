@@ -52,19 +52,19 @@ public class Program
                 services.AddScoped<ITechnicianService, TechnicianService>();
                 services.AddScoped<IBayService, BayService>();
                 
-                services.AddSingleton<AppointmentWorkerService.Core.Application.Ports.IDistributedLock>(sp => 
+                services.AddSingleton<IDistributedLock>(sp => 
                 {
                     var provider = sp.GetRequiredService<RedisConnectionProvider>();
-                    return new AppointmentWorkerService.Infrastructure.Locking.RedisDistributedLock(provider.GetConnection());
+                    return new Infrastructure.Locking.RedisDistributedLock(provider.GetConnection());
                 });
 
                 services.AddScoped<IAppointmentProcessor, AppointmentProcessor>();
                 
-                services.AddValidatorsFromAssemblyContaining<AppointmentWorkerService.Core.Application.Validators.AppointmentMessageValidator>();
+                services.AddValidatorsFromAssemblyContaining<Core.Application.Validators.AppointmentMessageValidator>();
 
                 int maxConcurrent = int.TryParse(hostContext.Configuration["WORKER_BULKHEAD_MAX_CONCURRENT"], out int mc) ? mc : 5;
                 int queueCapacity = int.TryParse(hostContext.Configuration["WORKER_BULKHEAD_QUEUE_CAPACITY"], out int qc) ? qc : 50;
-                services.AddSingleton(new AppointmentWorkerService.Infrastructure.Bulkhead.TenantBulkheadRouter(maxConcurrent, queueCapacity));
+                services.AddSingleton(new Infrastructure.Bulkhead.TenantBulkheadRouter(maxConcurrent, queueCapacity));
 
                 services.Configure<WorkerOptions>(options => 
                 {
@@ -73,8 +73,12 @@ public class Program
                     options.StreamBaseName = hostContext.Configuration["WORKER_STREAM_BASE_NAME"] ?? "appointments_stream";
                     options.ConsumerGroupName = hostContext.Configuration["WORKER_CONSUMER_GROUP"] ?? "worker_group";
                 });
+                services.AddScoped<IAppointmentReminderRepository, Infrastructure.Data.Repositories.AppointmentReminderRepository>();
+                services.AddScoped<IEmailService, Infrastructure.Adapters.Email.MockEmailService>();
+                services.AddScoped<ISendAppointmentRemindersUseCase, SendAppointmentRemindersUseCase>();
                 
                 services.AddHostedService<PartitionedStreamHost>();
+                services.AddHostedService<Infrastructure.BackgroundJobs.DailyReminderBackgroundService>();
             });
 }
 

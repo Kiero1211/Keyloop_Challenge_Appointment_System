@@ -17,6 +17,8 @@ public class AppDbContext : DbContext
     public DbSet<ServiceBay> ServiceBays => Set<ServiceBay>();
     public DbSet<TechnicianSkill> TechnicianSkills => Set<TechnicianSkill>();
     public DbSet<AuditLogEntry> AuditLogs => Set<AuditLogEntry>();
+    public DbSet<AppointmentReminder> AppointmentReminders => Set<AppointmentReminder>();
+    public DbSet<AppointmentReminderData> AppointmentReminderView => Set<AppointmentReminderData>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -81,6 +83,26 @@ public class AppDbContext : DbContext
 
             entity.Property(a => a.Timestamp)
                 .HasColumnType("timestamp with time zone");
+        });
+
+        // Configure AppointmentReminder
+        modelBuilder.Entity<AppointmentReminder>(entity =>
+        {
+            entity.ToTable("appointment_reminders");
+            entity.HasKey(a => a.Id);
+            entity.Property(a => a.SentAt)
+                .HasColumnType("timestamp with time zone");
+        });
+
+        // Configure AppointmentReminderData
+        modelBuilder.Entity<AppointmentReminderData>(entity =>
+        {
+            entity.ToView("appointment_reminder_view");
+            entity.HasNoKey();
+            entity.Property(a => a.AppointmentStartTime)
+                .HasColumnType("timestamp with time zone");
+            entity.Property(a => a.AppointmentStatus)
+                .HasConversion<string>();
         });
     }
 
