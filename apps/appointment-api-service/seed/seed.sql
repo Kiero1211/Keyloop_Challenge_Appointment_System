@@ -54,3 +54,10 @@ INSERT INTO "appointments" ("id", "tenant_id", "customer_id", "vehicle_id", "ser
 VALUES
   (gen_random_uuid(), '11111111-1111-1111-1111-111111111111', '44444444-4444-4444-4444-444444444444', '66666666-6666-6666-6666-666666666666', '88888888-8888-8888-8888-888888888888', 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa', 'cccccccc-cccc-cccc-cccc-cccccccccccc', now() + interval '1 day', now() + interval '1 day 30 minutes', 'Scheduled', now(), now()),
   (gen_random_uuid(), '11111111-1111-1111-1111-111111111111', '55555555-5555-5555-5555-555555555555', '77777777-7777-7777-7777-777777777777', '99999999-9999-9999-9999-999999999999', 'bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb', 'dddddddd-dddd-dddd-dddd-dddddddddddd', now() + interval '2 days', now() + interval '2 days 45 minutes', 'Scheduled', now(), now());
+
+-- 10. Create Technician Skills
+INSERT INTO "technician_skills" ("id", "tenant_id", "technician_id", "service_type_id", "created_at")
+VALUES
+  (gen_random_uuid(), '11111111-1111-1111-1111-111111111111', 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa', '88888888-8888-8888-8888-888888888888', now()),
+  (gen_random_uuid(), '11111111-1111-1111-1111-111111111111', 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa', '99999999-9999-9999-9999-999999999999', now()),
+  (gen_random_uuid(), '11111111-1111-1111-1111-111111111111', 'bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb', '88888888-8888-8888-8888-888888888888', now());

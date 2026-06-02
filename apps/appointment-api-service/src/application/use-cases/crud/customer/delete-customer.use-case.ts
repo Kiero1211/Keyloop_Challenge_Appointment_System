@@ -2,7 +2,9 @@ import { ICustomerRepository } from '@/application/ports/repositories/customer.r
 import { ConflictException } from '@/domain/exceptions';
 
 export class DeleteCustomerUseCase {
-  constructor(private customerRepository: ICustomerRepository) {}
+  constructor(
+    private customerRepository: ICustomerRepository
+  ) {}
 
   async execute(tenantId: string, id: string): Promise<void> {
     const hasAppointments = await this.customerRepository.hasActiveAppointments(tenantId, id);

@@ -18,7 +18,17 @@ import { DrizzleCustomerRepository } from '@/infrastructure/db/repositories/driz
 import { DrizzleVehicleRepository } from '@/infrastructure/db/repositories/drizzle-vehicle.repository';
 import { DrizzleTenantRepository } from '@/infrastructure/db/repositories/drizzle-tenant.repository';
 import { DrizzleAppointmentCrudRepository } from '@/infrastructure/db/repositories/drizzle-appointment-crud.repository';
-
+import { CachedCustomerRepository } from '@/infrastructure/repositories/cached/cached-customer.repository';
+import { CachedVehicleRepository } from '@/infrastructure/repositories/cached/cached-vehicle.repository';
+import { CachedServiceBayRepository } from '@/infrastructure/repositories/cached/cached-service-bay.repository';
+import { CachedServiceTypeRepository } from '@/infrastructure/repositories/cached/cached-service-type.repository';
+import { CachedTechnicianRepository } from '@/infrastructure/repositories/cached/cached-technician.repository';
+import { CachedAppointmentCrudRepository } from '@/infrastructure/repositories/cached/cached-appointment-crud.repository';
+import { ICustomerRepository } from '@/application/ports/repositories/customer.repository.port';
+import { IVehicleRepository } from '@/application/ports/repositories/vehicle.repository.port';
+import { IServiceBayRepository } from '@/application/ports/repositories/service-bay.repository.port';
+import { IServiceTypeRepository } from '@/application/ports/repositories/service-type.repository.port';
+import { ITechnicianRepository } from '@/application/ports/repositories/technician.repository.port';
 class DIContainer {
   public redisClient!: Redis;
   public cacheProvider!: RedisCacheAdapter;
@@ -30,12 +40,12 @@ class DIContainer {
   public refreshTokenRepository!: DrizzleRefreshTokenRepository;
   public userTenantRepository!: DrizzleUserTenantRepository;
   public appointmentCrudRepository!: IAppointmentCrudRepository;
-  public serviceTypeRepository!: DrizzleServiceTypeRepository;
-  public technicianRepository!: DrizzleTechnicianRepository;
+  public serviceTypeRepository!: IServiceTypeRepository;
+  public technicianRepository!: ITechnicianRepository;
   public technicianSkillRepository!: DrizzleTechnicianSkillRepository;
-  public serviceBayRepository!: DrizzleServiceBayRepository;
-  public customerRepository!: DrizzleCustomerRepository;
-  public vehicleRepository!: DrizzleVehicleRepository;
+  public serviceBayRepository!: IServiceBayRepository;
+  public customerRepository!: ICustomerRepository;
+  public vehicleRepository!: IVehicleRepository;
   public tenantRepository!: DrizzleTenantRepository;
 
   async initialize(redisClientInstance?: Redis) {
@@ -63,13 +73,13 @@ class DIContainer {
     this.refreshTokenRepository = new DrizzleRefreshTokenRepository();
     this.userTenantRepository = new DrizzleUserTenantRepository();
     
-    this.appointmentCrudRepository = new DrizzleAppointmentCrudRepository();
-    this.serviceTypeRepository = new DrizzleServiceTypeRepository();
-    this.technicianRepository = new DrizzleTechnicianRepository();
+    this.appointmentCrudRepository = new CachedAppointmentCrudRepository(new DrizzleAppointmentCrudRepository(), this.cacheProvider);
+    this.serviceTypeRepository = new CachedServiceTypeRepository(new DrizzleServiceTypeRepository(), this.cacheProvider);
+    this.technicianRepository = new CachedTechnicianRepository(new DrizzleTechnicianRepository(), this.cacheProvider);
     this.technicianSkillRepository = new DrizzleTechnicianSkillRepository();
-    this.serviceBayRepository = new DrizzleServiceBayRepository();
-    this.customerRepository = new DrizzleCustomerRepository();
-    this.vehicleRepository = new DrizzleVehicleRepository();
+    this.serviceBayRepository = new CachedServiceBayRepository(new DrizzleServiceBayRepository(), this.cacheProvider);
+    this.customerRepository = new CachedCustomerRepository(new DrizzleCustomerRepository(), this.cacheProvider);
+    this.vehicleRepository = new CachedVehicleRepository(new DrizzleVehicleRepository(), this.cacheProvider);
     this.tenantRepository = new DrizzleTenantRepository();
   }
 

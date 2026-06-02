@@ -2,7 +2,9 @@ import { IAppointmentCrudRepository } from '@/application/ports/repositories/app
 import { NotFoundException } from '@/domain/exceptions';
 
 export class GetAppointmentDetailUseCase {
-  constructor(private appointmentRepository: IAppointmentCrudRepository) {}
+  constructor(
+    private appointmentRepository: IAppointmentCrudRepository
+  ) {}
 
   async execute(tenantId: string, id: string) {
     const detail = await this.appointmentRepository.findDetailById(tenantId, id);

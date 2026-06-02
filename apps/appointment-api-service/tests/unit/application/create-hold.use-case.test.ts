@@ -16,6 +16,7 @@ describe('CreateHoldUseCase', () => {
       deleteMultiple: jest.fn(),
       ping: jest.fn(),
       setMultipleIfNotExists: jest.fn(),
+      expire: jest.fn(),
     };
     
     useCase = new CreateHoldUseCase(cacheProvider);

@@ -3,7 +3,9 @@ import { Appointment } from '@/domain/entities/appointment.entity';
 import { UnprocessableException, NotFoundException } from '@/domain/exceptions';
 
 export class UpdateAppointmentStatusUseCase {
-  constructor(private appointmentRepository: IAppointmentCrudRepository) {}
+  constructor(
+    private appointmentRepository: IAppointmentCrudRepository
+  ) {}
 
   async execute(tenantId: string, id: string, newStatus: string): Promise<Appointment> {
     const appointment = await this.appointmentRepository.findById(tenantId, id);
@@ -15,13 +17,13 @@ export class UpdateAppointmentStatusUseCase {
     const currentStatus = appointment.status;
 
     // Validate state machine
-    // PENDING -> CONFIRMED -> COMPLETED
-    // PENDING | CONFIRMED -> CANCELLED
+    // Scheduled -> InProgress -> Completed
+    // Scheduled | InProgress -> Cancelled
     const validTransitions: Record<string, string[]> = {
-      'PENDING': ['CONFIRMED', 'CANCELLED'],
-      'CONFIRMED': ['COMPLETED', 'CANCELLED'],
-      'COMPLETED': [],
-      'CANCELLED': []
+      'Scheduled': ['InProgress', 'Cancelled'],
+      'InProgress': ['Completed', 'Cancelled'],
+      'Completed': [],
+      'Cancelled': []
     };
 
     if (!validTransitions[currentStatus]?.includes(newStatus)) {
@@ -32,6 +34,7 @@ export class UpdateAppointmentStatusUseCase {
     if (!updated) {
       throw new NotFoundException('Appointment not found during update');
     }
+
     return updated;
   }
 }

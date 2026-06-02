@@ -14,7 +14,7 @@ export const createAppointmentCrudSchema = z.object({
 export const updateAppointmentCrudSchema = createAppointmentCrudSchema.partial();
 
 export const updateAppointmentStatusSchema = z.object({
-  status: z.enum(['PENDING', 'CONFIRMED', 'COMPLETED', 'CANCELLED']),
+  status: z.enum(['Scheduled', 'InProgress', 'Completed', 'Cancelled']),
 });
 
 export type CreateAppointmentCrudCommand = z.infer<typeof createAppointmentCrudSchema>;

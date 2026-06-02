@@ -15,6 +15,7 @@ describe('HealthCheckUseCase', () => {
       ping: jest.fn(),
       deleteMultiple: jest.fn(),
       setMultipleIfNotExists: jest.fn(),
+      expire: jest.fn(),
     };
     
     useCase = new HealthCheckUseCase(cacheProvider);

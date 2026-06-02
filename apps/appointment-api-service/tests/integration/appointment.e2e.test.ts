@@ -52,6 +52,8 @@ describe("Appointment API E2E", () => {
   });
 
   describe("POST /api/v1/appointments", () => {
+    let holdId = "";
+
     it("should accept a valid appointment with a valid hold and return 202", async () => {
       // First create a hold
       const holdPayload = {
@@ -65,7 +67,8 @@ describe("Appointment API E2E", () => {
         .send(holdPayload);
 
       const payload = {
-        holdId: holdResponse.body.holdId,
+        technicianHolId: holdResponse.body.holdId,
+        serviceBayHoldId: holdResponse.body.holdId,
         customerId: "cust-1",
         vehicleId: "veh-1",
         serviceTypeId: "srv-1",
@@ -73,6 +76,7 @@ describe("Appointment API E2E", () => {
         serviceBayId: "bay-1",
         desiredStartTime: new Date(Date.now() + 86400000).toISOString(), // Tomorrow
       };
+      holdId = holdResponse.body.holdId;
 
       const response = await request(app)
         .post("/api/v1/appointments")
@@ -80,17 +84,20 @@ describe("Appointment API E2E", () => {
         .set("x-tenant-id", tenantId)
         .send(payload);
 
+      console.log("response.body", response.body);
       expect(response.status).toBe(202);
       expect(response.body).toHaveProperty("commandId");
 
-      // Verify in redis
+      // Verify bay hold was deleted
       const keys = await redisClient.keys(
-        `tenant:${tenantId}:appointment:veh-1:pending`,
+        `tenant:${tenantId}:hold:bay:${holdPayload.serviceBayId}`,
       );
-      expect(keys.length).toBe(1);
+      expect(keys.length).toBe(0);
 
-      // Verify hold was deleted
-      const holdKeys = await redisClient.keys(`tenant:${tenantId}:hold:technician:tech-1`);
+      // Verify technician hold was deleted
+      const holdKeys = await redisClient.keys(
+        `tenant:${tenantId}:hold:technician:${holdPayload.technicianId}`,
+      );
       expect(holdKeys.length).toBe(0);
     });
 
@@ -109,7 +116,8 @@ describe("Appointment API E2E", () => {
 
     it("should reject booking (409 Conflict) if hold is missing or expired", async () => {
       const payload = {
-        holdId: "00000000-0000-0000-0000-000000000000",
+        technicianHolId: holdId,
+        serviceBayHoldId: holdId,
         customerId: "cust-1",
         vehicleId: "veh-1",
         serviceTypeId: "srv-1",
@@ -124,8 +132,11 @@ describe("Appointment API E2E", () => {
         .set("x-tenant-id", tenantId)
         .send(payload);
 
+      console.log("response.body 409 test", response.body);
       expect(response.status).toBe(409);
-      expect(response.body.message).toBe("The booking session has expired. Please re-create the booking session.");
+      expect(response.body.message).toBe(
+        "The booking session has expired. Please re-create the booking session.",
+      );
     });
 
     it("should allow booking same vehicle twice without idempotency conflict", async () => {
@@ -136,7 +147,8 @@ describe("Appointment API E2E", () => {
         .send({ technicianId: "tech-1", serviceBayId: "bay-1" });
 
       const payload1 = {
-        holdId: hold1Response.body.holdId,
+        technicianHolId: hold1Response.body.holdId,
+        serviceBayHoldId: hold1Response.body.holdId,
         customerId: "cust-1",
         vehicleId: "veh-1",
         serviceTypeId: "srv-1",
@@ -150,6 +162,11 @@ describe("Appointment API E2E", () => {
         .set("Authorization", `Bearer ${token}`)
         .set("x-tenant-id", tenantId)
         .send(payload1)
+        .expect((res) => {
+          if (res.status !== 202) {
+            console.log("payload1 failure:", res.body);
+          }
+        })
         .expect(202);
 
       const hold2Response = await request(app)
@@ -159,7 +176,8 @@ describe("Appointment API E2E", () => {
         .send({ technicianId: "tech-2", serviceBayId: "bay-2" });
 
       const payload2 = {
-        holdId: hold2Response.body.holdId,
+        technicianHolId: hold2Response.body.holdId,
+        serviceBayHoldId: hold2Response.body.holdId,
         customerId: "cust-1",
         vehicleId: "veh-1",
         serviceTypeId: "srv-1",

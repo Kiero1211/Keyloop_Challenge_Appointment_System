@@ -6,6 +6,7 @@ import { createTechnicianSchema, updateTechnicianSchema } from '@/application/co
 import { createTechnicianSkillSchema } from '@/application/commands/technician-skill.command';
 import { tenantContext } from '@/domain/context/tenant-context';
 import { NotFoundException } from '@/domain/exceptions';
+import { Technician } from '@/domain/entities/technician.entity';
 
 const router = Router();
 

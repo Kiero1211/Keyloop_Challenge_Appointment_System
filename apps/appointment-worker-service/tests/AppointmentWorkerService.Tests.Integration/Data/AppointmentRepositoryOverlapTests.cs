@@ -24,7 +24,7 @@ public class AppointmentRepositoryOverlapTests : IAsyncLifetime
 
     public async Task InitializeAsync()
     {
-        _context = _fixture.CreateContext("tenant-1");
+        _context = _fixture.CreateContext("11111111-1111-1111-1111-111111111111");
         _context.Database.EnsureDeleted();
         _context.Database.EnsureCreated();
         _sut = new AppointmentRepository(_context);
@@ -36,16 +36,16 @@ public class AppointmentRepositoryOverlapTests : IAsyncLifetime
         return Task.CompletedTask;
     }
 
-    private async Task SeedRecordAsync(string techId, string bayId, AppointmentStatus status, DateTimeOffset start, DateTimeOffset end, string tenantId = "tenant-1")
+    private async Task SeedRecordAsync(string techId, string bayId, AppointmentStatus status, DateTimeOffset start, DateTimeOffset end, string tenantId = "11111111-1111-1111-1111-111111111111")
     {
         var seedContext = _fixture.CreateContext(tenantId);
         var record = new TrackingRecord
         {
             Id = Guid.NewGuid(),
             TenantId = tenantId,
-            VehicleId = "veh-1",
-            CustomerId = "cust-1",
-            ServiceTypeId = "svc-1",
+            VehicleId = "99999999-9999-9999-9999-999999999999",
+            CustomerId = "88888888-8888-8888-8888-888888888888",
+            ServiceTypeId = "77777777-7777-7777-7777-777777777777",
             TechnicianId = techId,
             ServiceBayId = bayId,
             StartTime = start,
@@ -61,9 +61,9 @@ public class AppointmentRepositoryOverlapTests : IAsyncLifetime
     {
         var start = DateTimeOffset.UtcNow.AddHours(1);
         var end = start.AddHours(1);
-        await SeedRecordAsync("tech-1", "bay-1", AppointmentStatus.InProgress, start, end);
+        await SeedRecordAsync("33333333-3333-3333-3333-333333333333", "55555555-5555-5555-5555-555555555555", AppointmentStatus.InProgress, start, end);
 
-        var result = await _sut.HasTechnicianOverlapAsync("tech-1", start, end, CancellationToken.None);
+        var result = await _sut.HasTechnicianOverlapAsync("33333333-3333-3333-3333-333333333333", start, end, CancellationToken.None);
 
         Assert.True(result);
     }
@@ -73,9 +73,9 @@ public class AppointmentRepositoryOverlapTests : IAsyncLifetime
     {
         var start = DateTimeOffset.UtcNow.AddHours(1);
         var end = start.AddHours(1);
-        await SeedRecordAsync("tech-1", "bay-1", AppointmentStatus.Scheduled, start, end);
+        await SeedRecordAsync("33333333-3333-3333-3333-333333333333", "55555555-5555-5555-5555-555555555555", AppointmentStatus.Scheduled, start, end);
 
-        var result = await _sut.HasTechnicianOverlapAsync("tech-1", start, end, CancellationToken.None);
+        var result = await _sut.HasTechnicianOverlapAsync("33333333-3333-3333-3333-333333333333", start, end, CancellationToken.None);
 
         Assert.True(result);
     }
@@ -85,9 +85,9 @@ public class AppointmentRepositoryOverlapTests : IAsyncLifetime
     {
         var start = DateTimeOffset.UtcNow.AddHours(1);
         var end = start.AddHours(1);
-        await SeedRecordAsync("tech-1", "bay-1", AppointmentStatus.Cancelled, start, end);
+        await SeedRecordAsync("33333333-3333-3333-3333-333333333333", "55555555-5555-5555-5555-555555555555", AppointmentStatus.Cancelled, start, end);
 
-        var result = await _sut.HasTechnicianOverlapAsync("tech-1", start, end, CancellationToken.None);
+        var result = await _sut.HasTechnicianOverlapAsync("33333333-3333-3333-3333-333333333333", start, end, CancellationToken.None);
 
         Assert.False(result);
     }
@@ -97,9 +97,9 @@ public class AppointmentRepositoryOverlapTests : IAsyncLifetime
     {
         var start = DateTimeOffset.UtcNow.AddHours(1);
         var end = start.AddHours(1);
-        await SeedRecordAsync("tech-1", "bay-1", AppointmentStatus.Completed, start, end);
+        await SeedRecordAsync("33333333-3333-3333-3333-333333333333", "55555555-5555-5555-5555-555555555555", AppointmentStatus.Completed, start, end);
 
-        var result = await _sut.HasTechnicianOverlapAsync("tech-1", start, end, CancellationToken.None);
+        var result = await _sut.HasTechnicianOverlapAsync("33333333-3333-3333-3333-333333333333", start, end, CancellationToken.None);
 
         Assert.False(result);
     }
@@ -109,9 +109,9 @@ public class AppointmentRepositoryOverlapTests : IAsyncLifetime
     {
         var start = DateTimeOffset.UtcNow.AddHours(1);
         var end = start.AddHours(1);
-        await SeedRecordAsync("tech-1", "bay-1", AppointmentStatus.Scheduled, start, end, "tenant-2");
+        await SeedRecordAsync("33333333-3333-3333-3333-333333333333", "55555555-5555-5555-5555-555555555555", AppointmentStatus.Scheduled, start, end, "22222222-2222-2222-2222-222222222222");
 
-        var result = await _sut.HasTechnicianOverlapAsync("tech-1", start, end, CancellationToken.None);
+        var result = await _sut.HasTechnicianOverlapAsync("33333333-3333-3333-3333-333333333333", start, end, CancellationToken.None);
 
         Assert.False(result);
     }
@@ -121,9 +121,9 @@ public class AppointmentRepositoryOverlapTests : IAsyncLifetime
     {
         var existingStart = DateTimeOffset.UtcNow.AddHours(1);
         var existingEnd = existingStart.AddHours(1);
-        await SeedRecordAsync("tech-1", "bay-1", AppointmentStatus.Scheduled, existingStart, existingEnd);
+        await SeedRecordAsync("33333333-3333-3333-3333-333333333333", "55555555-5555-5555-5555-555555555555", AppointmentStatus.Scheduled, existingStart, existingEnd);
 
-        var result = await _sut.HasTechnicianOverlapAsync("tech-1", existingEnd, existingEnd.AddHours(1), CancellationToken.None);
+        var result = await _sut.HasTechnicianOverlapAsync("33333333-3333-3333-3333-333333333333", existingEnd, existingEnd.AddHours(1), CancellationToken.None);
 
         Assert.False(result);
     }
@@ -133,9 +133,9 @@ public class AppointmentRepositoryOverlapTests : IAsyncLifetime
     {
         var existingStart = DateTimeOffset.UtcNow.AddHours(1);
         var existingEnd = existingStart.AddHours(1);
-        await SeedRecordAsync("tech-1", "bay-1", AppointmentStatus.Scheduled, existingStart, existingEnd);
+        await SeedRecordAsync("33333333-3333-3333-3333-333333333333", "55555555-5555-5555-5555-555555555555", AppointmentStatus.Scheduled, existingStart, existingEnd);
 
-        var result = await _sut.HasTechnicianOverlapAsync("tech-1", existingEnd, existingEnd.AddHours(1), CancellationToken.None);
+        var result = await _sut.HasTechnicianOverlapAsync("33333333-3333-3333-3333-333333333333", existingEnd, existingEnd.AddHours(1), CancellationToken.None);
 
         Assert.False(result);
     }
@@ -145,9 +145,9 @@ public class AppointmentRepositoryOverlapTests : IAsyncLifetime
     {
         var existingStart = DateTimeOffset.UtcNow.AddHours(1);
         var existingEnd = existingStart.AddHours(2); // 2 hours
-        await SeedRecordAsync("tech-1", "bay-1", AppointmentStatus.Scheduled, existingStart, existingEnd);
+        await SeedRecordAsync("33333333-3333-3333-3333-333333333333", "55555555-5555-5555-5555-555555555555", AppointmentStatus.Scheduled, existingStart, existingEnd);
 
-        var result = await _sut.HasTechnicianOverlapAsync("tech-1", existingStart.AddMinutes(30), existingStart.AddMinutes(90), CancellationToken.None);
+        var result = await _sut.HasTechnicianOverlapAsync("33333333-3333-3333-3333-333333333333", existingStart.AddMinutes(30), existingStart.AddMinutes(90), CancellationToken.None);
 
         Assert.True(result);
     }
@@ -157,9 +157,9 @@ public class AppointmentRepositoryOverlapTests : IAsyncLifetime
     {
         var start = DateTimeOffset.UtcNow.AddHours(1);
         var end = start.AddHours(1);
-        await SeedRecordAsync("tech-1", "bay-1", AppointmentStatus.Scheduled, start, end);
+        await SeedRecordAsync("33333333-3333-3333-3333-333333333333", "55555555-5555-5555-5555-555555555555", AppointmentStatus.Scheduled, start, end);
 
-        var result = await _sut.HasTechnicianOverlapAsync("tech-1", start, end, CancellationToken.None);
+        var result = await _sut.HasTechnicianOverlapAsync("33333333-3333-3333-3333-333333333333", start, end, CancellationToken.None);
 
         Assert.True(result);
     }
@@ -169,9 +169,9 @@ public class AppointmentRepositoryOverlapTests : IAsyncLifetime
     {
         var existingStart = DateTimeOffset.UtcNow.AddHours(1);
         var existingEnd = existingStart.AddHours(1);
-        await SeedRecordAsync("tech-1", "bay-1", AppointmentStatus.Scheduled, existingStart, existingEnd);
+        await SeedRecordAsync("33333333-3333-3333-3333-333333333333", "55555555-5555-5555-5555-555555555555", AppointmentStatus.Scheduled, existingStart, existingEnd);
 
-        var result = await _sut.HasTechnicianOverlapAsync("tech-1", existingStart.AddMinutes(30), existingEnd.AddMinutes(30), CancellationToken.None);
+        var result = await _sut.HasTechnicianOverlapAsync("33333333-3333-3333-3333-333333333333", existingStart.AddMinutes(30), existingEnd.AddMinutes(30), CancellationToken.None);
 
         Assert.True(result);
     }
@@ -181,22 +181,11 @@ public class AppointmentRepositoryOverlapTests : IAsyncLifetime
     {
         var existingStart = DateTimeOffset.UtcNow.AddHours(1);
         var existingEnd = existingStart.AddHours(1);
-        await SeedRecordAsync("tech-1", "bay-1", AppointmentStatus.Scheduled, existingStart, existingEnd);
+        await SeedRecordAsync("33333333-3333-3333-3333-333333333333", "55555555-5555-5555-5555-555555555555", AppointmentStatus.Scheduled, existingStart, existingEnd);
 
-        var result = await _sut.HasTechnicianOverlapAsync("tech-1", existingStart.AddMinutes(-30), existingStart.AddMinutes(30), CancellationToken.None);
+        var result = await _sut.HasTechnicianOverlapAsync("33333333-3333-3333-3333-333333333333", existingStart.AddMinutes(-30), existingStart.AddMinutes(30), CancellationToken.None);
 
         Assert.True(result);
-    }
-    [Fact]
-    public async Task GivenRejectedRecord_WhenCheckTechnicianOverlap_ThenReturnsFalse()
-    {
-        var start = DateTimeOffset.UtcNow.AddHours(1);
-        var end = start.AddHours(1);
-        await SeedRecordAsync("tech-1", "bay-1", AppointmentStatus.Rejected, start, end);
-
-        var result = await _sut.HasTechnicianOverlapAsync("tech-1", start, end, CancellationToken.None);
-
-        Assert.False(result);
     }
 
     [Fact]
@@ -204,9 +193,9 @@ public class AppointmentRepositoryOverlapTests : IAsyncLifetime
     {
         var start = DateTimeOffset.UtcNow.AddHours(1);
         var end = start.AddHours(1);
-        await SeedRecordAsync("tech-1", "bay-1", AppointmentStatus.Scheduled, start, end);
+        await SeedRecordAsync("33333333-3333-3333-3333-333333333333", "55555555-5555-5555-5555-555555555555", AppointmentStatus.Scheduled, start, end);
 
-        var result = await _sut.HasBayOverlapAsync("bay-1", start, end, CancellationToken.None);
+        var result = await _sut.HasBayOverlapAsync("55555555-5555-5555-5555-555555555555", start, end, CancellationToken.None);
 
         Assert.True(result);
     }

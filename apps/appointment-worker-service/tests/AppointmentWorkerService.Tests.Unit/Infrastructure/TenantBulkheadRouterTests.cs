@@ -47,12 +47,12 @@ public class TenantBulkheadRouterTests
         var tcs = new TaskCompletionSource();
 
         // 1 executing
-        sut.DispatchAsync("tenant-1", () => tcs.Task);
+        sut.DispatchAsync("11111111-1111-1111-1111-111111111111", () => tcs.Task);
         // 1 in queue
-        sut.DispatchAsync("tenant-1", () => tcs.Task);
+        sut.DispatchAsync("11111111-1111-1111-1111-111111111111", () => tcs.Task);
         
         // Next should be full
-        var result = sut.DispatchAsync("tenant-1", () => tcs.Task);
+        var result = sut.DispatchAsync("11111111-1111-1111-1111-111111111111", () => tcs.Task);
 
         Assert.Equal(DispatchResult.ChannelFull, result);
         
@@ -65,11 +65,11 @@ public class TenantBulkheadRouterTests
         var sut = new TenantBulkheadRouter(maxConcurrent: 1, queueCapacity: 1);
         var tcs = new TaskCompletionSource();
 
-        sut.DispatchAsync("tenant-1", () => tcs.Task);
-        sut.DispatchAsync("tenant-1", () => tcs.Task);
+        sut.DispatchAsync("11111111-1111-1111-1111-111111111111", () => tcs.Task);
+        sut.DispatchAsync("11111111-1111-1111-1111-111111111111", () => tcs.Task);
         
         var sw = Stopwatch.StartNew();
-        var result = sut.DispatchAsync("tenant-1", () => tcs.Task);
+        var result = sut.DispatchAsync("11111111-1111-1111-1111-111111111111", () => tcs.Task);
         sw.Stop();
 
         Assert.Equal(DispatchResult.ChannelFull, result);
