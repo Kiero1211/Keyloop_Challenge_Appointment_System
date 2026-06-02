@@ -73,8 +73,12 @@ public class Program
                     options.StreamBaseName = hostContext.Configuration["WORKER_STREAM_BASE_NAME"] ?? "appointments_stream";
                     options.ConsumerGroupName = hostContext.Configuration["WORKER_CONSUMER_GROUP"] ?? "worker_group";
                 });
+                services.AddScoped<IAppointmentReminderRepository, AppointmentWorkerService.Infrastructure.Data.Repositories.AppointmentReminderRepository>();
+                services.AddScoped<IEmailService, AppointmentWorkerService.Infrastructure.Adapters.Email.MockEmailService>();
+                services.AddScoped<ISendAppointmentRemindersUseCase, SendAppointmentRemindersUseCase>();
                 
                 services.AddHostedService<PartitionedStreamHost>();
+                services.AddHostedService<AppointmentWorkerService.Infrastructure.BackgroundJobs.DailyReminderBackgroundService>();
             });
 }
 
