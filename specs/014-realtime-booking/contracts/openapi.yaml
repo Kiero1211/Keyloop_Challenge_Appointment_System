@@ -1,0 +1,214 @@
+openapi: "3.0.3"
+info:
+  title: Appointment API — Real-Time Booking Endpoints
+  version: "1.0.0"
+  description: >
+    New and modified endpoints introduced by the 014-realtime-booking feature.
+    All endpoints require Bearer token authentication and the `x-tenant-id` header.
+
+servers:
+  - url: http://localhost:3000/api/v1
+
+security:
+  - bearerAuth: []
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    OccupiedSlot:
+      type: object
+      required: [appointmentId, startTime, endTime]
+      properties:
+        appointmentId:
+          type: string
+          format: uuid
+        startTime:
+          type: string
+          format: date-time
+        endTime:
+          type: string
+          format: date-time
+
+    AppointmentCacheEntry:
+      type: object
+      required: [id, tenantId, customerId, vehicleId, serviceTypeId, technicianId, serviceBayId, startTime, endTime, status, createdAt, updatedAt]
+      properties:
+        id:
+          type: string
+          format: uuid
+        tenantId:
+          type: string
+          format: uuid
+        customerId:
+          type: string
+          format: uuid
+        vehicleId:
+          type: string
+          format: uuid
+        serviceTypeId:
+          type: string
+          format: uuid
+        technicianId:
+          type: string
+          format: uuid
+        serviceBayId:
+          type: string
+          format: uuid
+        startTime:
+          type: string
+          format: date-time
+        endTime:
+          type: string
+          format: date-time
+        status:
+          type: string
+          enum: [Pending, Scheduled, Failed]
+        notes:
+          type: string
+          nullable: true
+        actualStartTime:
+          type: string
+          format: date-time
+          nullable: true
+        actualEndTime:
+          type: string
+          format: date-time
+          nullable: true
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+paths:
+  /appointments/active:
+    get:
+      summary: Get active (Pending + Scheduled) appointments from cache
+      description: >
+        Returns all appointments currently in Pending or Scheduled status,
+        sourced from the Redis appointment hash cache. Updated in near real-time
+        by the worker service.
+      parameters:
+        - in: header
+          name: x-tenant-id
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: List of active appointments
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/AppointmentCacheEntry"
+        "401":
+          description: Unauthorized
+
+  /technicians/{id}/occupied:
+    get:
+      summary: Get occupied time windows for a technician
+      description: >
+        Returns all time slots currently occupied by the given technician,
+        sourced from the Redis occupancy sorted set. The UI polls this endpoint
+        while the create appointment modal is open.
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+            format: uuid
+          description: Technician ID
+        - in: header
+          name: x-tenant-id
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - in: query
+          name: date
+          required: false
+          schema:
+            type: string
+            format: date
+          description: Filter slots for a specific date (ISO 8601). Defaults to today.
+      responses:
+        "200":
+          description: Occupied time windows for the technician
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [technicianId, occupiedSlots]
+                properties:
+                  technicianId:
+                    type: string
+                    format: uuid
+                  occupiedSlots:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/OccupiedSlot"
+        "401":
+          description: Unauthorized
+        "404":
+          description: Technician not found
+
+  /service-bays/{id}/occupied:
+    get:
+      summary: Get occupied time windows for a service bay
+      description: >
+        Returns all time slots currently occupied by the given service bay,
+        sourced from the Redis occupancy sorted set.
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+            format: uuid
+          description: Service Bay ID
+        - in: header
+          name: x-tenant-id
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - in: query
+          name: date
+          required: false
+          schema:
+            type: string
+            format: date
+          description: Filter slots for a specific date (ISO 8601). Defaults to today.
+      responses:
+        "200":
+          description: Occupied time windows for the service bay
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [serviceBayId, occupiedSlots]
+                properties:
+                  serviceBayId:
+                    type: string
+                    format: uuid
+                  occupiedSlots:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/OccupiedSlot"
+        "401":
+          description: Unauthorized
+        "404":
+          description: Service Bay not found
