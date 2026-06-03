@@ -84,9 +84,10 @@ dotnet build AppointmentWorkerService.sln
 ## Test
 
 Test Credentials
-Admin account: admin@gmail.com - password123
-TenantManager account: manager@gmail.com - password123
-TenantUser account: user@gmail.com - password123
+
+- [Admin] admin@gmail.com - password123
+- [TenantManager] manager@gmail.com - password123
+- [TenantUser] user@gmail.com - password123
 
 Run API unit tests:
 
