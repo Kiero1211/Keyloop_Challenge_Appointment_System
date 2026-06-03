@@ -23,18 +23,17 @@ public class AppointmentReminderViewTests : IAsyncLifetime
         await _dbContext.Database.ExecuteSqlRawAsync(@"
             CREATE OR REPLACE VIEW appointment_reminder_view AS
             SELECT 
-                a.id as appointment_id,
-                a.tenant_id as tenant_id,
-                a.start_time as appointment_start_time,
-                a.status as appointment_status,
-                a.user_id as user_id,
-                a.vehicle_id as vehicle_id,
-                'John Doe' as user_name,
-                'john@example.com' as user_email,
-                'Toyota' as vehicle_make,
-                'Corolla' as vehicle_model,
-                false as reminder_sent
-            FROM appointments a;
+                '00000000-0000-0000-0000-000000000001'::uuid as ""AppointmentId"",
+                '00000000-0000-0000-0000-000000000010'::uuid as ""TenantId"",
+                NOW() as ""AppointmentStartTime"",
+                'Scheduled'::text as ""AppointmentStatus"",
+                '00000000-0000-0000-0000-000000000020'::uuid as ""UserId"",
+                'john@example.com'::text as ""UserEmail"",
+                'John Doe'::text as ""UserName"",
+                '00000000-0000-0000-0000-000000000030'::uuid as ""VehicleId"",
+                'Toyota'::text as ""VehicleMake"",
+                'Corolla'::text as ""VehicleModel"",
+                false as ""ReminderSent"";
         ");
     }
 

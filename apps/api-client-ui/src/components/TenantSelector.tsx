@@ -1,31 +1,47 @@
 import { useEffect, useState } from 'react';
 import type { ChangeEvent } from 'react';
 import { useAuth } from '@/useAuth';
-import { getAllTenants, switchTenantApi } from '@/api';
+import { getAllTenants, getTenants, switchTenantApi } from '@/api';
 
 interface Tenant {
   id: string;
   name: string;
 }
 
+type TenantListItem = {
+  id?: string;
+  name?: string;
+  tenantId?: string;
+  tenantName?: string;
+};
+
 export function TenantSelector() {
-  const { tenant_id, setTenant, isSuperAdmin, login } = useAuth();
+  const { tenant_id, setTenant, isSuperAdmin, role, login } = useAuth();
   const [tenants, setTenants] = useState<Tenant[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    getAllTenants(1)
+    const isAdmin = isSuperAdmin || role === 'Admin';
+    const fetchTenants = isAdmin ? getAllTenants : getTenants;
+
+    fetchTenants(1)
       .then((data: any) => {
         const list = Array.isArray(data) ? data : data.items || data.data || [];
-        setTenants(list.map((t: any) => ({ id: t.id, name: t.name })) || []);
+        setTenants(list
+          .map((t: TenantListItem) => ({
+            id: t.id || t.tenantId || '',
+            name: t.name || t.tenantName || '',
+          }))
+          .filter((t: Tenant) => t.id && t.name));
       })
       .catch((err) => {
         console.error('Failed to fetch tenants:', err);
+        setTenants([]);
       })
       .finally(() => {
         setLoading(false);
       });
-  }, []);
+  }, [isSuperAdmin, role]);
 
   const handleChange = async (e: ChangeEvent<HTMLSelectElement>) => {
     const value = e.target.value;
@@ -58,10 +74,12 @@ export function TenantSelector() {
       <h2>Select Tenant</h2>
       {loading ? (
         <p>Loading tenants...</p>
+      ) : tenants.length === 0 ? (
+        <p>No tenants available for the current user.</p>
       ) : (
         <select value={tenant_id || ''} onChange={handleChange} style={{ padding: '8px', width: '200px' }}>
           <option value="" disabled>-- Select a Tenant --</option>
-          {tenants.length > 0 && tenants.map(t => (
+          {tenants.map(t => (
             <option key={t.id} value={t.id}>
               {t.name} ({t.id})
             </option>

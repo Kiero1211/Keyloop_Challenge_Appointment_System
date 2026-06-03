@@ -51,7 +51,7 @@ export class GetActiveAppointmentsUseCase {
       if (!hash) continue;
 
       const appointment = mapHashToAppointment(hash);
-      if (appointment.status !== 'Pending' && appointment.status !== 'Scheduled') continue;
+      if (appointment.status !== 'Pending' && appointment.status !== 'Scheduled' && appointment.status !== 'Failed') continue;
       if (scope === 'mine' && userId && appointment.userId !== userId) continue;
 
       appointments.push(appointment);

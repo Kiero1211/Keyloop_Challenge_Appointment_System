@@ -25,16 +25,14 @@ describe('Appointment Status E2E', () => {
       isSuperAdmin: false,
     });
 
-    const u = await factories.user();
-    await factories.userTenant(u.id, tenantId1);
-    const v = await factories.vehicle(tenantId1, u.id);
+    const v = await factories.vehicle(tenantId1, u1.id);
     const st = await factories.serviceType(tenantId1);
     const t = await factories.technician(tenantId1);
     const sb = await factories.serviceBay(tenantId1);
 
     const appt = await db.insert(appointments).values({
       tenantId: tenantId1,
-      userId: u.id,
+      userId: u1.id,
       vehicleId: v.id,
       serviceTypeId: st.id,
       technicianId: t.id,

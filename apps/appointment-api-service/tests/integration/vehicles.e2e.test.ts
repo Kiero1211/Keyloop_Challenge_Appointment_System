@@ -26,9 +26,7 @@ describe('Vehicles API E2E', () => {
       isSuperAdmin: false,
     });
 
-    const owner = await factories.user();
-    await factories.userTenant(owner.id, tenantId1);
-    userId = owner.id;
+    userId = u1.id;
   });
 
   afterAll(async () => {
