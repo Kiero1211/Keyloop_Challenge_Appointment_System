@@ -116,7 +116,7 @@ public class AppointmentProcessorCacheTests
     }
 
     [Fact]
-    public async Task ProcessAsync_Failure_WritesFailedCacheAndRemovesActiveIndex()
+    public async Task ProcessAsync_Failure_WritesFailedCacheAndKeepsActiveIndex()
     {
         var message = new AppointmentMessage(
             TenantId: "tenant-1",
@@ -149,7 +149,7 @@ public class AppointmentProcessorCacheTests
                 !string.IsNullOrWhiteSpace(fields["notes"])),
             TimeSpan.FromHours(1)), Times.Once);
 
-        _mockCacheProvider.Verify(x => x.SetRemoveAsync(
+        _mockCacheProvider.Verify(x => x.SetAddAsync(
             CacheKeys.ActiveAppointmentsSetKey(message.TenantId),
             message.AppointmentId), Times.Once);
 

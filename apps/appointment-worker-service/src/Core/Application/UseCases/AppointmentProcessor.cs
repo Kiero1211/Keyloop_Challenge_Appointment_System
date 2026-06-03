@@ -229,8 +229,8 @@ public class AppointmentProcessor : IAppointmentProcessor
                 VehicleId = message.VehicleId,
                 UserId = message.UserId,
                 ServiceTypeId = message.ServiceTypeId,
-                TechnicianId = assignedTechId ?? Guid.Empty.ToString(),
-                ServiceBayId = assignedBayId ?? Guid.Empty.ToString(),
+                TechnicianId = string.Empty,
+                ServiceBayId = string.Empty,
                 StartTime = message.DesiredStartTime.ToUniversalTime(),
                 EndTime = message.ScheduledEndTime?.ToUniversalTime() ?? message.DesiredStartTime.ToUniversalTime().AddHours(1),
                 Status = AppointmentStatus.Failed,
@@ -268,7 +268,7 @@ public class AppointmentProcessor : IAppointmentProcessor
                         ["updated_at"] = failureTime
                     },
                     TimeSpan.FromHours(1));
-                await _cacheProvider.SetRemoveAsync(activeAppointmentsKey, appointmentId);
+                await _cacheProvider.SetAddAsync(activeAppointmentsKey, appointmentId);
                 await _cacheProvider.StreamAcknowledgeAsync("appointments_stream", "worker_group", messageId);
             }
             catch (Exception cacheEx)

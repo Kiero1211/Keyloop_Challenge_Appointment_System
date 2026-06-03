@@ -166,7 +166,7 @@ public class AppointmentProcessorAvailabilityTests
             It.IsAny<string>(),
             It.IsAny<Dictionary<string, string>>(),
             TimeSpan.FromHours(1)), Times.Once);
-        _cacheMock.Verify(x => x.SetRemoveAsync(It.IsAny<string>(), It.IsAny<string>()), Times.Once);
+        _cacheMock.Verify(x => x.SetAddAsync(It.IsAny<string>(), It.IsAny<string>()), Times.Once);
         _cacheMock.Verify(x => x.StreamAcknowledgeAsync("appointments_stream", "worker_group", "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa"), Times.Once);
     }
 

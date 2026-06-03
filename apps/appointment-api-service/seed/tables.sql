@@ -1,4 +1,15 @@
 -- Create Tables
+DROP TABLE IF EXISTS "appointments" CASCADE;
+DROP TABLE IF EXISTS "refresh_tokens" CASCADE;
+DROP TABLE IF EXISTS "service_bays" CASCADE;
+DROP TABLE IF EXISTS "service_types" CASCADE;
+DROP TABLE IF EXISTS "technician_skills" CASCADE;
+DROP TABLE IF EXISTS "technicians" CASCADE;
+DROP TABLE IF EXISTS "tenants" CASCADE;
+DROP TABLE IF EXISTS "user_tenants" CASCADE;
+DROP TABLE IF EXISTS "users" CASCADE;
+DROP TABLE IF EXISTS "vehicles" CASCADE;
+DROP TABLE IF EXISTS "appointment_reminders" CASCADE;
 
 CREATE TABLE IF NOT EXISTS "appointments" (
 	"id" uuid DEFAULT gen_random_uuid() NOT NULL,
@@ -6,8 +17,8 @@ CREATE TABLE IF NOT EXISTS "appointments" (
 	"user_id" uuid NOT NULL,
 	"vehicle_id" uuid NOT NULL,
 	"service_type_id" uuid NOT NULL,
-	"technician_id" uuid NOT NULL,
-	"service_bay_id" uuid NOT NULL,
+	"technician_id" uuid,
+	"service_bay_id" uuid,
 	"start_time" timestamp with time zone NOT NULL,
 	"end_time" timestamp with time zone NOT NULL,
 	"status" text DEFAULT 'Scheduled' NOT NULL,
@@ -138,6 +149,19 @@ CREATE TABLE IF NOT EXISTS "appointment_reminders" (
 	"sent_at" timestamp with time zone NOT NULL
 );
 
+CREATE TABLE IF NOT EXISTS "audit_logs" (
+	"id" uuid DEFAULT gen_random_uuid() NOT NULL,
+	"tenant_id" uuid NOT NULL,
+	"entity_type" text NOT NULL,
+	"entity_id" text NOT NULL,
+	"action" text NOT NULL,
+	"result" jsonb NOT NULL,
+	"timestamp" timestamp with time zone NOT NULL,
+	"user_id" text,
+	PRIMARY KEY ("tenant_id", "id")
+) PARTITION BY HASH ("tenant_id");
+
+
 CREATE INDEX IF NOT EXISTS "idx_appointment_reminders_tenant_appointment" ON "appointment_reminders" ("tenant_id", "appointment_id");
 
 -- Indices
@@ -163,7 +187,8 @@ CREATE INDEX IF NOT EXISTS "idx_user_tenants_tenant_id" ON "user_tenants" ("tena
 CREATE INDEX IF NOT EXISTS "idx_users_last_active_tenant_id" ON "users" ("last_active_tenant_id");
 CREATE INDEX IF NOT EXISTS "idx_vehicles_tenant_user" ON "vehicles" ("tenant_id","user_id");
 CREATE INDEX IF NOT EXISTS "idx_vehicles_tenant_id" ON "vehicles" ("tenant_id","id");
-
+CREATE INDEX IF NOT EXISTS "idx_audit_logs_tenant_entity" ON "audit_logs" ("tenant_id", "entity_type", "entity_id");
+CREATE INDEX IF NOT EXISTS "idx_audit_logs_tenant_timestamp" ON "audit_logs" ("tenant_id", "timestamp");
 
 -- Create 64 Partitions for appointments
 DO $$
@@ -180,24 +205,6 @@ BEGIN
         );
     END LOOP;
 END $$;
-
--- Create Tables for Audit Logs
-
-CREATE TABLE IF NOT EXISTS "audit_logs" (
-	"id" uuid DEFAULT gen_random_uuid() NOT NULL,
-	"tenant_id" uuid NOT NULL,
-	"entity_type" text NOT NULL,
-	"entity_id" text NOT NULL,
-	"action" text NOT NULL,
-	"result" jsonb NOT NULL,
-	"timestamp" timestamp with time zone NOT NULL,
-	"user_id" text,
-	PRIMARY KEY ("tenant_id", "id")
-) PARTITION BY HASH ("tenant_id");
-
--- Indices for Audit Logs
-CREATE INDEX IF NOT EXISTS "idx_audit_logs_tenant_entity" ON "audit_logs" ("tenant_id", "entity_type", "entity_id");
-CREATE INDEX IF NOT EXISTS "idx_audit_logs_tenant_timestamp" ON "audit_logs" ("tenant_id", "timestamp");
 
 -- Create 64 Partitions for audit_logs
 DO $$
