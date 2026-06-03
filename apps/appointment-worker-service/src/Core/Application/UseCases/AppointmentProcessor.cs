@@ -154,7 +154,7 @@ public class AppointmentProcessor : IAppointmentProcessor
                 Id = recordId,
                 TenantId = message.TenantId,
                 VehicleId = message.VehicleId,
-                CustomerId = message.CustomerId,
+                UserId = message.UserId,
                 ServiceTypeId = message.ServiceTypeId,
                 TechnicianId = assignedTechId!,
                 ServiceBayId = assignedBayId!,
@@ -171,7 +171,7 @@ public class AppointmentProcessor : IAppointmentProcessor
             {
                 ["id"] = appointmentId,
                 ["tenant_id"] = message.TenantId,
-                ["customer_id"] = message.CustomerId,
+                ["user_id"] = message.UserId,
                 ["vehicle_id"] = message.VehicleId,
                 ["service_type_id"] = message.ServiceTypeId,
                 ["technician_id"] = assignedTechId ?? string.Empty,
@@ -227,10 +227,10 @@ public class AppointmentProcessor : IAppointmentProcessor
                 Id = Guid.TryParse(appointmentId, out var parsedAppointmentId) ? parsedAppointmentId : Guid.NewGuid(),
                 TenantId = message.TenantId,
                 VehicleId = message.VehicleId,
-                CustomerId = message.CustomerId,
+                UserId = message.UserId,
                 ServiceTypeId = message.ServiceTypeId,
-                TechnicianId = assignedTechId ?? Guid.Empty.ToString(),
-                ServiceBayId = assignedBayId ?? Guid.Empty.ToString(),
+                TechnicianId = string.Empty,
+                ServiceBayId = string.Empty,
                 StartTime = message.DesiredStartTime.ToUniversalTime(),
                 EndTime = message.ScheduledEndTime?.ToUniversalTime() ?? message.DesiredStartTime.ToUniversalTime().AddHours(1),
                 Status = AppointmentStatus.Failed,
@@ -239,13 +239,21 @@ public class AppointmentProcessor : IAppointmentProcessor
             try
             {
                 await _appointmentRepository.AddAsync(failedRecord, cancellationToken);
+            }
+            catch (Exception dbEx)
+            {
+                _logger.LogError(dbEx, "Failed to save Failed appointment record {MessageId}", messageId);
+            }
+
+            try
+            {
                 await _cacheProvider.HashSetFieldsAsync(
                     appointmentKey,
                     new Dictionary<string, string>
                     {
                         ["id"] = appointmentId,
                         ["tenant_id"] = message.TenantId,
-                        ["customer_id"] = message.CustomerId,
+                        ["user_id"] = message.UserId,
                         ["vehicle_id"] = message.VehicleId,
                         ["service_type_id"] = message.ServiceTypeId,
                         ["technician_id"] = assignedTechId ?? string.Empty,
@@ -260,13 +268,12 @@ public class AppointmentProcessor : IAppointmentProcessor
                         ["updated_at"] = failureTime
                     },
                     TimeSpan.FromHours(1));
-                await _cacheProvider.SetRemoveAsync(activeAppointmentsKey, appointmentId);
+                await _cacheProvider.SetAddAsync(activeAppointmentsKey, appointmentId);
                 await _cacheProvider.StreamAcknowledgeAsync("appointments_stream", "worker_group", messageId);
             }
-            catch (Exception dbEx)
+            catch (Exception cacheEx)
             {
-                _logger.LogError(dbEx, "Failed to save Failed appointment record {MessageId}", messageId);
-                throw;
+                _logger.LogError(cacheEx, "Failed to update failed appointment cache state {MessageId}", messageId);
             }
         }
         finally

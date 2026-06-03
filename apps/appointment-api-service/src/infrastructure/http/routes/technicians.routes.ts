@@ -27,10 +27,17 @@ import { ListAvailableTechniciansUseCase } from '@/application/use-cases/crud/te
 
 router.get('/', async (req, res, next) => {
   try {
-    const { startTime, endTime } = req.query;
+    const { startTime, endTime, serviceTypeId } = req.query;
     if (startTime && endTime) {
-      const useCase = new ListAvailableTechniciansUseCase(container.technicianRepository);
-      const results = await useCase.execute(startTime as string, endTime as string);
+      const useCase = new ListAvailableTechniciansUseCase(
+        container.technicianRepository,
+        container.technicianSkillRepository
+      );
+      const results = await useCase.execute(
+        startTime as string,
+        endTime as string,
+        serviceTypeId as string | undefined
+      );
       res.json(results);
       return;
     }

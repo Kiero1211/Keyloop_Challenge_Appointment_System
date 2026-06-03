@@ -53,7 +53,7 @@ public class AppointmentProcessorAvailabilityTests
     private AppointmentMessage CreateMessage(string? techId = "33333333-3333-3333-3333-333333333333", string? bayId = "55555555-5555-5555-5555-555555555555") => new(
         TenantId: "11111111-1111-1111-1111-111111111111",
         VehicleId: "99999999-9999-9999-9999-999999999999",
-        CustomerId: "88888888-8888-8888-8888-888888888888",
+        UserId: "88888888-8888-8888-8888-888888888888",
         ServiceTypeId: "77777777-7777-7777-7777-777777777777",
         ServiceBayId: bayId,
         TechnicianId: techId,
@@ -166,7 +166,7 @@ public class AppointmentProcessorAvailabilityTests
             It.IsAny<string>(),
             It.IsAny<Dictionary<string, string>>(),
             TimeSpan.FromHours(1)), Times.Once);
-        _cacheMock.Verify(x => x.SetRemoveAsync(It.IsAny<string>(), It.IsAny<string>()), Times.Once);
+        _cacheMock.Verify(x => x.SetAddAsync(It.IsAny<string>(), It.IsAny<string>()), Times.Once);
         _cacheMock.Verify(x => x.StreamAcknowledgeAsync("appointments_stream", "worker_group", "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa"), Times.Once);
     }
 

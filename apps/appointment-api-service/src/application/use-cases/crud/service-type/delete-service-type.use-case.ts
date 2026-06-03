@@ -14,7 +14,7 @@ export class DeleteServiceTypeUseCase {
       throw new NotFoundException(`Service type not found`);
     }
 
-    const { total } = await this.appointmentRepo.findAll(tenantId, { serviceTypeId: id }, 1, 0);
+    const { total } = await this.appointmentRepo.findAll(tenantId, { serviceTypeId: id, scope: 'tenant' }, 1, 0);
     if (total > 0) {
       throw new ConflictException(`Cannot delete service type that is referenced by appointments`);
     }

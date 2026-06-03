@@ -47,16 +47,47 @@ export async function getTechnicians(page = 1) {
   return apiFetch(`/api/v1/technicians?page=${page}`);
 }
 
+export async function getAvailableTechnicians(startTime: string, endTime: string, serviceTypeId: string) {
+  const query = new URLSearchParams({
+    startTime,
+    endTime,
+    serviceTypeId,
+  });
+  return apiFetch(`/api/v1/technicians?${query.toString()}`);
+}
+
 export async function getServiceBays(page = 1) {
   return apiFetch(`/api/v1/service-bays?page=${page}`);
 }
 
-export async function getAppointments(page = 1) {
-  return apiFetch(`/api/v1/appointments?page=${page}`);
+type ScopeParams = {
+  page?: number;
+  scope?: 'tenant' | 'mine';
+  userId?: string;
+};
+
+function buildScopedQuery(params: ScopeParams = {}) {
+  const query = new URLSearchParams();
+  if (params.page) {
+    query.set('page', String(params.page));
+  }
+  if (params.scope) {
+    query.set('scope', params.scope);
+  }
+  if (params.userId) {
+    query.set('userId', params.userId);
+  }
+  const serialized = query.toString();
+  return serialized ? `?${serialized}` : '';
 }
 
-export async function getActiveAppointments() {
-  return apiFetch('/api/v1/appointments/active');
+export async function getAppointments(params: ScopeParams | number = 1) {
+  const normalized = typeof params === 'number' ? { page: params } : params;
+  return apiFetch(`/api/v1/appointments${buildScopedQuery(normalized)}`);
+}
+
+export async function getActiveAppointments(params: Omit<ScopeParams, 'page'> = {}) {
+  return apiFetch(`/api/v1/appointments/active${buildScopedQuery(params)}`);
 }
 
 export async function getAuditLogs(page = 1) {
@@ -66,12 +97,13 @@ export async function getAuditLogs(page = 1) {
   return apiFetch(`/api/v1/audit-logs?page=${page}&start_time=${start_time}&end_time=${end_time}`);
 }
 
-export async function getCustomers(page = 1) {
-  return apiFetch(`/api/v1/customers?page=${page}`);
+export async function getUsers(page = 1) {
+  return apiFetch(`/api/v1/users?page=${page}`);
 }
 
-export async function getVehicles(page = 1) {
-  return apiFetch(`/api/v1/vehicles?page=${page}`);
+export async function getVehicles(params: ScopeParams | number = 1) {
+  const normalized = typeof params === 'number' ? { page: params } : params;
+  return apiFetch(`/api/v1/vehicles${buildScopedQuery(normalized)}`);
 }
 
 export async function getServiceTypes(page = 1) {
@@ -83,7 +115,7 @@ const entityPathMap: Record<string, string> = {
   'ServiceBays': '/api/v1/service-bays',
   'Appointments': '/api/v1/appointments',
   'Tenants': '/api/v1/tenants',
-  'Customers': '/api/v1/customers',
+  'Users': '/api/v1/users',
   'Vehicles': '/api/v1/vehicles',
   'ServiceTypes': '/api/v1/service-types',
 };
@@ -139,22 +171,22 @@ export async function switchTenantApi(targetTenantId: string, refreshToken: stri
   return response.json();
 }
 
-export async function assignUserToTenant(tenantId: string, userId: string, role: string) {
-  return apiFetch(`/api/v1/tenants/${tenantId}/users`, {
+export async function assignUserToTenant(userId: string, role: string) {
+  return apiFetch(`/api/v1/users`, {
     method: 'POST',
     body: JSON.stringify({ userId, role }),
   });
 }
 
-export async function promoteUserToManager(tenantId: string, userId: string) {
-  return apiFetch(`/api/v1/tenants/${tenantId}/users/${userId}/role`, {
+export async function promoteUserToManager(userId: string) {
+  return apiFetch(`/api/v1/users/${userId}/role`, {
     method: 'PUT',
     body: JSON.stringify({ role: 'TenantManager' }),
   });
 }
 
-export async function getTenantUsers(tenantId: string) {
-  return apiFetch(`/api/v1/tenants/${tenantId}/users`);
+export async function getTenantUsers() {
+  return apiFetch(`/api/v1/users`);
 }
 
 export async function getOccupiedSlots(resourceType: 'technicians' | 'service-bays', id: string, date?: string) {

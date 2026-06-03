@@ -1,37 +1,33 @@
 -- Create Tables
+DROP TABLE IF EXISTS "appointments" CASCADE;
+DROP TABLE IF EXISTS "refresh_tokens" CASCADE;
+DROP TABLE IF EXISTS "service_bays" CASCADE;
+DROP TABLE IF EXISTS "service_types" CASCADE;
+DROP TABLE IF EXISTS "technician_skills" CASCADE;
+DROP TABLE IF EXISTS "technicians" CASCADE;
+DROP TABLE IF EXISTS "tenants" CASCADE;
+DROP TABLE IF EXISTS "user_tenants" CASCADE;
+DROP TABLE IF EXISTS "users" CASCADE;
+DROP TABLE IF EXISTS "vehicles" CASCADE;
+DROP TABLE IF EXISTS "appointment_reminders" CASCADE;
 
 CREATE TABLE IF NOT EXISTS "appointments" (
 	"id" uuid DEFAULT gen_random_uuid() NOT NULL,
 	"tenant_id" uuid NOT NULL,
-	"customer_id" uuid NOT NULL,
+	"user_id" uuid NOT NULL,
 	"vehicle_id" uuid NOT NULL,
 	"service_type_id" uuid NOT NULL,
-	"technician_id" uuid NOT NULL,
-	"service_bay_id" uuid NOT NULL,
+	"technician_id" uuid,
+	"service_bay_id" uuid,
 	"start_time" timestamp with time zone NOT NULL,
 	"end_time" timestamp with time zone NOT NULL,
 	"status" text DEFAULT 'Scheduled' NOT NULL,
 	"notes" text,
-	"actual_start_time" timestamp with time zone,
-	"actual_end_time" timestamp with time zone,
 	"deleted_at" timestamp with time zone,
 	"created_at" timestamp with time zone DEFAULT now() NOT NULL,
 	"updated_at" timestamp with time zone DEFAULT now() NOT NULL,
 	PRIMARY KEY ("tenant_id", "id")
 ) PARTITION BY HASH ("tenant_id");
-
-CREATE TABLE IF NOT EXISTS "customers" (
-	"id" uuid DEFAULT gen_random_uuid() NOT NULL,
-	"tenant_id" uuid NOT NULL,
-	"first_name" text NOT NULL,
-	"last_name" text NOT NULL,
-	"email" text NOT NULL,
-	"phone" text,
-	"deleted_at" timestamp with time zone,
-	"created_at" timestamp with time zone DEFAULT now() NOT NULL,
-	"updated_at" timestamp with time zone DEFAULT now() NOT NULL,
-	PRIMARY KEY ("tenant_id", "id")
-);
 
 CREATE TABLE IF NOT EXISTS "refresh_tokens" (
 	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
@@ -131,7 +127,7 @@ CREATE TABLE IF NOT EXISTS "users" (
 CREATE TABLE IF NOT EXISTS "vehicles" (
 	"id" uuid DEFAULT gen_random_uuid() NOT NULL,
 	"tenant_id" uuid NOT NULL,
-	"customer_id" uuid NOT NULL,
+	"user_id" uuid NOT NULL,
 	"vin" text,
 	"license_plate" text,
 	"make" text NOT NULL,
@@ -151,6 +147,19 @@ CREATE TABLE IF NOT EXISTS "appointment_reminders" (
 	"sent_at" timestamp with time zone NOT NULL
 );
 
+CREATE TABLE IF NOT EXISTS "audit_logs" (
+	"id" uuid DEFAULT gen_random_uuid() NOT NULL,
+	"tenant_id" uuid NOT NULL,
+	"entity_type" text NOT NULL,
+	"entity_id" text NOT NULL,
+	"action" text NOT NULL,
+	"result" jsonb NOT NULL,
+	"timestamp" timestamp with time zone NOT NULL,
+	"user_id" text,
+	PRIMARY KEY ("tenant_id", "id")
+) PARTITION BY HASH ("tenant_id");
+
+
 CREATE INDEX IF NOT EXISTS "idx_appointment_reminders_tenant_appointment" ON "appointment_reminders" ("tenant_id", "appointment_id");
 
 -- Indices
@@ -158,9 +167,8 @@ CREATE INDEX IF NOT EXISTS "idx_appointments_tenant_id" ON "appointments" ("tena
 CREATE INDEX IF NOT EXISTS "idx_appointments_tenant_tech_time" ON "appointments" ("tenant_id","technician_id","start_time","end_time");
 CREATE INDEX IF NOT EXISTS "idx_appointments_tenant_bay_time" ON "appointments" ("tenant_id","service_bay_id","start_time","end_time");
 CREATE INDEX IF NOT EXISTS "idx_appointments_tenant_status" ON "appointments" ("tenant_id","status");
-CREATE INDEX IF NOT EXISTS "idx_appointments_tenant_start_time" ON "appointments" ("tenant_id","start_time","end_time");
-CREATE UNIQUE INDEX IF NOT EXISTS "idx_customers_tenant_email" ON "customers" ("tenant_id","email");
-CREATE INDEX IF NOT EXISTS "idx_customers_tenant_id" ON "customers" ("tenant_id","id");
+CREATE INDEX IF NOT EXISTS "idx_appointments_tenant_start_time" ON "appointments" ("tenant_id","start_time");
+CREATE INDEX IF NOT EXISTS "idx_appointments_tenant_user" ON "appointments" ("tenant_id","user_id");
 CREATE INDEX IF NOT EXISTS "idx_refresh_tokens_token" ON "refresh_tokens" ("token");
 CREATE INDEX IF NOT EXISTS "idx_refresh_tokens_user_id" ON "refresh_tokens" ("user_id");
 CREATE INDEX IF NOT EXISTS "idx_refresh_tokens_tenant_id" ON "refresh_tokens" ("tenant_id");
@@ -175,9 +183,10 @@ CREATE INDEX IF NOT EXISTS "idx_technicians_tenant_id" ON "technicians" ("tenant
 CREATE UNIQUE INDEX IF NOT EXISTS "idx_user_tenants_unique" ON "user_tenants" ("user_id","tenant_id");
 CREATE INDEX IF NOT EXISTS "idx_user_tenants_tenant_id" ON "user_tenants" ("tenant_id");
 CREATE INDEX IF NOT EXISTS "idx_users_last_active_tenant_id" ON "users" ("last_active_tenant_id");
-CREATE INDEX IF NOT EXISTS "idx_vehicles_tenant_customer" ON "vehicles" ("tenant_id","customer_id");
+CREATE INDEX IF NOT EXISTS "idx_vehicles_tenant_user" ON "vehicles" ("tenant_id","user_id");
 CREATE INDEX IF NOT EXISTS "idx_vehicles_tenant_id" ON "vehicles" ("tenant_id","id");
-
+CREATE INDEX IF NOT EXISTS "idx_audit_logs_tenant_entity" ON "audit_logs" ("tenant_id", "entity_type", "entity_id");
+CREATE INDEX IF NOT EXISTS "idx_audit_logs_tenant_timestamp" ON "audit_logs" ("tenant_id", "timestamp");
 
 -- Create 64 Partitions for appointments
 DO $$
@@ -194,24 +203,6 @@ BEGIN
         );
     END LOOP;
 END $$;
-
--- Create Tables for Audit Logs
-
-CREATE TABLE IF NOT EXISTS "audit_logs" (
-	"id" uuid DEFAULT gen_random_uuid() NOT NULL,
-	"tenant_id" uuid NOT NULL,
-	"entity_type" text NOT NULL,
-	"entity_id" text NOT NULL,
-	"action" text NOT NULL,
-	"result" jsonb NOT NULL,
-	"timestamp" timestamp with time zone NOT NULL,
-	"user_id" text,
-	PRIMARY KEY ("tenant_id", "id")
-) PARTITION BY HASH ("tenant_id");
-
--- Indices for Audit Logs
-CREATE INDEX IF NOT EXISTS "idx_audit_logs_tenant_entity" ON "audit_logs" ("tenant_id", "entity_type", "entity_id");
-CREATE INDEX IF NOT EXISTS "idx_audit_logs_tenant_timestamp" ON "audit_logs" ("tenant_id", "timestamp");
 
 -- Create 64 Partitions for audit_logs
 DO $$
@@ -237,14 +228,14 @@ SELECT
     a.id AS appointment_id,
     a.start_time AS appointment_start_time,
     a.status AS appointment_status,
-    c.id AS customer_id,
-    c.email AS customer_email,
-    c.first_name || ' ' || c.last_name AS customer_name,
+    u.id AS user_id,
+    u.email AS user_email,
+    u.first_name || ' ' || u.last_name AS user_name,
     v.id AS vehicle_id,
     v.make AS vehicle_make,
     v.model AS vehicle_model,
     CASE WHEN ar.id IS NOT NULL THEN true ELSE false END AS reminder_sent
 FROM appointments a
-JOIN customers c ON a.tenant_id = c.tenant_id AND a.customer_id = c.id
+JOIN users u ON a.user_id = u.id
 JOIN vehicles v ON a.tenant_id = v.tenant_id AND a.vehicle_id = v.id
 LEFT JOIN appointment_reminders ar ON a.tenant_id = ar.tenant_id AND a.id = ar.appointment_id;

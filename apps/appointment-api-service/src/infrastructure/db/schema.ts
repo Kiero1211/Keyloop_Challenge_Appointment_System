@@ -58,25 +58,10 @@ export const tenants = pgTable('tenants', {
   updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
 });
 
-export const customers = pgTable('customers', {
-  id: uuid('id').defaultRandom().primaryKey(),
-  tenantId: uuid('tenant_id').notNull().references(() => tenants.id),
-  firstName: text('first_name').notNull(),
-  lastName: text('last_name').notNull(),
-  email: text('email').notNull(),
-  phone: text('phone'),
-  deletedAt: timestamp('deleted_at', { withTimezone: true }),
-  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
-  updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
-}, (table) => ({
-  tenantEmailIdx: uniqueIndex('idx_customers_tenant_email').on(table.tenantId, table.email),
-  tenantIdIdx: index('idx_customers_tenant_id').on(table.tenantId, table.id),
-}));
-
 export const vehicles = pgTable('vehicles', {
   id: uuid('id').defaultRandom().primaryKey(),
   tenantId: uuid('tenant_id').notNull().references(() => tenants.id),
-  customerId: uuid('customer_id').notNull().references(() => customers.id),
+  userId: uuid('user_id').notNull().references(() => users.id),
   vin: text('vin'),
   licensePlate: text('license_plate'),
   make: text('make').notNull(),
@@ -86,7 +71,7 @@ export const vehicles = pgTable('vehicles', {
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
   updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
 }, (table) => ({
-  tenantCustomerIdx: index('idx_vehicles_tenant_customer').on(table.tenantId, table.customerId),
+  tenantUserIdx: index('idx_vehicles_tenant_user').on(table.tenantId, table.userId),
   tenantIdIdx: index('idx_vehicles_tenant_id').on(table.tenantId, table.id),
 }));
 
@@ -144,7 +129,7 @@ export const serviceBays = pgTable('service_bays', {
 export const appointments = pgTable('appointments', {
   id: uuid('id').defaultRandom().primaryKey(),
   tenantId: uuid('tenant_id').notNull().references(() => tenants.id),
-  customerId: uuid('customer_id').notNull().references(() => customers.id),
+  userId: uuid('user_id').notNull().references(() => users.id),
   vehicleId: uuid('vehicle_id').notNull().references(() => vehicles.id),
   serviceTypeId: uuid('service_type_id').notNull().references(() => serviceTypes.id),
   technicianId: uuid('technician_id').notNull().references(() => technicians.id),
@@ -160,6 +145,7 @@ export const appointments = pgTable('appointments', {
   updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
 }, (table) => ({
   tenantIdIdx: index('idx_appointments_tenant_id').on(table.tenantId, table.id),
+  tenantUserIdx: index('idx_appointments_tenant_user').on(table.tenantId, table.userId),
   tenantTechnicianTimeIdx: index('idx_appointments_tenant_tech_time').on(table.tenantId, table.technicianId, table.scheduledStartTime, table.scheduledEndTime),
   tenantBayTimeIdx: index('idx_appointments_tenant_bay_time').on(table.tenantId, table.serviceBayId, table.scheduledStartTime, table.scheduledEndTime),
   tenantStatusIdx: index('idx_appointments_tenant_status').on(table.tenantId, table.status),
@@ -173,7 +159,6 @@ export const usersRelations = relations(users, ({ many }) => ({
 
 export const tenantsRelations = relations(tenants, ({ many }) => ({
   userTenants: many(userTenants),
-  customers: many(customers),
   vehicles: many(vehicles),
   serviceTypes: many(serviceTypes),
   technicians: many(technicians),

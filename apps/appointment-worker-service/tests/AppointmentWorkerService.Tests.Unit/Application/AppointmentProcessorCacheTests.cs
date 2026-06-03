@@ -63,7 +63,7 @@ public class AppointmentProcessorCacheTests
         var message = new AppointmentMessage(
             TenantId: "tenant-1",
             VehicleId: "vehicle-1",
-            CustomerId: "customer-1",
+            UserId: "user-1",
             ServiceTypeId: "service-1",
             ServiceBayId: "bay-1",
             TechnicianId: "tech-1",
@@ -116,12 +116,12 @@ public class AppointmentProcessorCacheTests
     }
 
     [Fact]
-    public async Task ProcessAsync_Failure_WritesFailedCacheAndRemovesActiveIndex()
+    public async Task ProcessAsync_Failure_WritesFailedCacheAndKeepsActiveIndex()
     {
         var message = new AppointmentMessage(
             TenantId: "tenant-1",
             VehicleId: "vehicle-1",
-            CustomerId: "customer-1",
+            UserId: "user-1",
             ServiceTypeId: "service-1",
             ServiceBayId: "bay-1",
             TechnicianId: "tech-1",
@@ -149,7 +149,7 @@ public class AppointmentProcessorCacheTests
                 !string.IsNullOrWhiteSpace(fields["notes"])),
             TimeSpan.FromHours(1)), Times.Once);
 
-        _mockCacheProvider.Verify(x => x.SetRemoveAsync(
+        _mockCacheProvider.Verify(x => x.SetAddAsync(
             CacheKeys.ActiveAppointmentsSetKey(message.TenantId),
             message.AppointmentId), Times.Once);
 

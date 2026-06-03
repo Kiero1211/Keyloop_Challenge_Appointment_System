@@ -1,7 +1,7 @@
 export interface Vehicle {
   id: string;
   tenantId: string;
-  customerId: string;
+  userId: string;
   make: string;
   model: string;
   year: number;

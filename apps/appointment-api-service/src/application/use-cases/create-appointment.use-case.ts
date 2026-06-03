@@ -4,13 +4,14 @@ import { CreateAppointmentCommand } from '@/application/commands/create-appointm
 import { tenantContext } from '@/domain/context/tenant-context';
 import { DomainValidationException } from '@/domain/exceptions';
 import { CommandId } from '@/domain/value-objects/command-id';
-import { CustomerId } from '@/domain/value-objects/customer-id';
 import { VehicleId } from '@/domain/value-objects/vehicle-id';
 import { ServiceTypeId } from '@/domain/value-objects/service-type-id';
 import { DesiredTime } from '@/domain/value-objects/desired-time';
 import { v4 as uuidv4 } from 'uuid';
 
 import { IServiceTypeRepository } from '@/application/ports/repositories/service-type.repository.port';
+import { IVehicleRepository } from '@/application/ports/repositories/vehicle.repository.port';
+import { IUserRepository } from '@/application/ports/repositories/user.repository.port';
 import { activeAppointmentsSetKey, appointmentHashKey } from '@/domain/cache-keys';
 
 export class CreateAppointmentUseCase {
@@ -18,6 +19,8 @@ export class CreateAppointmentUseCase {
     private readonly cacheProvider: ICacheProvider,
     private readonly messagePublisher: IMessagePublisher,
     private readonly serviceTypeRepository: IServiceTypeRepository,
+    private readonly vehicleRepository: IVehicleRepository,
+    private readonly userRepository: IUserRepository,
     private readonly partitionHasher: (tenantId: string, vehicleId: string) => number
   ) {}
 
@@ -27,34 +30,49 @@ export class CreateAppointmentUseCase {
       throw new DomainValidationException('Tenant context is missing');
     }
 
-    const { tenantId } = context;
+    const { tenantId, userId: signedInUserId, role } = context;
     
-    // Validate Value Objects
     const commandId = new CommandId(uuidv4());
-    const customerId = new CustomerId(command.customerId);
     const vehicleId = new VehicleId(command.vehicleId);
     const serviceTypeId = new ServiceTypeId(command.serviceTypeId);
     const desiredStartTime = new DesiredTime(command.desiredStartTime);
+    const resolvedUserId = command.userId || (role === 'TenantUser' ? signedInUserId : undefined);
 
-    // Fetch ServiceType to get estimatedDurationMinutes
+    if (!resolvedUserId) {
+      throw new DomainValidationException('userId is required for appointment creation');
+    }
+
+    if (role === 'TenantUser' && resolvedUserId !== signedInUserId) {
+      throw new DomainValidationException('TenantUser can only create appointments for themselves');
+    }
+
+    const tenantUsers = await this.userRepository.findByTenantId(tenantId);
+    const user = (tenantUsers ?? []).find(item => item.id === resolvedUserId);
+    if (!user) {
+      throw new DomainValidationException('User not found in active tenant');
+    }
+
+    const vehicle = await this.vehicleRepository.findById(tenantId, vehicleId.value);
+    if (!vehicle || vehicle.userId !== resolvedUserId) {
+      throw new DomainValidationException('Vehicle must belong to the selected user');
+    }
+
     const serviceType = await this.serviceTypeRepository.findById(tenantId, serviceTypeId.value);
     if (!serviceType) {
       throw new DomainValidationException('ServiceType not found');
     }
     
-    // Calculate scheduledEndTime
     const scheduledEndTime = new Date(new Date(desiredStartTime.value).getTime() + serviceType.estimatedDurationMinutes * 60000);
 
     const partition = this.partitionHasher(tenantId, vehicleId.value);
     const streamName = `appointments_stream_${partition}`;
 
-    // Compile message payload
     const createdAt = new Date().toISOString();
     const payload = {
       commandId: commandId.value,
       appointmentId: commandId.value,
       tenantId,
-      customerId: customerId.value,
+      userId: resolvedUserId,
       vehicleId: vehicleId.value,
       serviceTypeId: serviceTypeId.value,
       technicianId: command.technicianId,
@@ -75,7 +93,7 @@ export class CreateAppointmentUseCase {
     await this.cacheProvider.hset(cacheKey, {
       id: appointmentId,
       tenant_id: tenantId,
-      customer_id: customerId.value,
+      user_id: resolvedUserId,
       vehicle_id: vehicleId.value,
       service_type_id: serviceTypeId.value,
       technician_id: command.technicianId ?? '',

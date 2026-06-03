@@ -8,7 +8,7 @@ export class DrizzleVehicleRepository implements IVehicleRepository {
   async create(data: Partial<Vehicle>): Promise<Vehicle> {
     const [result] = await db.insert(vehicles).values({
       tenantId: data.tenantId!,
-      customerId: data.customerId!,
+      userId: data.userId!,
       make: data.make!,
       model: data.model!,
       year: data.year!,
@@ -25,19 +25,22 @@ export class DrizzleVehicleRepository implements IVehicleRepository {
     return (result as Vehicle) || null;
   }
 
-  async findByCustomer(tenantId: string, customerId: string): Promise<Vehicle[]> {
+  async findByUser(tenantId: string, userId: string): Promise<Vehicle[]> {
     const results = await db.query.vehicles.findMany({
-      where: and(eq(vehicles.customerId, customerId), eq(vehicles.tenantId, tenantId), isNull(vehicles.deletedAt)),
+      where: and(eq(vehicles.userId, userId), eq(vehicles.tenantId, tenantId), isNull(vehicles.deletedAt)),
     });
     return results as Vehicle[];
   }
 
-  async findAll(tenantId?: string, page: number = 1, pageSize: number = 20): Promise<{ data: Vehicle[]; total: number; page: number; pageSize: number }> {
+  async findAll(tenantId: string | undefined, filters: { scope?: 'tenant' | 'mine'; userId?: string }, page: number = 1, pageSize: number = 20): Promise<{ data: Vehicle[]; total: number; page: number; pageSize: number }> {
     const { count } = await import('drizzle-orm');
     
     const conditions = [isNull(vehicles.deletedAt)];
     if (tenantId) {
       conditions.push(eq(vehicles.tenantId, tenantId));
+    }
+    if (filters.scope === 'mine' && filters.userId) {
+      conditions.push(eq(vehicles.userId, filters.userId));
     }
 
     const totalResult = await db.select({ count: count() }).from(vehicles).where(and(...conditions));

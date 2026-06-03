@@ -96,7 +96,7 @@ describe('CachedAppointmentCrudRepository', () => {
       const mockAppt: Appointment = {
         id: '123',
         tenantId: 'tenant',
-        customerId: 'customer123',
+        userId: 'user123',
         vehicleId: 'vehicle123',
         serviceTypeId: 'serviceType123',
         technicianId: 'tech123',
@@ -122,7 +122,7 @@ describe('CachedAppointmentCrudRepository', () => {
       const mockAppt: Appointment = {
         id: '123',
         tenantId: 'tenant',
-        customerId: 'customer123',
+        userId: 'user123',
         vehicleId: 'vehicle123',
         serviceTypeId: 'serviceType123',
         technicianId: 'tech123',

@@ -3,12 +3,12 @@ import { app } from '@/infrastructure/http/app';
 import { db } from '@/infrastructure/db/client';
 import { factories } from '../helpers/factories';
 import { container } from '@/infrastructure/di/container';
-import { vehicles, customers } from '@/infrastructure/db/schema';
+import { vehicles } from '@/infrastructure/db/schema';
 
 describe('Vehicles API E2E', () => {
   let tenantId1: string;
   let token1: string;
-  let customerId: string;
+  let userId: string;
   let vehicleId: string;
 
   beforeAll(async () => {
@@ -26,13 +26,11 @@ describe('Vehicles API E2E', () => {
       isSuperAdmin: false,
     });
 
-    const c = await factories.customer(tenantId1);
-    customerId = c.id;
+    userId = u1.id;
   });
 
   afterAll(async () => {
     await db.delete(vehicles);
-    await db.delete(customers);
     await container.destroy();
   });
 
@@ -41,13 +39,13 @@ describe('Vehicles API E2E', () => {
       const response = await request(app)
         .post('/api/v1/vehicles')
         .set('Authorization', `Bearer ${token1}`)
-        .set('x-tenant-id', tenantId1)
-        .send({
-          customerId,
-          licensePlate: 'TEST-123',
-          make: 'Toyota',
-          model: 'Corolla',
-          year: 2022
+      .set('x-tenant-id', tenantId1)
+      .send({
+        userId,
+        licensePlate: 'TEST-123',
+        make: 'Toyota',
+        model: 'Corolla',
+        year: 2022
         });
 
       expect(response.status).toBe(201);
@@ -55,13 +53,13 @@ describe('Vehicles API E2E', () => {
       vehicleId = response.body.id;
     });
 
-    it('should fail with cross-tenant customerId', async () => {
+    it('should fail with cross-tenant userId', async () => {
       const response = await request(app)
         .post('/api/v1/vehicles')
         .set('Authorization', `Bearer ${token1}`)
         .set('x-tenant-id', tenantId1)
         .send({
-          customerId: '00000000-0000-0000-0000-000000000000', // random uuid
+          userId: '00000000-0000-0000-0000-000000000000', // random uuid
           licensePlate: 'TEST-456',
           make: 'Ford',
           model: 'Focus',
@@ -73,9 +71,9 @@ describe('Vehicles API E2E', () => {
   });
 
   describe('GET /api/v1/vehicles', () => {
-    it('should return list of vehicles for customer', async () => {
+    it('should return list of vehicles for user scope', async () => {
       const response = await request(app)
-        .get(`/api/v1/vehicles?customerId=${customerId}`)
+        .get(`/api/v1/vehicles?scope=mine&userId=${userId}`)
         .set('Authorization', `Bearer ${token1}`)
         .set('x-tenant-id', tenantId1);
 

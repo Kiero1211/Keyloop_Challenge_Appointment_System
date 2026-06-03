@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import type { EntityType } from '@/types';
-import { getTechnicians, getServiceBays, getAppointments, getActiveAppointments, getAuditLogs, getAllTenants, getCustomers, getVehicles, getServiceTypes, createEntity, updateEntity, deleteEntity, assignUserToTenant, promoteUserToManager, getTenantUsers } from '@/api';
+import { getTechnicians, getServiceBays, getAppointments, getActiveAppointments, getAuditLogs, getAllTenants, getUsers, getVehicles, getServiceTypes, createEntity, updateEntity, deleteEntity, assignUserToTenant, promoteUserToManager, getTenantUsers } from '@/api';
 import { DataTable } from '@/components/DataTable';
 import { CrudModal } from '@/components/CrudModal';
 import { AppointmentModal } from '@/components/AppointmentModal';
@@ -16,8 +16,9 @@ function mergeActiveAppointments(base: any[], active: any[]) {
 }
 
 export function Dashboard() {
-  const { isSuperAdmin, tenant_id, setTenant, role } = useAuth();
+  const { isSuperAdmin, tenant_id, setTenant, role, userId } = useAuth();
   const [currentEntity, setCurrentEntity] = useState<EntityType>('Technicians');
+  const [currentScope, setCurrentScope] = useState<'tenant' | 'mine'>('tenant');
   const [data, setData] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<Error | null>(null);
@@ -42,7 +43,7 @@ export function Dashboard() {
     e.preventDefault();
     if (!tenant_id) return alert('Please select a tenant first');
     try {
-      await assignUserToTenant(tenant_id, assignUserId, assignRole);
+      await assignUserToTenant(assignUserId, assignRole);
       alert('User assigned successfully');
       setAssignUserId('');
     } catch(err: any) { alert(err.message); }
@@ -52,7 +53,7 @@ export function Dashboard() {
     e.preventDefault();
     if (!tenant_id) return alert('Please select a tenant first');
     try {
-      await promoteUserToManager(tenant_id, promoteUserId);
+      await promoteUserToManager(promoteUserId);
       alert('User promoted successfully');
       setPromoteUserId('');
     } catch(err: any) { alert(err.message); }
@@ -70,7 +71,7 @@ export function Dashboard() {
 
   useEffect(() => {
     if (currentEntity === 'RoleManagement' && tenant_id) {
-      getTenantUsers(tenant_id).then(res => {
+      getTenantUsers().then(res => {
         setTenantUsers(Array.isArray(res) ? res : res.data || []);
       }).catch(console.error);
     }
@@ -83,7 +84,10 @@ export function Dashboard() {
 
     const loadActiveAppointments = async () => {
       try {
-        const res = await getActiveAppointments();
+        const res = await getActiveAppointments({
+          scope: currentScope,
+          userId: currentScope === 'mine' ? userId || undefined : undefined,
+        });
         if (!active) return;
 
         const list = Array.isArray(res) ? res : res.data || [];
@@ -96,13 +100,13 @@ export function Dashboard() {
     };
 
     void loadActiveAppointments();
-    const interval = window.setInterval(loadActiveAppointments, 4000);
+    const interval = window.setInterval(loadActiveAppointments, 2500);
 
     return () => {
       active = false;
       window.clearInterval(interval);
     };
-  }, [currentEntity, tenant_id, refreshTrigger]);
+  }, [currentEntity, currentScope, userId, tenant_id, refreshTrigger]);
 
   useEffect(() => {
     let active = true;
@@ -119,16 +123,24 @@ export function Dashboard() {
         fetcher = getServiceBays;
         break;
       case 'Appointments':
-        fetcher = getAppointments;
+        fetcher = (page: number) => getAppointments({
+          page,
+          scope: currentScope,
+          userId: currentScope === 'mine' ? userId || undefined : undefined,
+        });
         break;
       case 'AuditLogs':
         fetcher = getAuditLogs;
         break;
-      case 'Customers':
-        fetcher = getCustomers;
+      case 'Users':
+        fetcher = getUsers;
         break;
       case 'Vehicles':
-        fetcher = getVehicles;
+        fetcher = (page: number) => getVehicles({
+          page,
+          scope: currentScope,
+          userId: currentScope === 'mine' ? userId || undefined : undefined,
+        });
         break;
       case 'ServiceTypes':
         fetcher = getServiceTypes;
@@ -167,7 +179,7 @@ export function Dashboard() {
     return () => {
       active = false;
     };
-  }, [currentEntity, page, tenant_id, refreshTrigger]); // re-fetch when tenant switches or refresh triggered
+  }, [currentEntity, currentScope, page, tenant_id, userId, refreshTrigger]); // re-fetch when tenant switches or refresh triggered
 
   const handleEdit = (row: any) => {
     setSelectedRow(row);
@@ -212,13 +224,21 @@ export function Dashboard() {
     return entitySchemas[currentEntity] || [];
   };
 
-  const tabs: EntityType[] = ['Technicians', 'ServiceBays', 'Appointments', 'AuditLogs', 'Customers', 'Vehicles', 'ServiceTypes'];
-  if (isSuperAdmin) {
-    tabs.push('Tenants');
-  }
-  if (isSuperAdmin || role === 'TenantManager') {
-    tabs.push('RoleManagement');
-  }
+  const canSeeElevatedTabs = isSuperAdmin || role === 'TenantManager' || role === 'Admin';
+  const canManageTenantUsers = canSeeElevatedTabs;
+  const tabs = [
+    { label: 'Technicians', entity: 'Technicians' as EntityType, scope: 'tenant' as const },
+    { label: 'Service Bays', entity: 'ServiceBays' as EntityType, scope: 'tenant' as const },
+    { label: 'Appointments', entity: 'Appointments' as EntityType, scope: 'tenant' as const },
+    ...(canSeeElevatedTabs ? [{ label: 'My Appointments', entity: 'Appointments' as EntityType, scope: 'mine' as const }] : []),
+    { label: 'Vehicles', entity: 'Vehicles' as EntityType, scope: 'tenant' as const },
+    ...(canSeeElevatedTabs ? [{ label: 'My Vehicles', entity: 'Vehicles' as EntityType, scope: 'mine' as const }] : []),
+    { label: 'Audit Logs', entity: 'AuditLogs' as EntityType, scope: 'tenant' as const },
+    ...(canSeeElevatedTabs ? [{ label: 'Users', entity: 'Users' as EntityType, scope: 'tenant' as const }] : []),
+    ...(isSuperAdmin ? [{ label: 'Tenants', entity: 'Tenants' as EntityType, scope: 'tenant' as const }] : []),
+    ...(canManageTenantUsers ? [{ label: 'Role Management', entity: 'RoleManagement' as EntityType, scope: 'tenant' as const }] : []),
+    { label: 'Service Types', entity: 'ServiceTypes' as EntityType, scope: 'tenant' as const },
+  ];
 
   if (role === 'Guest') {
     return (
@@ -248,26 +268,27 @@ export function Dashboard() {
       <div style={{ marginBottom: '20px', display: 'flex', gap: '10px' }}>
         {tabs.map(tab => (
           <button
-            key={tab}
+            key={tab.label}
             onClick={() => {
-              setCurrentEntity(tab);
+              setCurrentEntity(tab.entity);
+              setCurrentScope(tab.scope);
               setPage(1);
             }}
             style={{
               padding: '10px 20px',
               cursor: 'pointer',
-              background: currentEntity === tab ? '#007bff' : '#e0e0e0',
-              color: currentEntity === tab ? '#fff' : '#333',
+              background: currentEntity === tab.entity && currentScope === tab.scope ? '#007bff' : '#e0e0e0',
+              color: currentEntity === tab.entity && currentScope === tab.scope ? '#fff' : '#333',
               border: 'none',
               borderRadius: '4px'
             }}
           >
-            {tab}
+            {tab.label}
           </button>
         ))}
       </div>
       
-      {currentEntity !== 'AuditLogs' && currentEntity !== 'RoleManagement' && (
+      {currentEntity !== 'AuditLogs' && currentEntity !== 'RoleManagement' && currentEntity !== 'Users' && currentEntity !== 'Tenants' && (
         <div style={{ marginBottom: '15px' }}>
           <button 
             onClick={handleInsertNew}
@@ -311,8 +332,8 @@ export function Dashboard() {
             data={data} 
             error={error} 
             loading={loading} 
-            onEdit={currentEntity !== 'AuditLogs' ? handleEdit : undefined}
-            onDelete={currentEntity !== 'AuditLogs' ? handleDelete : undefined}
+            onEdit={currentEntity !== 'AuditLogs' && currentEntity !== 'Users' ? handleEdit : undefined}
+            onDelete={currentEntity !== 'AuditLogs' && currentEntity !== 'Users' ? handleDelete : undefined}
           />
           <div style={{ marginTop: '20px', display: 'flex', gap: '10px', alignItems: 'center' }}>
             <button 

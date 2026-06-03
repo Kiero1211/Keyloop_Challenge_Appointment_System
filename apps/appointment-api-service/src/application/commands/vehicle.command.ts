@@ -1,7 +1,7 @@
 import { z } from 'zod';
 
 export const createVehicleSchema = z.object({
-  customerId: z.string().uuid('Invalid customerId'),
+  userId: z.string().uuid('Invalid userId'),
   licensePlate: z.string().min(1, 'License plate is required'),
   make: z.string().min(1, 'Make is required'),
   model: z.string().min(1, 'Model is required'),
@@ -9,7 +9,7 @@ export const createVehicleSchema = z.object({
   color: z.string().optional(),
 });
 
-export const updateVehicleSchema = createVehicleSchema.omit({ customerId: true }).partial();
+export const updateVehicleSchema = createVehicleSchema.omit({ userId: true }).partial();
 
 export type CreateVehicleCommand = z.infer<typeof createVehicleSchema>;
 export type UpdateVehicleCommand = z.infer<typeof updateVehicleSchema>;

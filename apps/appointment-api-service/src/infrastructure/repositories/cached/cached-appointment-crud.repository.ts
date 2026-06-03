@@ -21,7 +21,7 @@ export class CachedAppointmentCrudRepository implements IAppointmentCrudReposito
       (record) => {
         return {
           appointment: JSON.parse(record.appointment),
-          customer: record.customer ? JSON.parse(record.customer) : null,
+          user: record.user ? JSON.parse(record.user) : null,
           vehicle: record.vehicle ? JSON.parse(record.vehicle) : null,
           serviceType: record.serviceType ? JSON.parse(record.serviceType) : null,
           technician: record.technician ? JSON.parse(record.technician) : null,

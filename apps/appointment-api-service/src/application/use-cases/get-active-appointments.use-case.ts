@@ -4,7 +4,7 @@ import { activeAppointmentsSetKey, appointmentHashKey } from '@/domain/cache-key
 export interface ActiveAppointmentDto {
   id: string;
   tenantId: string;
-  customerId: string;
+  userId: string;
   vehicleId: string;
   serviceTypeId: string;
   technicianId: string;
@@ -23,7 +23,7 @@ function mapHashToAppointment(hash: Record<string, string>): ActiveAppointmentDt
   return {
     id: hash.id ?? '',
     tenantId: hash.tenant_id ?? '',
-    customerId: hash.customer_id ?? '',
+    userId: hash.user_id ?? '',
     vehicleId: hash.vehicle_id ?? '',
     serviceTypeId: hash.service_type_id ?? '',
     technicianId: hash.technician_id ?? '',
@@ -42,7 +42,7 @@ function mapHashToAppointment(hash: Record<string, string>): ActiveAppointmentDt
 export class GetActiveAppointmentsUseCase {
   constructor(private readonly cacheProvider: ICacheProvider) {}
 
-  async execute(tenantId: string): Promise<ActiveAppointmentDto[]> {
+  async execute(tenantId: string, scope: 'tenant' | 'mine' = 'tenant', userId?: string): Promise<ActiveAppointmentDto[]> {
     const appointmentIds = await this.cacheProvider.smembers(activeAppointmentsSetKey(tenantId));
     const appointments: ActiveAppointmentDto[] = [];
 
@@ -51,7 +51,8 @@ export class GetActiveAppointmentsUseCase {
       if (!hash) continue;
 
       const appointment = mapHashToAppointment(hash);
-      if (appointment.status !== 'Pending' && appointment.status !== 'Scheduled') continue;
+      if (appointment.status !== 'Pending' && appointment.status !== 'Scheduled' && appointment.status !== 'Failed') continue;
+      if (scope === 'mine' && userId && appointment.userId !== userId) continue;
 
       appointments.push(appointment);
     }

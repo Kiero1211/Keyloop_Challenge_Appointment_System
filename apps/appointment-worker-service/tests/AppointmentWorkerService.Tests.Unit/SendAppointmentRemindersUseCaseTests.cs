@@ -34,8 +34,8 @@ public class SendAppointmentRemindersUseCaseTests
                 TenantId = tenantId,
                 AppointmentId = appointmentId,
                 AppointmentStartTime = DateTimeOffset.UtcNow.AddHours(24),
-                CustomerEmail = "test@example.com",
-                CustomerName = "John Doe",
+                UserEmail = "test@example.com",
+                UserName = "John Doe",
                 VehicleMake = "Toyota",
                 VehicleModel = "Corolla",
                 ReminderSent = false

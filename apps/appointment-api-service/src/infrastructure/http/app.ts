@@ -6,9 +6,9 @@ import { serviceTypesRouter } from '@/infrastructure/http/routes/service-types.r
 import { techniciansRouter } from '@/infrastructure/http/routes/technicians.routes';
 import { serviceBaysRouter } from '@/infrastructure/http/routes/service-bays.routes';
 
-import { customersRouter } from '@/infrastructure/http/routes/customers.routes';
 import { vehiclesRouter } from '@/infrastructure/http/routes/vehicles.routes';
 import { tenantRouter } from '@/infrastructure/http/routes/tenant.routes';
+import { usersRouter } from '@/infrastructure/http/routes/users.routes';
 import { authRouter } from '@/infrastructure/http/routes/auth.routes';
 import { auditLogsRouter } from '@/infrastructure/http/routes/audit-logs.routes';
 import { tenantContextMiddleware } from '@/infrastructure/http/middleware/tenant-context.middleware';
@@ -72,13 +72,6 @@ app.use(
 
 
 app.use(
-  '/api/v1/customers',
-  (req, res, next) => jwtAuthMiddleware(container.jwtService)(req, res, next),
-  tenantContextMiddleware,
-  customersRouter
-);
-
-app.use(
   '/api/v1/vehicles',
   (req, res, next) => jwtAuthMiddleware(container.jwtService)(req, res, next),
   tenantContextMiddleware,
@@ -86,6 +79,12 @@ app.use(
 );
 
 app.use('/api/v1/tenants', tenantRouter);
+app.use(
+  '/api/v1/users',
+  (req, res, next) => jwtAuthMiddleware(container.jwtService)(req, res, next),
+  tenantContextMiddleware,
+  usersRouter
+);
 
 app.use(
   '/api/v1/audit-logs',

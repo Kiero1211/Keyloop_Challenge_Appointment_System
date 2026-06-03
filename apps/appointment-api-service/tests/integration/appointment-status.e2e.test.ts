@@ -3,7 +3,7 @@ import { app } from '@/infrastructure/http/app';
 import { db } from '@/infrastructure/db/client';
 import { factories } from '../helpers/factories';
 import { container } from '@/infrastructure/di/container';
-import { appointments, customers, vehicles, serviceTypes, technicians, serviceBays } from '@/infrastructure/db/schema';
+import { appointments, vehicles, serviceTypes, technicians, serviceBays } from '@/infrastructure/db/schema';
 
 describe('Appointment Status E2E', () => {
   let tenantId1: string;
@@ -25,15 +25,14 @@ describe('Appointment Status E2E', () => {
       isSuperAdmin: false,
     });
 
-    const c = await factories.customer(tenantId1);
-    const v = await factories.vehicle(tenantId1, c.id);
+    const v = await factories.vehicle(tenantId1, u1.id);
     const st = await factories.serviceType(tenantId1);
     const t = await factories.technician(tenantId1);
     const sb = await factories.serviceBay(tenantId1);
 
     const appt = await db.insert(appointments).values({
       tenantId: tenantId1,
-      customerId: c.id,
+      userId: u1.id,
       vehicleId: v.id,
       serviceTypeId: st.id,
       technicianId: t.id,
@@ -51,7 +50,6 @@ describe('Appointment Status E2E', () => {
     await db.delete(technicians);
     await db.delete(serviceTypes);
     await db.delete(vehicles);
-    await db.delete(customers);
     await container.destroy();
   });
 

@@ -1,4 +1,4 @@
-export type EntityType = 'Technicians' | 'ServiceBays' | 'Appointments' | 'AuditLogs' | 'Tenants' | 'Customers' | 'Vehicles' | 'ServiceTypes' | 'RoleManagement';
+export type EntityType = 'Technicians' | 'ServiceBays' | 'Appointments' | 'AuditLogs' | 'Tenants' | 'Users' | 'Vehicles' | 'ServiceTypes' | 'RoleManagement';
 
 export interface AuthSession {
   token: string | null;

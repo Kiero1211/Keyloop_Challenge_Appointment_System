@@ -13,11 +13,30 @@ export class SwitchTenantUseCase {
   ) {}
 
   async execute(userId: string, targetTenantId: string, refreshToken: string): Promise<{ accessToken: string; refreshToken: string; tenantId: string }> {
-    // 1. Verify they belong to target tenant
-    const userTenant = await this.userTenantRepository.findByUserAndTenant(userId, targetTenantId);
-    if (!userTenant) {
+    const user = await this.userRepository.findById(userId);
+    if (!user) {
+      throw new UnauthorizedException('User not found');
+    }
+
+    let userTenant = await this.userTenantRepository.findByUserAndTenant(userId, targetTenantId);
+    if (!userTenant && !user.isSuperAdmin) {
       throw new UnauthorizedException('User is not a member of the target tenant');
     }
+
+    if (!userTenant && user.isSuperAdmin) {
+      userTenant = {
+        id: '',
+        userId,
+        tenantId: targetTenantId,
+        role: 'Admin',
+        permissions: [],
+        isActive: true,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      };
+    }
+
+    const resolvedRole = userTenant?.role ?? 'Admin';
 
     // 2. Revoke old refresh token (optional but good for security)
     if (refreshToken) {
@@ -31,9 +50,9 @@ export class SwitchTenantUseCase {
     const accessToken = this.jwtService.generateAccessToken({
       userId,
       tenantId: targetTenantId,
-      role: userTenant.role,
+      role: resolvedRole,
       permissions: [],
-      isSuperAdmin: false, // In a real app we'd fetch this from the user entity
+      isSuperAdmin: user.isSuperAdmin,
     });
 
     const newRefreshToken = this.jwtService.generateRefreshToken({

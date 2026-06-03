@@ -1,17 +1,18 @@
 import { createContext, useContext, useState } from 'react';
 import type { ReactNode } from 'react';
-import type { AuthSession } from './types';
+import type { AuthSession } from '@/types';
 
 interface AuthContextType extends AuthSession {
   login: (token: string, tenantId: string | null, isSuperAdmin: boolean) => void;
   logout: () => void;
   setTenant: (tenantId: string) => void;
+  userId: string | null;
 }
 
 function parseJwt(token: string) {
   try {
     return JSON.parse(atob(token.split('.')[1]));
-  } catch (e) {
+  } catch {
     return null;
   }
 }
@@ -50,8 +51,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setSession((prev) => ({ ...prev, tenant_id: tenantId }));
   };
 
+  const userId = session.token ? parseJwt(session.token)?.sub || null : null;
+
   return (
-    <AuthContext.Provider value={{ ...session, login, logout, setTenant }}>
+    <AuthContext.Provider value={{ ...session, userId, login, logout, setTenant }}>
       {children}
     </AuthContext.Provider>
   );

@@ -44,7 +44,7 @@ public class AppointmentRepositoryOverlapTests : IAsyncLifetime
             Id = Guid.NewGuid(),
             TenantId = tenantId,
             VehicleId = "99999999-9999-9999-9999-999999999999",
-            CustomerId = "88888888-8888-8888-8888-888888888888",
+            UserId = "88888888-8888-8888-8888-888888888888",
             ServiceTypeId = "77777777-7777-7777-7777-777777777777",
             TechnicianId = techId,
             ServiceBayId = bayId,

@@ -1,6 +1,7 @@
 import { IAppointmentCrudRepository } from '@/application/ports/repositories/appointment-crud.repository.port';
 import { ICacheProvider } from '@/application/ports/cache-provider.port';
 import { Appointment } from '@/domain/entities/appointment.entity';
+import { tenantContext } from '@/domain/context/tenant-context';
 import { UnprocessableException, NotFoundException } from '@/domain/exceptions';
 import { activeAppointmentsSetKey, appointmentHashKey, bayOccupiedKey, occupiedSlotHashKey, technicianOccupiedKey } from '@/domain/cache-keys';
 
@@ -14,6 +15,11 @@ export class UpdateAppointmentStatusUseCase {
     const appointment = await this.appointmentRepository.findById(tenantId, id);
     
     if (!appointment) {
+      throw new NotFoundException('Appointment not found');
+    }
+
+    const context = tenantContext.getStore();
+    if (context?.role === 'TenantUser' && appointment.userId !== context.userId) {
       throw new NotFoundException('Appointment not found');
     }
 

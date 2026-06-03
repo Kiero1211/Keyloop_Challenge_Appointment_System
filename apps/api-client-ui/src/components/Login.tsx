@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import type { FormEvent } from 'react';
-import { useAuth } from '../useAuth';
-import { API_BASE_URL } from '../api';
+import { useAuth } from '@/useAuth';
+import { API_BASE_URL } from '@/api';
 
 interface LoginProps {
   onToggleToRegister: () => void;
