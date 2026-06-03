@@ -1,11 +1,11 @@
 import { IRefreshTokenRepository } from '@/application/ports/repositories/refresh-token.repository.port';
-import { JwtService } from '@/infrastructure/auth/jwt.service';
+import { ITokenService } from '@/application/ports/token-service.port';
 import { UnauthorizedException } from '@/domain/exceptions';
 
 export class RefreshTokenUseCase {
   constructor(
     private refreshTokenRepository: IRefreshTokenRepository,
-    private jwtService: JwtService
+    private jwtService: ITokenService
   ) {}
 
   async execute(token: string): Promise<{ accessToken: string; refreshToken: string }> {

@@ -1,4 +1,4 @@
-import { eq, and, isNull } from 'drizzle-orm';
+import { eq, and, isNull, count } from 'drizzle-orm';
 import { db } from '@/infrastructure/db/client';
 import { serviceTypes } from '@/infrastructure/db/schema';
 import { ServiceType } from '@/domain/entities/service-type.entity';
@@ -29,8 +29,6 @@ export class DrizzleServiceTypeRepository implements IServiceTypeRepository {
   }
 
   async findAll(tenantId?: string, page: number = 1, pageSize: number = 20): Promise<{ data: ServiceType[]; total: number; page: number; pageSize: number }> {
-    const { count } = await import('drizzle-orm');
-    
     const conditions = [isNull(serviceTypes.deletedAt)];
     if (tenantId) {
       conditions.push(eq(serviceTypes.tenantId, tenantId));

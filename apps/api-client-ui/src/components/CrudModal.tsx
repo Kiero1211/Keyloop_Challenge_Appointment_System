@@ -75,7 +75,9 @@ export function CrudModal({ isOpen, onClose, onSubmit, title, schema, initialDat
             if (field.type === 'datetime-local' && val) {
               try {
                 val = new Date(val).toISOString().slice(0, 16);
-              } catch (e) {}
+              } catch {
+                // Keep the original value when it cannot be parsed as a date.
+              }
             }
 
             return (

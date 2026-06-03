@@ -69,7 +69,7 @@ router.put('/:userId/role', async (req, res, next) => {
       return res.status(400).json({ error: 'Bad Request', message: 'Missing x-tenant-id header' });
     }
 
-    const data = promoteUserSchema.parse(req.body);
+    promoteUserSchema.parse(req.body);
     if (!context?.isSuperAdmin && context?.role !== 'TenantManager' && context?.role !== 'Admin') {
       throw new ForbiddenException('Insufficient permissions to update tenant user role');
     }

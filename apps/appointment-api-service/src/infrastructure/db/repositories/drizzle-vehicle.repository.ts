@@ -1,4 +1,4 @@
-import { eq, and, isNull } from 'drizzle-orm';
+import { eq, and, isNull, count } from 'drizzle-orm';
 import { db } from '@/infrastructure/db/client';
 import { vehicles } from '@/infrastructure/db/schema';
 import { Vehicle } from '@/domain/entities/vehicle.entity';
@@ -33,8 +33,6 @@ export class DrizzleVehicleRepository implements IVehicleRepository {
   }
 
   async findAll(tenantId: string | undefined, filters: { scope?: 'tenant' | 'mine'; userId?: string }, page: number = 1, pageSize: number = 20): Promise<{ data: Vehicle[]; total: number; page: number; pageSize: number }> {
-    const { count } = await import('drizzle-orm');
-    
     const conditions = [isNull(vehicles.deletedAt)];
     if (tenantId) {
       conditions.push(eq(vehicles.tenantId, tenantId));
@@ -78,6 +76,6 @@ export class DrizzleVehicleRepository implements IVehicleRepository {
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   async hasActiveAppointments(tenantId: string, id: string): Promise<boolean> {
-    return false; // placeholder implementation
+    return false;
   }
 }

@@ -2,7 +2,7 @@ import { IUserRepository } from '@/application/ports/repositories/user.repositor
 import { IUserTenantRepository } from '@/application/ports/repositories/user-tenant.repository.port';
 import { ITenantRepository } from '@/application/ports/repositories/tenant.repository.port';
 import { IRefreshTokenRepository } from '@/application/ports/repositories/refresh-token.repository.port';
-import { JwtService } from '@/infrastructure/auth/jwt.service';
+import { ITokenService } from '@/application/ports/token-service.port';
 import { ConflictException, NotFoundException } from '@/domain/exceptions';
 import * as bcrypt from 'bcryptjs';
 
@@ -12,7 +12,7 @@ export class RegisterUseCase {
     private userTenantRepository: IUserTenantRepository,
     private tenantRepository: ITenantRepository,
     private refreshTokenRepository: IRefreshTokenRepository,
-    private jwtService: JwtService
+    private jwtService: ITokenService
   ) {}
 
   async execute(data: any): Promise<{ accessToken: string; refreshToken: string; user: any }> {

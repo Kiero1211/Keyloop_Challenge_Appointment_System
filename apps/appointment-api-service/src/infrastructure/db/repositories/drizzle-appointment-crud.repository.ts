@@ -1,4 +1,4 @@
-import { eq, and, isNull, sql } from 'drizzle-orm';
+import { eq, and, isNull, count, gte, lte } from 'drizzle-orm';
 import { db } from '@/infrastructure/db/client';
 import { appointments } from '@/infrastructure/db/schema';
 import { Appointment } from '@/domain/entities/appointment.entity';
@@ -52,7 +52,6 @@ export class DrizzleAppointmentCrudRepository implements IAppointmentCrudReposit
   }
 
   async findAll(tenantId: string | undefined, filters: { scope?: 'tenant' | 'mine'; userId?: string; date?: string; startTime?: string; endTime?: string; status?: string; technicianId?: string; serviceBayId?: string; vehicleId?: string; serviceTypeId?: string }, page: number = 1, pageSize: number = 20): Promise<{ data: Appointment[], total: number, page: number, pageSize: number }> {
-    const { count, gte, lte } = await import('drizzle-orm');
     const conditions = [isNull(appointments.deletedAt)];
     if (tenantId) {
       conditions.push(eq(appointments.tenantId, tenantId));

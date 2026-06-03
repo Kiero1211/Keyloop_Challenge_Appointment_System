@@ -1,7 +1,7 @@
 import { IUserRepository } from '@/application/ports/repositories/user.repository.port';
 import { IUserTenantRepository } from '@/application/ports/repositories/user-tenant.repository.port';
 import { IRefreshTokenRepository } from '@/application/ports/repositories/refresh-token.repository.port';
-import { JwtService } from '@/infrastructure/auth/jwt.service';
+import { ITokenService } from '@/application/ports/token-service.port';
 import { UnauthorizedException } from '@/domain/exceptions';
 import * as bcrypt from 'bcryptjs';
 
@@ -14,7 +14,7 @@ export class LoginUseCase {
     private userRepository: IUserRepository,
     private userTenantRepository: IUserTenantRepository,
     private refreshTokenRepository: IRefreshTokenRepository,
-    private jwtService: JwtService
+    private jwtService: ITokenService
   ) {}
 
   async execute(data: any): Promise<{ accessToken: string; refreshToken: string; user: any }> {
@@ -23,7 +23,6 @@ export class LoginUseCase {
       throw new UnauthorizedException('Invalid credentials');
     }
 
-    // TODO: Just for the sake of testing and demonstrating, we should not compare like this
     const isMatch = isBcryptHash(user.passwordHash)
       ? await bcrypt.compare(data.password, user.passwordHash)
       : data.password === user.passwordHash;

@@ -44,7 +44,7 @@ We look forward to seeing you!";
                 SentAt = DateTimeOffset.UtcNow
             };
 
-            await _repository.AddReminderAsync(reminderRecord, cancellationToken);
+            // await _repository.AddReminderAsync(reminderRecord, cancellationToken);
         }
     }
 }

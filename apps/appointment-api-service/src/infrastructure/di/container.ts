@@ -29,6 +29,7 @@ import { IServiceBayRepository } from '@/application/ports/repositories/service-
 import { IServiceTypeRepository } from '@/application/ports/repositories/service-type.repository.port';
 import { ITechnicianRepository } from '@/application/ports/repositories/technician.repository.port';
 import { IUserRepository } from '@/application/ports/repositories/user.repository.port';
+import { IAuditLogRepository } from '@/application/ports/repositories/audit-log.repository.port';
 class DIContainer {
   public redisClient!: Redis;
   public cacheProvider!: RedisCacheAdapter;
@@ -46,7 +47,7 @@ class DIContainer {
   public serviceBayRepository!: IServiceBayRepository;
   public vehicleRepository!: IVehicleRepository;
   public tenantRepository!: DrizzleTenantRepository;
-  public auditLogRepository!: DrizzleAuditLogRepository;
+  public auditLogRepository!: IAuditLogRepository;
   async initialize(redisClientInstance?: Redis) {
     const redisUrl = process.env.REDIS_URL || 'redis://localhost:6379';
     
