@@ -28,6 +28,7 @@ services:
     environment:
       - NODE_ENV=production
       - PORT=3000
+      - INIT_DB_ON_STARTUP=true
       - REDIS_URL=redis://redis:6379
       - STREAM_PARTITION_COUNT=4
       - DATABASE_URL=postgresql://postgres:postgres@postgres:5432/appointments?schema=public

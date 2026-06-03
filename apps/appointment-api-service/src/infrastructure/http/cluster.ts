@@ -10,8 +10,8 @@ async function initDb() {
   if (process.env.INIT_DB_ON_STARTUP === 'true') {
     console.log('Initializing database tables and seed data...');
     try {
-      const tablesSql = fs.readFileSync(path.join(__dirname, '../../../../seed/tables.sql'), 'utf-8');
-      const seedSql = fs.readFileSync(path.join(__dirname, '../../../../seed/seed.sql'), 'utf-8');
+      const tablesSql = fs.readFileSync(path.join(__dirname, '../../../seed/tables.sql'), 'utf-8');
+      const seedSql = fs.readFileSync(path.join(__dirname, '../../../seed/seed.sql'), 'utf-8');
       await db.execute(sql.raw(tablesSql));
       await db.execute(sql.raw(seedSql));
       console.log('Database initialized successfully.');

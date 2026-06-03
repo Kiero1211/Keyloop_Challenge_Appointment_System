@@ -50,40 +50,6 @@ Stop the full stack and remove volumes with:
 docker compose down -v
 ```
 
-## Run Services Locally
-
-Start shared infrastructure first:
-
-```bash
-docker compose up -d postgres redis
-```
-
-Run the API service:
-
-```bash
-cd apps/appointment-api-service
-npm ci
-npm run dev
-```
-
-Run the worker service:
-
-```bash
-cd apps/appointment-worker-service
-dotnet restore
-dotnet run --project src/AppointmentWorkerService.csproj
-```
-
-Run the client UI:
-
-```bash
-cd apps/api-client-ui
-npm ci
-npm run dev
-```
-
-The UI dev server prints its local Vite URL, usually `http://localhost:5173`.
-
 ## Build
 
 Build the whole containerized system:
@@ -116,6 +82,11 @@ dotnet build AppointmentWorkerService.sln
 ```
 
 ## Test
+
+Test Credentials
+Admin account: admin@gmail.com - password123
+TenantManager account: manager@gmail.com - password123
+TenantUser account: user@gmail.com - password123
 
 Run API unit tests:
 

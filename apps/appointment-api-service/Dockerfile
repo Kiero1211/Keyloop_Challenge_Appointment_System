@@ -18,6 +18,7 @@ RUN npm ci --only=production
 
 COPY --from=builder /app/dist ./dist
 COPY --from=builder /app/openapi.yaml ./openapi.yaml
+COPY seed ./seed
 
 ENV NODE_ENV=production
 ENV PORT=3000
