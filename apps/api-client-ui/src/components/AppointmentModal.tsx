@@ -5,6 +5,7 @@ import {
   getVehicles, 
   getServiceTypes, 
   getTechnicians, 
+  getAvailableTechnicians,
   getServiceBays, 
   getOccupiedSlots
 } from '@/api';
@@ -125,10 +126,7 @@ export function AppointmentModal({ isOpen, onClose, onSubmit }: AppointmentModal
     const refreshAvailability = async () => {
       try {
         const [techSlots, baySlots] = await Promise.all([
-          Promise.all(technicians.map(async tech => ({
-            id: tech.id,
-            occupiedSlots: (await getOccupiedSlots('technicians', tech.id, day)).occupiedSlots || [],
-          }))),
+          getAvailableTechnicians(start.toISOString(), end.toISOString(), serviceTypeId),
           Promise.all(serviceBays.map(async bay => ({
             id: bay.id,
             occupiedSlots: (await getOccupiedSlots('service-bays', bay.id, day)).occupiedSlots || [],
@@ -137,10 +135,8 @@ export function AppointmentModal({ isOpen, onClose, onSubmit }: AppointmentModal
 
         if (!active) return;
 
-        const filteredTechnicians = technicians.filter(tech => {
-          const slots = techSlots.find(entry => entry.id === tech.id)?.occupiedSlots || [];
-          return !slots.some((slot: any) => slotsOverlap(slot.startTime, slot.endTime, start, end));
-        });
+        const getList = (res: any) => Array.isArray(res) ? res : res.items || res.data || [];
+        const filteredTechnicians = getList(techSlots);
 
         const filteredServiceBays = serviceBays.filter(bay => {
           const slots = baySlots.find(entry => entry.id === bay.id)?.occupiedSlots || [];
@@ -150,7 +146,7 @@ export function AppointmentModal({ isOpen, onClose, onSubmit }: AppointmentModal
         setAvailableTechnicians(filteredTechnicians);
         setAvailableServiceBays(filteredServiceBays);
 
-        if (technicianId && !filteredTechnicians.some(tech => tech.id === technicianId)) {
+        if (technicianId && !filteredTechnicians.some((tech: any) => tech.id === technicianId)) {
           setTechnicianId('');
         }
 

@@ -47,6 +47,15 @@ export async function getTechnicians(page = 1) {
   return apiFetch(`/api/v1/technicians?page=${page}`);
 }
 
+export async function getAvailableTechnicians(startTime: string, endTime: string, serviceTypeId: string) {
+  const query = new URLSearchParams({
+    startTime,
+    endTime,
+    serviceTypeId,
+  });
+  return apiFetch(`/api/v1/technicians?${query.toString()}`);
+}
+
 export async function getServiceBays(page = 1) {
   return apiFetch(`/api/v1/service-bays?page=${page}`);
 }
