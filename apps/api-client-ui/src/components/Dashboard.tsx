@@ -1,11 +1,19 @@
 import { useState, useEffect } from 'react';
-import type { EntityType } from '../types';
-import { getTechnicians, getServiceBays, getAppointments, getAuditLogs, getAllTenants, getCustomers, getVehicles, getServiceTypes, createEntity, updateEntity, deleteEntity, assignUserToTenant, promoteUserToManager, getTenantUsers } from '../api';
-import { DataTable } from './DataTable';
-import { CrudModal } from './CrudModal';
-import { AppointmentModal } from './AppointmentModal';
-import { entitySchemas } from '../formSchemas';
-import { useAuth } from '../useAuth';
+import type { EntityType } from '@/types';
+import { getTechnicians, getServiceBays, getAppointments, getActiveAppointments, getAuditLogs, getAllTenants, getCustomers, getVehicles, getServiceTypes, createEntity, updateEntity, deleteEntity, assignUserToTenant, promoteUserToManager, getTenantUsers } from '@/api';
+import { DataTable } from '@/components/DataTable';
+import { CrudModal } from '@/components/CrudModal';
+import { AppointmentModal } from '@/components/AppointmentModal';
+import { entitySchemas } from '@/formSchemas';
+import { useAuth } from '@/useAuth';
+
+function mergeActiveAppointments(base: any[], active: any[]) {
+  const activeById = new Map(active.map(item => [item.id, item]));
+  const merged = base.map(item => activeById.get(item.id) ? { ...item, ...activeById.get(item.id) } : item);
+  const baseIds = new Set(base.map(item => item.id));
+  const extras = active.filter(item => !baseIds.has(item.id));
+  return [...extras, ...merged];
+}
 
 export function Dashboard() {
   const { isSuperAdmin, tenant_id, setTenant, role } = useAuth();
@@ -66,6 +74,34 @@ export function Dashboard() {
         setTenantUsers(Array.isArray(res) ? res : res.data || []);
       }).catch(console.error);
     }
+  }, [currentEntity, tenant_id, refreshTrigger]);
+
+  useEffect(() => {
+    if (currentEntity !== 'Appointments') return;
+
+    let active = true;
+
+    const loadActiveAppointments = async () => {
+      try {
+        const res = await getActiveAppointments();
+        if (!active) return;
+
+        const list = Array.isArray(res) ? res : res.data || [];
+        setData(prev => mergeActiveAppointments(prev, list));
+      } catch (err: any) {
+        if (active) {
+          setError(err);
+        }
+      }
+    };
+
+    void loadActiveAppointments();
+    const interval = window.setInterval(loadActiveAppointments, 4000);
+
+    return () => {
+      active = false;
+      window.clearInterval(interval);
+    };
   }, [currentEntity, tenant_id, refreshTrigger]);
 
   useEffect(() => {

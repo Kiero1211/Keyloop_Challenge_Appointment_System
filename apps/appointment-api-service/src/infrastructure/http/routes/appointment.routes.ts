@@ -12,6 +12,7 @@ import { ListAppointmentsUseCase } from '@/application/use-cases/crud/appointmen
 import { GetAppointmentDetailUseCase } from '@/application/use-cases/crud/appointment/get-appointment-detail.use-case';
 import { UpdateAppointmentStatusUseCase } from '@/application/use-cases/crud/appointment/update-appointment-status.use-case';
 import { updateAppointmentStatusSchema } from '@/application/commands/appointment.command';
+import { GetActiveAppointmentsUseCase } from '@/application/use-cases/get-active-appointments.use-case';
 
 const router = Router();
 
@@ -63,6 +64,17 @@ router.get('/', async (req, res, next) => {
   }
 });
 
+router.get('/active', async (req, res, next) => {
+  try {
+    const tenantId = tenantContext.getStore()!.tenantId as string;
+    const useCase = new GetActiveAppointmentsUseCase(container.cacheProvider);
+    const results = await useCase.execute(tenantId);
+    res.json({ data: results });
+  } catch (error) {
+    next(error);
+  }
+});
+
 router.get('/:id', async (req, res, next) => {
   try {
     const tenantId = tenantContext.getStore()!.tenantId as string;
@@ -78,7 +90,7 @@ router.patch('/:id/status', async (req, res, next) => {
   try {
     const tenantId = tenantContext.getStore()!.tenantId as string;
     const command = updateAppointmentStatusSchema.parse(req.body);
-    const useCase = new UpdateAppointmentStatusUseCase(container.appointmentCrudRepository);
+    const useCase = new UpdateAppointmentStatusUseCase(container.appointmentCrudRepository, container.cacheProvider);
     const result = await useCase.execute(tenantId, req.params.id, command.status);
     res.json(result);
   } catch (error) {
@@ -89,7 +101,7 @@ router.patch('/:id/status', async (req, res, next) => {
 router.delete('/:id', async (req, res, next) => {
   try {
     const tenantId = tenantContext.getStore()!.tenantId as string;
-    const useCase = new CancelAppointmentUseCase(container.appointmentCrudRepository);
+    const useCase = new CancelAppointmentUseCase(container.appointmentCrudRepository, container.cacheProvider);
     const result = await useCase.execute(tenantId, req.params.id);
     res.json(result);
   } catch (error) {

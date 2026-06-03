@@ -10,4 +10,5 @@ public record AppointmentMessage(
     DateTimeOffset DesiredStartTime,
     string Source,
     bool AutoAssigned,
-    DateTimeOffset? ScheduledEndTime = null);
+    DateTimeOffset? ScheduledEndTime = null,
+    string AppointmentId = "");

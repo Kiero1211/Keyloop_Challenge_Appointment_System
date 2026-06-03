@@ -32,7 +32,11 @@ describe('CachedAppointmentCrudRepository', () => {
       deleteMultiple: jest.fn(),
       ping: jest.fn(),
       setMultipleIfNotExists: jest.fn(),
+      zadd: jest.fn(),
+      zrem: jest.fn(),
+      zrangebyscore: jest.fn(),
       sadd: jest.fn(),
+      srem: jest.fn(),
       smembers: jest.fn(),
     };
 
@@ -55,7 +59,7 @@ describe('CachedAppointmentCrudRepository', () => {
     it('should initialize ReadThroughCacheWrapper with correct default ttl (-1)', () => {
       expect(ReadThroughCacheWrapper).toHaveBeenCalledWith(
         cacheProvider,
-        'AppointmentDetail',
+        'Appointment',
         -1
       );
     });

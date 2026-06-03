@@ -7,6 +7,7 @@ describe('ReadThroughCacheWrapper', () => {
   const tenantId = 'tenant-123';
   const entityId = 'entity-456';
   const entityName = 'TestEntity';
+  const cacheKey = `tenant:${tenantId}:test-entity:${entityId}`;
 
   beforeEach(() => {
     cacheProvider = {
@@ -19,7 +20,11 @@ describe('ReadThroughCacheWrapper', () => {
       deleteMultiple: jest.fn(),
       ping: jest.fn(),
       setMultipleIfNotExists: jest.fn(),
+      zadd: jest.fn(),
+      zrem: jest.fn(),
+      zrangebyscore: jest.fn(),
       sadd: jest.fn(),
+      srem: jest.fn(),
       smembers: jest.fn(),
     };
     wrapper = new ReadThroughCacheWrapper(cacheProvider, entityName);
@@ -38,7 +43,7 @@ describe('ReadThroughCacheWrapper', () => {
 
       const result = await wrapper.get(tenantId, entityId, fetchFromDb);
 
-      expect(cacheProvider.hgetall).toHaveBeenCalledWith(`${tenantId}:${entityName}:${entityId}`);
+      expect(cacheProvider.hgetall).toHaveBeenCalledWith(cacheKey);
       expect(fetchFromDb).not.toHaveBeenCalled();
       
       expect(result.createdAt).toBe(cachedData.createdAt); // Raw without deserializer
@@ -58,11 +63,11 @@ describe('ReadThroughCacheWrapper', () => {
 
       const result = await wrapper.get(tenantId, entityId, fetchFromDb);
 
-      expect(cacheProvider.hgetall).toHaveBeenCalledWith(`${tenantId}:${entityName}:${entityId}`);
+      expect(cacheProvider.hgetall).toHaveBeenCalledWith(cacheKey);
       expect(fetchFromDb).toHaveBeenCalled();
       
       expect(cacheProvider.hset).toHaveBeenCalledWith(
-        `${tenantId}:${entityName}:${entityId}`,
+        cacheKey,
         expect.objectContaining({
           id: entityId,
           tenantId,
@@ -85,7 +90,7 @@ describe('ReadThroughCacheWrapper', () => {
       await wrapper.get(tenantId, entityId, fetchFromDb, undefined, ttlResolver);
 
       expect(cacheProvider.hset).toHaveBeenCalledWith(
-        `${tenantId}:${entityName}:${entityId}`,
+        cacheKey,
         expect.any(Object),
         21600
       );
@@ -95,7 +100,7 @@ describe('ReadThroughCacheWrapper', () => {
   describe('invalidate', () => {
     it('should delete hash from cache', async () => {
       await wrapper.invalidate(tenantId, entityId);
-      expect(cacheProvider.del).toHaveBeenCalledWith(`${tenantId}:${entityName}:${entityId}`);
+      expect(cacheProvider.del).toHaveBeenCalledWith(cacheKey);
     });
   });
 });

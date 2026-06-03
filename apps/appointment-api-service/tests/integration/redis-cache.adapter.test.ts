@@ -73,4 +73,27 @@ describe('RedisCacheAdapter Integration', () => {
     await cacheAdapter.del(key);
     expect(await cacheAdapter.exists(key)).toBe(false);
   });
+
+  it('should manage sorted sets', async () => {
+    const key = 'test:zset';
+
+    await cacheAdapter.zadd(key, 100, 'member-1');
+    await cacheAdapter.zadd(key, 200, 'member-2');
+
+    expect(await cacheAdapter.zrangebyscore(key, 0, 150)).toEqual(['member-1']);
+    expect(await cacheAdapter.zrangebyscore(key, 0, 250)).toEqual(['member-1', 'member-2']);
+
+    await cacheAdapter.zrem(key, 'member-1');
+    expect(await cacheAdapter.zrangebyscore(key, 0, 250)).toEqual(['member-2']);
+  });
+
+  it('should manage set members', async () => {
+    const key = 'test:set';
+
+    await cacheAdapter.sadd(key, ['member-1', 'member-2']);
+    expect(await cacheAdapter.smembers(key)).toEqual(expect.arrayContaining(['member-1', 'member-2']));
+
+    await cacheAdapter.srem(key, 'member-1');
+    expect(await cacheAdapter.smembers(key)).toEqual(['member-2']);
+  });
 });

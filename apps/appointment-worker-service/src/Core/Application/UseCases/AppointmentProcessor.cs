@@ -1,6 +1,7 @@
 using AppointmentWorkerService.Core.Application.Ports;
 using AppointmentWorkerService.Core.Application.Ports.Repositories;
 using AppointmentWorkerService.Core.Application.Ports.Services;
+using AppointmentWorkerService.Core.Domain;
 using AppointmentWorkerService.Core.Domain.Entities;
 using AppointmentWorkerService.Core.Domain.Exceptions;
 using Microsoft.Extensions.Logging;
@@ -47,6 +48,9 @@ public class AppointmentProcessor : IAppointmentProcessor
     {
         _logger.LogInformation("Processing appointment message for tenant {TenantId}, vehicle {VehicleId}", message.TenantId, message.VehicleId);
 
+        var appointmentId = string.IsNullOrWhiteSpace(message.AppointmentId) ? messageId : message.AppointmentId;
+        var appointmentKey = CacheKeys.AppointmentHashKey(message.TenantId, appointmentId);
+        var activeAppointmentsKey = CacheKeys.ActiveAppointmentsSetKey(message.TenantId);
         string? assignedTechId = message.TechnicianId;
         string? assignedBayId = message.ServiceBayId;
         var techLock = string.Empty;
@@ -144,9 +148,10 @@ public class AppointmentProcessor : IAppointmentProcessor
                 }
             }
 
+            var recordId = Guid.TryParse(appointmentId, out var parsedAppointmentId) ? parsedAppointmentId : Guid.NewGuid();
             var record = new TrackingRecord
             {
-                Id = Guid.NewGuid(),
+                Id = recordId,
                 TenantId = message.TenantId,
                 VehicleId = message.VehicleId,
                 CustomerId = message.CustomerId,
@@ -158,30 +163,68 @@ public class AppointmentProcessor : IAppointmentProcessor
                 Status = AppointmentStatus.Scheduled
             };
 
-            try
+            await _appointmentRepository.AddAsync(record, cancellationToken);
+            _logger.LogInformation("Successfully saved appointment {Id} with status {Status}", record.Id, record.Status);
+
+            var utcNow = DateTimeOffset.UtcNow.ToString("O");
+            var scheduledFields = new Dictionary<string, string>
             {
-                await _appointmentRepository.AddAsync(record, cancellationToken);
-                _logger.LogInformation("Successfully saved appointment {Id} with status {Status}", record.Id, record.Status);
-                
-                await _cacheProvider.SetAsync($"{record.TenantId}:AppointmentDetail:{record.Id}", new { appointment = record }, null);
-                await _cacheProvider.StreamAcknowledgeAsync("appointments_stream", "worker_group", messageId);
-            }
-            catch (Microsoft.EntityFrameworkCore.DbUpdateConcurrencyException ex)
+                ["id"] = appointmentId,
+                ["tenant_id"] = message.TenantId,
+                ["customer_id"] = message.CustomerId,
+                ["vehicle_id"] = message.VehicleId,
+                ["service_type_id"] = message.ServiceTypeId,
+                ["technician_id"] = assignedTechId ?? string.Empty,
+                ["service_bay_id"] = assignedBayId ?? string.Empty,
+                ["start_time"] = startUtc.ToString("O"),
+                ["end_time"] = endUtc.ToString("O"),
+                ["status"] = "Scheduled",
+                ["notes"] = string.Empty,
+                ["actual_start_time"] = string.Empty,
+                ["actual_end_time"] = string.Empty,
+                ["created_at"] = utcNow,
+                ["updated_at"] = utcNow
+            };
+
+            await _cacheProvider.HashSetFieldsAsync(appointmentKey, scheduledFields);
+            await _cacheProvider.SetAddAsync(activeAppointmentsKey, appointmentId);
+
+            if (!string.IsNullOrWhiteSpace(assignedTechId))
             {
-                _logger.LogWarning(ex, "Concurrency conflict detected for appointment {Id}", record.Id);
-                record.Status = AppointmentStatus.Cancelled;
-                
-                await _cacheProvider.SetAsync($"{record.TenantId}:AppointmentDetail:{record.Id}", new { appointment = record }, TimeSpan.FromHours(6));
-                await _cacheProvider.StreamAcknowledgeAsync("appointments_stream", "worker_group", messageId);
+                await _cacheProvider.SortedSetAddAsync(
+                    CacheKeys.TechnicianOccupiedKey(message.TenantId, assignedTechId),
+                    appointmentId,
+                    startUtc.ToUnixTimeSeconds());
             }
+
+            if (!string.IsNullOrWhiteSpace(assignedBayId))
+            {
+                await _cacheProvider.SortedSetAddAsync(
+                    CacheKeys.BayOccupiedKey(message.TenantId, assignedBayId),
+                    appointmentId,
+                    startUtc.ToUnixTimeSeconds());
+            }
+
+            await _cacheProvider.HashSetFieldsAsync(
+                CacheKeys.OccupiedSlotHashKey(message.TenantId, appointmentId),
+                new Dictionary<string, string>
+                {
+                    ["appointment_id"] = appointmentId,
+                    ["start_time"] = startUtc.ToString("O"),
+                    ["end_time"] = endUtc.ToString("O")
+                });
+
+            await _cacheProvider.StreamAcknowledgeAsync("appointments_stream", "worker_group", messageId);
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Failed to process appointment message {MessageId}", messageId);
 
+            var failureNotes = ex.Message;
+            var failureTime = DateTimeOffset.UtcNow.ToString("O");
             var failedRecord = new TrackingRecord
             {
-                Id = Guid.NewGuid(),
+                Id = Guid.TryParse(appointmentId, out var parsedAppointmentId) ? parsedAppointmentId : Guid.NewGuid(),
                 TenantId = message.TenantId,
                 VehicleId = message.VehicleId,
                 CustomerId = message.CustomerId,
@@ -196,7 +239,28 @@ public class AppointmentProcessor : IAppointmentProcessor
             try
             {
                 await _appointmentRepository.AddAsync(failedRecord, cancellationToken);
-                await _cacheProvider.SetAsync($"{failedRecord.TenantId}:AppointmentDetail:{failedRecord.Id}", new { appointment = failedRecord }, TimeSpan.FromHours(6));
+                await _cacheProvider.HashSetFieldsAsync(
+                    appointmentKey,
+                    new Dictionary<string, string>
+                    {
+                        ["id"] = appointmentId,
+                        ["tenant_id"] = message.TenantId,
+                        ["customer_id"] = message.CustomerId,
+                        ["vehicle_id"] = message.VehicleId,
+                        ["service_type_id"] = message.ServiceTypeId,
+                        ["technician_id"] = assignedTechId ?? string.Empty,
+                        ["service_bay_id"] = assignedBayId ?? string.Empty,
+                        ["start_time"] = failedRecord.StartTime.ToUniversalTime().ToString("O"),
+                        ["end_time"] = failedRecord.EndTime.ToUniversalTime().ToString("O"),
+                        ["status"] = "Failed",
+                        ["notes"] = failureNotes,
+                        ["actual_start_time"] = string.Empty,
+                        ["actual_end_time"] = string.Empty,
+                        ["created_at"] = failureTime,
+                        ["updated_at"] = failureTime
+                    },
+                    TimeSpan.FromHours(1));
+                await _cacheProvider.SetRemoveAsync(activeAppointmentsKey, appointmentId);
                 await _cacheProvider.StreamAcknowledgeAsync("appointments_stream", "worker_group", messageId);
             }
             catch (Exception dbEx)

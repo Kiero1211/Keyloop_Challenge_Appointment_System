@@ -10,7 +10,7 @@ export class CachedAppointmentCrudRepository implements IAppointmentCrudReposito
     private baseRepository: IAppointmentCrudRepository,
     cacheProvider: ICacheProvider
   ) {
-    this.cacheWrapper = new ReadThroughCacheWrapper<any>(cacheProvider, 'AppointmentDetail', -1);
+    this.cacheWrapper = new ReadThroughCacheWrapper<any>(cacheProvider, 'Appointment', -1);
   }
 
   async findDetailById(tenantId: string, id: string): Promise<any | null> {

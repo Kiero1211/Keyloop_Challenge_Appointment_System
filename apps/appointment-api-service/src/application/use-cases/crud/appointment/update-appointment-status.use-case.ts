@@ -1,10 +1,13 @@
 import { IAppointmentCrudRepository } from '@/application/ports/repositories/appointment-crud.repository.port';
+import { ICacheProvider } from '@/application/ports/cache-provider.port';
 import { Appointment } from '@/domain/entities/appointment.entity';
 import { UnprocessableException, NotFoundException } from '@/domain/exceptions';
+import { activeAppointmentsSetKey, appointmentHashKey, bayOccupiedKey, occupiedSlotHashKey, technicianOccupiedKey } from '@/domain/cache-keys';
 
 export class UpdateAppointmentStatusUseCase {
   constructor(
-    private appointmentRepository: IAppointmentCrudRepository
+    private appointmentRepository: IAppointmentCrudRepository,
+    private readonly cacheProvider: ICacheProvider
   ) {}
 
   async execute(tenantId: string, id: string, newStatus: string): Promise<Appointment> {
@@ -33,6 +36,14 @@ export class UpdateAppointmentStatusUseCase {
     const updated = await this.appointmentRepository.updateStatus(tenantId, id, newStatus as any);
     if (!updated) {
       throw new NotFoundException('Appointment not found during update');
+    }
+
+    if (newStatus === 'Completed' || newStatus === 'Cancelled') {
+      await this.cacheProvider.srem(activeAppointmentsSetKey(tenantId), id);
+      await this.cacheProvider.zrem(technicianOccupiedKey(tenantId, appointment.technicianId), id);
+      await this.cacheProvider.zrem(bayOccupiedKey(tenantId, appointment.serviceBayId), id);
+      await this.cacheProvider.del(occupiedSlotHashKey(tenantId, id));
+      await this.cacheProvider.del(appointmentHashKey(tenantId, id));
     }
 
     return updated;

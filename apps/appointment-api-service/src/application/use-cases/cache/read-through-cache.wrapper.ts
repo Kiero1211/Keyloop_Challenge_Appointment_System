@@ -7,8 +7,16 @@ export class ReadThroughCacheWrapper<T> {
     private ttlSeconds: number = 3600 // Default 1 hour TTL
   ) {}
 
+  private normalizeResourceType(): string {
+    const baseName = this.entityName.endsWith('Detail')
+      ? this.entityName.replace(/Detail$/, '')
+      : this.entityName;
+
+    return baseName.replace(/([a-z0-9])([A-Z])/g, '$1-$2').toLowerCase();
+  }
+
   private getCacheKey(tenantId: string, id: string): string {
-    return `${tenantId}:${this.entityName}:${id}`;
+    return `tenant:${tenantId}:${this.normalizeResourceType()}:${id}`;
   }
 
   private serialize(entity: T): Record<string, string> {
@@ -71,7 +79,7 @@ export class ReadThroughCacheWrapper<T> {
     idExtractor?: (entity: T) => string,
     setKeyOverride?: string
   ): Promise<T[]> {
-    const setKey = setKeyOverride || `tenant:${tenantId}:${this.entityName}s`;
+    const setKey = setKeyOverride || `tenant:${tenantId}:${this.normalizeResourceType()}s`;
     const members = await this.cacheProvider.smembers(setKey);
 
     if (members && members.length > 0) {

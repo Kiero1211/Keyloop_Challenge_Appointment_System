@@ -428,21 +428,9 @@ components:
       type: object
       required: [customerId, vehicleId, serviceTypeId, desiredStartTime]
       properties:
-        holdId:
-          type: string
-          format: uuid
-          description: Optional hold ID to claim a temporary slot hold
-        technicianHoldId:
-          type: string
-          format: uuid
-          description: Optional technician hold ID
-        serviceBayHoldId:
-          type: string
-          format: uuid
-          description: Optional service bay hold ID
         autoAssigned:
           type: boolean
-          description: Indicates if the appointment was auto-assigned
+          description: Indicates if the appointment should be auto-assigned
         customerId:
           type: string
           format: uuid
@@ -513,6 +501,84 @@ components:
           type: string
           format: date-time
         updatedAt:
+          type: string
+          format: date-time
+
+    AppointmentCacheEntry:
+      type: object
+      required:
+        - id
+        - tenantId
+        - customerId
+        - vehicleId
+        - serviceTypeId
+        - technicianId
+        - serviceBayId
+        - startTime
+        - endTime
+        - status
+        - createdAt
+        - updatedAt
+      properties:
+        id:
+          type: string
+          format: uuid
+        tenantId:
+          type: string
+          format: uuid
+        customerId:
+          type: string
+          format: uuid
+        vehicleId:
+          type: string
+          format: uuid
+        serviceTypeId:
+          type: string
+          format: uuid
+        technicianId:
+          type: string
+          format: uuid
+        serviceBayId:
+          type: string
+          format: uuid
+        startTime:
+          type: string
+          format: date-time
+        endTime:
+          type: string
+          format: date-time
+        status:
+          type: string
+          enum: [Pending, Scheduled]
+        notes:
+          type: string
+          nullable: true
+        actualStartTime:
+          type: string
+          format: date-time
+          nullable: true
+        actualEndTime:
+          type: string
+          format: date-time
+          nullable: true
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    OccupiedSlot:
+      type: object
+      required: [appointmentId, startTime, endTime]
+      properties:
+        appointmentId:
+          type: string
+          format: uuid
+        startTime:
+          type: string
+          format: date-time
+        endTime:
           type: string
           format: date-time
 
@@ -1310,6 +1376,27 @@ paths:
         "400":
           description: Validation error
 
+  /appointments/active:
+    parameters:
+      - $ref: '#/components/parameters/XTenantId'
+    get:
+      tags: [Appointments]
+      summary: List active appointments from cache
+      security:
+        - BearerAuth: []
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/AppointmentCacheEntry'
+        "401": { description: Unauthorized }
+
   /appointments/hold:
     parameters:
       - $ref: '#/components/parameters/XTenantId'
@@ -1345,6 +1432,60 @@ paths:
                     format: date-time
         "409":
           description: The selected technician or service bay is currently held by another user
+
+  /technicians/{id}/occupied:
+    parameters:
+      - $ref: '#/components/parameters/XTenantId'
+      - { name: id, in: path, required: true, schema: { type: string, format: uuid } }
+    get:
+      tags: [Technicians]
+      summary: List occupied slots for a technician
+      security:
+        - BearerAuth: []
+      parameters:
+        - { name: date, in: query, required: false, schema: { type: string, format: date } }
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [technicianId, occupiedSlots]
+                properties:
+                  technicianId:
+                    type: string
+                    format: uuid
+                  occupiedSlots:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/OccupiedSlot'
+
+  /service-bays/{id}/occupied:
+    parameters:
+      - $ref: '#/components/parameters/XTenantId'
+      - { name: id, in: path, required: true, schema: { type: string, format: uuid } }
+    get:
+      tags: [ServiceBays]
+      summary: List occupied slots for a service bay
+      security:
+        - BearerAuth: []
+      parameters:
+        - { name: date, in: query, required: false, schema: { type: string, format: date } }
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [serviceBayId, occupiedSlots]
+                properties:
+                  serviceBayId:
+                    type: string
+                    format: uuid
+                  occupiedSlots:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/OccupiedSlot'
 
   /appointments/{id}:
     parameters:

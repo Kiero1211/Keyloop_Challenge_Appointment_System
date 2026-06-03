@@ -3,9 +3,10 @@ import type { Config } from 'jest';
 const config: Config = {
   preset: 'ts-jest',
   testEnvironment: 'node',
-  testMatch: ['**/*.e2e.test.ts', '**/*.integration.test.ts'],
+  testMatch: ['**/tests/integration/**/*.test.ts', '**/*.e2e.test.ts', '**/*.integration.test.ts'],
   setupFilesAfterEnv: ['<rootDir>/tests/helpers/testcontainers.ts'],
   moduleNameMapper: {
+    '^@/tests/(.*)$': '<rootDir>/tests/$1',
     '^@/(.*)$': '<rootDir>/src/$1',
   },
   transform: {

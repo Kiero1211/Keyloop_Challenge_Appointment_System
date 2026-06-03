@@ -19,6 +19,7 @@ describe('LoginUseCase', () => {
       create: jest.fn(),
       findByEmail: jest.fn(),
       findById: jest.fn(),
+      findByTenantId: jest.fn(),
       update: jest.fn(),
       updateLastLogin: jest.fn()
     };

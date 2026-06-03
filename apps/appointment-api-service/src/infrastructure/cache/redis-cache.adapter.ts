@@ -103,4 +103,20 @@ export class RedisCacheAdapter implements ICacheProvider {
   async smembers(key: string): Promise<string[]> {
     return this.redisClient.smembers(key);
   }
+
+  async zadd(key: string, score: number, member: string): Promise<number> {
+    return this.redisClient.zadd(key, score, member);
+  }
+
+  async zrem(key: string, member: string): Promise<number> {
+    return this.redisClient.zrem(key, member);
+  }
+
+  async zrangebyscore(key: string, min: number, max: number): Promise<string[]> {
+    return this.redisClient.zrangebyscore(key, min, max);
+  }
+
+  async srem(key: string, member: string): Promise<number> {
+    return this.redisClient.srem(key, member);
+  }
 }

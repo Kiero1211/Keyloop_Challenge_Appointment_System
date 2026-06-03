@@ -1,26 +1,36 @@
-import { PostgreSqlContainer, StartedPostgreSqlContainer } from '@testcontainers/postgresql';
-import { RedisContainer, StartedRedisContainer } from '@testcontainers/redis';
+import { GenericContainer, Wait } from 'testcontainers';
 import { exec } from 'child_process';
 import { promisify } from 'util';
 
 const execAsync = promisify(exec);
 
-let pgContainer: StartedPostgreSqlContainer;
-let redisContainer: StartedRedisContainer;
+let pgContainer: any;
+let redisContainer: any;
 
 beforeAll(async () => {
   // Start PostgreSQL container
-  pgContainer = await new PostgreSqlContainer('postgres:15-alpine')
-    .withDatabase('appointments_test')
-    .withUsername('test')
-    .withPassword('test')
+  pgContainer = await new GenericContainer('postgres:15-alpine')
+    .withEnvironment({
+      POSTGRES_DB: 'appointments_test',
+      POSTGRES_USER: 'test',
+      POSTGRES_PASSWORD: 'test',
+    })
+    .withExposedPorts(5432)
+    .withWaitStrategy(Wait.forListeningPorts())
     .start();
 
-  process.env.DATABASE_URL = pgContainer.getConnectionUri();
+  const pgHost = pgContainer.getHost();
+  const pgPort = pgContainer.getMappedPort(5432);
+  process.env.DATABASE_URL = `postgres://test:test@${pgHost}:${pgPort}/appointments_test`;
 
   // Start Redis container
-  redisContainer = await new RedisContainer('redis:7-alpine').start();
-  process.env.REDIS_URL = redisContainer.getConnectionUrl();
+  redisContainer = await new GenericContainer('redis:7-alpine')
+    .withExposedPorts(6379)
+    .withWaitStrategy(Wait.forListeningPorts())
+    .start();
+  const redisHost = redisContainer.getHost();
+  const redisPort = redisContainer.getMappedPort(6379);
+  process.env.REDIS_URL = `redis://${redisHost}:${redisPort}`;
 
   // Run migrations
   await execAsync('npx drizzle-kit push', {
