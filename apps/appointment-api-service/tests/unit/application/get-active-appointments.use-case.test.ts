@@ -31,7 +31,7 @@ describe('GetActiveAppointmentsUseCase', () => {
       .mockResolvedValueOnce({
         id: 'appt-1',
         tenant_id: 'tenant-1',
-        customer_id: 'cust-1',
+        user_id: 'user-1',
         vehicle_id: 'veh-1',
         service_type_id: 'svc-1',
         technician_id: 'tech-1',
@@ -46,7 +46,7 @@ describe('GetActiveAppointmentsUseCase', () => {
       .mockResolvedValueOnce({
         id: 'appt-2',
         tenant_id: 'tenant-1',
-        customer_id: 'cust-2',
+        user_id: 'user-2',
         vehicle_id: 'veh-2',
         service_type_id: 'svc-2',
         technician_id: 'tech-2',

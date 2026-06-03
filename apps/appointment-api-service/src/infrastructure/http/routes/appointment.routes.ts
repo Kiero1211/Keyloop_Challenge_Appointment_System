@@ -51,13 +51,16 @@ router.get('/', async (req, res, next) => {
       status: req.query.status as string,
       technicianId: req.query.technicianId as string,
       serviceBayId: req.query.serviceBayId as string,
+      vehicleId: req.query.vehicleId as string,
     };
+    const scope = (req.query.scope as 'tenant' | 'mine' | undefined) ?? 'tenant';
+    const userId = req.query.userId as string | undefined;
     const page = parseInt(req.query.page as string) || 1;
     const pageSize = parseInt(req.query.pageSize as string) || 20;
 
     const tenantId = tenantContext.getStore()!.tenantId as string;
     const useCase = new ListAppointmentsUseCase(container.appointmentCrudRepository);
-    const results = await useCase.execute(tenantId, filters, page, pageSize);
+    const results = await useCase.execute(tenantId, scope, userId, filters, page, pageSize);
     res.json(results);
   } catch (error) {
     next(error);
@@ -68,7 +71,9 @@ router.get('/active', async (req, res, next) => {
   try {
     const tenantId = tenantContext.getStore()!.tenantId as string;
     const useCase = new GetActiveAppointmentsUseCase(container.cacheProvider);
-    const results = await useCase.execute(tenantId);
+    const context = tenantContext.getStore()!;
+    const scope = context.role === 'TenantUser' ? 'mine' : ((req.query.scope as 'tenant' | 'mine' | undefined) ?? 'tenant');
+    const results = await useCase.execute(tenantId, scope, context.userId);
     res.json({ data: results });
   } catch (error) {
     next(error);

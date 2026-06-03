@@ -3,13 +3,13 @@ import { db } from '@/infrastructure/db/client';
 import { appointments } from '@/infrastructure/db/schema';
 import { Appointment } from '@/domain/entities/appointment.entity';
 import { IAppointmentCrudRepository } from '@/application/ports/repositories/appointment-crud.repository.port';
-import { customers, vehicles, serviceTypes, technicians, serviceBays } from '@/infrastructure/db/schema';
+import { users, vehicles, serviceTypes, technicians, serviceBays } from '@/infrastructure/db/schema';
 
 export class DrizzleAppointmentCrudRepository implements IAppointmentCrudRepository {
   async create(data: Partial<Appointment>): Promise<Appointment> {
     const [result] = await db.insert(appointments).values({
       tenantId: data.tenantId!,
-      customerId: data.customerId!,
+      userId: data.userId!,
       vehicleId: data.vehicleId!,
       serviceTypeId: data.serviceTypeId!,
       technicianId: data.technicianId!,
@@ -32,14 +32,14 @@ export class DrizzleAppointmentCrudRepository implements IAppointmentCrudReposit
   async findDetailById(tenantId: string, id: string): Promise<any | null> {
     const result = await db.select({
       appointment: appointments,
-      customer: customers,
+      user: users,
       vehicle: vehicles,
       serviceType: serviceTypes,
       technician: technicians,
       serviceBay: serviceBays,
     })
       .from(appointments)
-      .leftJoin(customers, eq(appointments.customerId, customers.id))
+      .leftJoin(users, eq(appointments.userId, users.id))
       .leftJoin(vehicles, eq(appointments.vehicleId, vehicles.id))
       .leftJoin(serviceTypes, eq(appointments.serviceTypeId, serviceTypes.id))
       .leftJoin(technicians, eq(appointments.technicianId, technicians.id))
@@ -51,7 +51,7 @@ export class DrizzleAppointmentCrudRepository implements IAppointmentCrudReposit
     return result[0];
   }
 
-  async findAll(tenantId: string | undefined, filters: any, page: number = 1, pageSize: number = 20): Promise<{ data: Appointment[], total: number, page: number, pageSize: number }> {
+  async findAll(tenantId: string | undefined, filters: { scope?: 'tenant' | 'mine'; userId?: string; date?: string; startTime?: string; endTime?: string; status?: string; technicianId?: string; serviceBayId?: string; vehicleId?: string; serviceTypeId?: string }, page: number = 1, pageSize: number = 20): Promise<{ data: Appointment[], total: number, page: number, pageSize: number }> {
     const { count, gte, lte } = await import('drizzle-orm');
     const conditions = [isNull(appointments.deletedAt)];
     if (tenantId) {
@@ -59,9 +59,10 @@ export class DrizzleAppointmentCrudRepository implements IAppointmentCrudReposit
     }
 
     if (filters.status) conditions.push(eq(appointments.status, filters.status));
+    if (filters.serviceTypeId) conditions.push(eq(appointments.serviceTypeId, filters.serviceTypeId));
     if (filters.technicianId) conditions.push(eq(appointments.technicianId, filters.technicianId));
     if (filters.serviceBayId) conditions.push(eq(appointments.serviceBayId, filters.serviceBayId));
-    if (filters.customerId) conditions.push(eq(appointments.customerId, filters.customerId));
+    if (filters.scope === 'mine' && filters.userId) conditions.push(eq(appointments.userId, filters.userId));
     if (filters.vehicleId) conditions.push(eq(appointments.vehicleId, filters.vehicleId));
     if (filters.date) {
       const startOfDay = new Date(filters.date);

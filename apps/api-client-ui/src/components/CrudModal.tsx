@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import type { FormField } from '../formSchemas';
+import type { FormField } from '@/formSchemas';
 
 interface CrudModalProps {
   isOpen: boolean;

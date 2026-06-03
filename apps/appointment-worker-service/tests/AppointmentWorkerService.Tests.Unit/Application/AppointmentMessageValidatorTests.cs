@@ -16,7 +16,7 @@ public class AppointmentMessageValidatorTests
     private AppointmentMessage CreateValidMessage() => new(
         TenantId: "tenant-123",
         VehicleId: "veh-123",
-        CustomerId: "cust-123",
+        UserId: "user-123",
         ServiceTypeId: "svc-123",
         ServiceBayId: "bay-123",
         TechnicianId: "tech-123",
@@ -24,6 +24,19 @@ public class AppointmentMessageValidatorTests
         Source: "test",
         AutoAssigned: false
     );
+
+    [Fact]
+    public void GivenNullUserId_ThenValidationFails()
+    {
+        // Arrange
+        var message = CreateValidMessage() with { UserId = null };
+
+        // Act
+        var result = _sut.TestValidate(message);
+
+        // Assert
+        result.ShouldHaveValidationErrorFor(x => x.UserId);
+    }
 
     [Fact]
     public void GivenNullTechnicianId_ThenValidationFails()

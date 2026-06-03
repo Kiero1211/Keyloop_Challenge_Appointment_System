@@ -1,7 +1,7 @@
 export interface Appointment {
   id: string;
   tenantId: string;
-  customerId: string;
+  userId: string;
   vehicleId: string;
   serviceTypeId: string;
   technicianId: string;

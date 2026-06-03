@@ -14,14 +14,13 @@ export const entitySchemas: Record<string, FormField[]> = {
   ServiceBays: [
     { name: 'name', label: 'Bay Name', type: 'text', required: true },
   ],
-  Customers: [
+  Users: [
     { name: 'firstName', label: 'First Name', type: 'text', required: true },
     { name: 'lastName', label: 'Last Name', type: 'text', required: true },
     { name: 'email', label: 'Email', type: 'text', required: true },
-    { name: 'phone', label: 'Phone', type: 'text', required: true },
   ],
   Vehicles: [
-    { name: 'customerId', label: 'Customer ID', type: 'text', required: true },
+    { name: 'userId', label: 'User ID', type: 'text', required: true },
     { name: 'vin', label: 'VIN', type: 'text', required: true },
     { name: 'licensePlate', label: 'License Plate', type: 'text', required: true },
     { name: 'make', label: 'Make', type: 'text', required: true },
@@ -39,7 +38,7 @@ export const entitySchemas: Record<string, FormField[]> = {
   // Appointments have custom handling based on context. 
   // Update only updates status. Create requires specific fields.
   AppointmentsCreate: [
-    { name: 'customerId', label: 'Customer ID', type: 'text', required: true },
+    { name: 'userId', label: 'User ID', type: 'text', required: true },
     { name: 'vehicleId', label: 'Vehicle ID', type: 'text', required: true },
     { name: 'serviceTypeId', label: 'Service Type ID', type: 'text', required: true },
     { name: 'technicianId', label: 'Technician ID (optional)', type: 'text', required: false },

@@ -16,7 +16,7 @@ describe('CachedVehicleRepository', () => {
   beforeEach(() => {
     baseRepo = {
       findById: jest.fn(),
-      findByCustomer: jest.fn(),
+      findByUser: jest.fn(),
       create: jest.fn(),
       update: jest.fn(),
       softDelete: jest.fn(),
@@ -61,7 +61,7 @@ describe('CachedVehicleRepository', () => {
       const mockVehicle: Vehicle = {
         id: '123',
         tenantId: 'tenant',
-        customerId: 'customer123',
+        userId: 'user123',
         make: 'Toyota',
         model: 'Corolla',
         year: 2020,
@@ -88,12 +88,12 @@ describe('CachedVehicleRepository', () => {
     });
   });
 
-  describe('findByCustomer', () => {
+  describe('findByUser', () => {
     it('should pass through to base repository', async () => {
       const mockVehicle: Vehicle = {
         id: '123',
         tenantId: 'tenant',
-        customerId: 'customer123',
+        userId: 'user123',
         make: 'Toyota',
         model: 'Corolla',
         year: 2020,
@@ -104,10 +104,10 @@ describe('CachedVehicleRepository', () => {
         deletedAt: null,
       };
       
-      baseRepo.findByCustomer.mockResolvedValue([mockVehicle]);
-      const result = await cachedRepo.findByCustomer('tenant', 'customer123');
+      baseRepo.findByUser.mockResolvedValue([mockVehicle]);
+      const result = await cachedRepo.findByUser('tenant', 'user123');
 
-      expect(baseRepo.findByCustomer).toHaveBeenCalledWith('tenant', 'customer123');
+      expect(baseRepo.findByUser).toHaveBeenCalledWith('tenant', 'user123');
       expect(result).toEqual([mockVehicle]);
     });
   });
@@ -117,7 +117,7 @@ describe('CachedVehicleRepository', () => {
       const mockVehicle: Vehicle = {
         id: '123',
         tenantId: 'tenant',
-        customerId: 'customer123',
+        userId: 'user123',
         make: 'Toyota',
         model: 'Corolla',
         year: 2020,
@@ -141,7 +141,7 @@ describe('CachedVehicleRepository', () => {
       const mockVehicle: Vehicle = {
         id: '123',
         tenantId: 'tenant',
-        customerId: 'customer123',
+        userId: 'user123',
         make: 'Toyota',
         model: 'Corolla',
         year: 2020,

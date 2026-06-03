@@ -31,7 +31,7 @@ export class StartupSeedService {
         await this.cacheProvider.hset(appointmentHashKey(tenantId, appointmentId), {
           id: appointmentId,
           tenant_id: tenantId,
-          customer_id: appointment.customerId,
+          user_id: appointment.userId,
           vehicle_id: appointment.vehicleId,
           service_type_id: appointment.serviceTypeId,
           technician_id: appointment.technicianId,

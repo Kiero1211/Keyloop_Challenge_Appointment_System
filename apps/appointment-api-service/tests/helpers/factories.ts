@@ -1,5 +1,5 @@
 import { db } from '@/infrastructure/db/client';
-import { users, tenants, userTenants, customers, vehicles, serviceTypes, technicians, serviceBays, appointments } from '@/infrastructure/db/schema';
+import { users, tenants, userTenants, vehicles, serviceTypes, technicians, serviceBays, appointments } from '@/infrastructure/db/schema';
 import { v4 as uuidv4 } from 'uuid';
 import * as bcrypt from 'bcryptjs';
 
@@ -34,21 +34,10 @@ export const factories = {
     return ut;
   },
 
-  customer: async (tenantId: string, overrides = {}) => {
-    const [customer] = await db.insert(customers).values({
-      tenantId,
-      firstName: 'Test',
-      lastName: 'Customer',
-      email: `customer-${uuidv4()}@example.com`,
-      ...overrides,
-    }).returning();
-    return customer;
-  },
-
-  vehicle: async (tenantId: string, customerId: string, overrides = {}) => {
+  vehicle: async (tenantId: string, userId: string, overrides = {}) => {
     const [vehicle] = await db.insert(vehicles).values({
       tenantId,
-      customerId,
+      userId,
       make: 'Toyota',
       model: 'Camry',
       year: 2020,
@@ -88,14 +77,14 @@ export const factories = {
     return bay;
   },
 
-  appointment: async (tenantId: string, customerId: string, vehicleId: string, serviceTypeId: string, technicianId: string, serviceBayId: string, overrides = {}) => {
+  appointment: async (tenantId: string, userId: string, vehicleId: string, serviceTypeId: string, technicianId: string, serviceBayId: string, overrides = {}) => {
     const now = new Date();
-    const scheduledStartTime = new Date(now.getTime() + 24 * 60 * 60 * 1000); // Tomorrow
-    const scheduledEndTime = new Date(scheduledStartTime.getTime() + 30 * 60 * 1000); // 30 mins later
-    
+    const scheduledStartTime = new Date(now.getTime() + 24 * 60 * 60 * 1000);
+    const scheduledEndTime = new Date(scheduledStartTime.getTime() + 30 * 60 * 1000);
+
     const [app] = await db.insert(appointments).values({
       tenantId,
-      customerId,
+      userId,
       vehicleId,
       serviceTypeId,
       technicianId,

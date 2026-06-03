@@ -17,14 +17,14 @@ export class CachedVehicleRepository implements IVehicleRepository {
     const vehicle = await this.cacheWrapper.get(
       tenantId,
       id,
-      () => this.baseRepository.findById(tenantId, id),
-      (record) => ({
-        id: record.id,
-        tenantId: record.tenantId,
-        customerId: record.customerId,
-        make: record.make,
-        model: record.model,
-        year: parseInt(record.year as unknown as string, 10),
+        () => this.baseRepository.findById(tenantId, id),
+        (record) => ({
+          id: record.id,
+          tenantId: record.tenantId,
+          userId: record.userId,
+          make: record.make,
+          model: record.model,
+          year: parseInt(record.year as unknown as string, 10),
         licensePlate: record.licensePlate || undefined,
         vin: record.vin || undefined,
         deletedAt: record.deletedAt ? new Date(record.deletedAt) : null,
@@ -35,14 +35,14 @@ export class CachedVehicleRepository implements IVehicleRepository {
     return vehicle;
   }
 
-  async findByCustomer(tenantId: string, customerId: string): Promise<Vehicle[]> {
+  async findByUser(tenantId: string, userId: string): Promise<Vehicle[]> {
     return this.cacheWrapper.getList(
       tenantId,
-      () => this.baseRepository.findByCustomer(tenantId, customerId),
+      () => this.baseRepository.findByUser(tenantId, userId),
       (record) => ({
         id: record.id,
         tenantId: record.tenantId,
-        customerId: record.customerId,
+        userId: record.userId,
         make: record.make,
         model: record.model,
         year: parseInt(record.year as unknown as string, 10),
@@ -53,12 +53,12 @@ export class CachedVehicleRepository implements IVehicleRepository {
         updatedAt: new Date(record.updatedAt),
       } as Vehicle),
       undefined,
-      `tenant:${tenantId}:Customer:${customerId}:Vehicles`
+      `tenant:${tenantId}:User:${userId}:Vehicles`
     );
   }
 
-  async findAll(tenantId?: string, page: number = 1, pageSize: number = 20): Promise<{ data: Vehicle[]; total: number; page: number; pageSize: number }> {
-    return this.baseRepository.findAll(tenantId, page, pageSize);
+  async findAll(tenantId: string | undefined, filters: { scope?: 'tenant' | 'mine'; userId?: string }, page: number = 1, pageSize: number = 20): Promise<{ data: Vehicle[]; total: number; page: number; pageSize: number }> {
+    return this.baseRepository.findAll(tenantId, filters, page, pageSize);
   }
 
   async create(vehicle: Vehicle): Promise<Vehicle> {

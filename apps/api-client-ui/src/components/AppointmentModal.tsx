@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
+import { useAuth } from '@/useAuth';
 import { 
-  getCustomers, 
+  getUsers,
   getVehicles, 
   getServiceTypes, 
   getTechnicians, 
@@ -22,11 +23,12 @@ interface AppointmentModalProps {
 }
 
 export function AppointmentModal({ isOpen, onClose, onSubmit }: AppointmentModalProps) {
+  const { role, userId } = useAuth();
   const [loadingLists, setLoadingLists] = useState(false);
   const [submitting, setSubmitting] = useState(false);
 
   // Lists
-  const [customers, setCustomers] = useState<any[]>([]);
+  const [users, setUsers] = useState<any[]>([]);
   const [vehicles, setVehicles] = useState<any[]>([]);
   const [serviceTypes, setServiceTypes] = useState<any[]>([]);
   const [technicians, setTechnicians] = useState<any[]>([]);
@@ -35,7 +37,7 @@ export function AppointmentModal({ isOpen, onClose, onSubmit }: AppointmentModal
   const [availableServiceBays, setAvailableServiceBays] = useState<any[]>([]);
 
   // Form State
-  const [customerId, setCustomerId] = useState('');
+  const [selectedUserId, setSelectedUserId] = useState('');
   const [vehicleId, setVehicleId] = useState('');
   const [serviceTypeId, setServiceTypeId] = useState('');
   const [desiredStartTime, setDesiredStartTime] = useState('');
@@ -48,21 +50,23 @@ export function AppointmentModal({ isOpen, onClose, onSubmit }: AppointmentModal
   useEffect(() => {
     if (isOpen) {
       setLoadingLists(true);
+      const isElevated = role === 'TenantManager' || role === 'Admin';
       Promise.all([
-        getCustomers(1),
+        isElevated ? getUsers(1) : Promise.resolve([]),
         getVehicles(1),
         getServiceTypes(1),
         getTechnicians(1),
         getServiceBays(1)
-      ]).then(([custRes, vehRes, stRes, techRes, bayRes]) => {
+      ]).then(([userRes, vehRes, stRes, techRes, bayRes]) => {
         const getList = (res: any) => Array.isArray(res) ? res : res.items || res.data || [];
-        setCustomers(getList(custRes));
+        setUsers(getList(userRes));
         setVehicles(getList(vehRes));
         setServiceTypes(getList(stRes));
         setTechnicians(getList(techRes));
         setServiceBays(getList(bayRes));
         setAvailableTechnicians(getList(techRes));
         setAvailableServiceBays(getList(bayRes));
+        setSelectedUserId(isElevated ? '' : (userId || ''));
       }).catch(err => {
         console.error("Failed to load options", err);
       }).finally(() => {
@@ -70,7 +74,7 @@ export function AppointmentModal({ isOpen, onClose, onSubmit }: AppointmentModal
       });
     } else {
       // Reset form when closed
-      setCustomerId('');
+      setSelectedUserId('');
       setVehicleId('');
       setServiceTypeId('');
       setDesiredStartTime('');
@@ -80,7 +84,7 @@ export function AppointmentModal({ isOpen, onClose, onSubmit }: AppointmentModal
       setAvailableTechnicians([]);
       setAvailableServiceBays([]);
     }
-  }, [isOpen]);
+  }, [isOpen, role, userId]);
 
   const handleTechnicianChange = (newTechId: string) => {
     setTechnicianId(newTechId);
@@ -174,7 +178,7 @@ export function AppointmentModal({ isOpen, onClose, onSubmit }: AppointmentModal
     
     // Construct payload strictly matching the backend schema
     const payload: any = {
-      customerId,
+      userId: selectedUserId || userId,
       vehicleId,
       serviceTypeId,
       desiredStartTime: new Date(desiredStartTime).toISOString(),
@@ -213,11 +217,18 @@ export function AppointmentModal({ isOpen, onClose, onSubmit }: AppointmentModal
           <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
             
             <div style={{ display: 'flex', flexDirection: 'column' }}>
-              <label style={{ fontWeight: 'bold' }}>Customer</label>
-              <select value={customerId} onChange={e => setCustomerId(e.target.value)} required style={{ padding: '8px' }}>
-                <option value="" disabled>-- Select Customer --</option>
-                {customers.map(c => <option key={c.id} value={c.id}>{c.firstName} {c.lastName}</option>)}
-              </select>
+              <label style={{ fontWeight: 'bold' }}>User</label>
+              {(role === 'TenantUser' || role === 'Guest') ? (
+                <input value={selectedUserId} readOnly style={{ padding: '8px' }} />
+              ) : (
+                <select value={selectedUserId} onChange={e => {
+                  setSelectedUserId(e.target.value);
+                  setVehicleId('');
+                }} required style={{ padding: '8px' }}>
+                  <option value="" disabled>-- Select User --</option>
+                  {users.map(u => <option key={u.id} value={u.id}>{u.firstName} {u.lastName}</option>)}
+                </select>
+              )}
             </div>
 
             <div style={{ display: 'flex', flexDirection: 'column' }}>
@@ -225,7 +236,7 @@ export function AppointmentModal({ isOpen, onClose, onSubmit }: AppointmentModal
               <select value={vehicleId} onChange={e => setVehicleId(e.target.value)} required style={{ padding: '8px' }}>
                 <option value="" disabled>-- Select Vehicle --</option>
                 {vehicles
-                  .filter(v => !customerId || v.customerId === customerId) // Filter vehicles by customer if selected
+                  .filter(v => !selectedUserId || v.userId === selectedUserId)
                   .map(v => <option key={v.id} value={v.id}>{v.make} {v.model} ({v.licensePlate})</option>)
                 }
               </select>

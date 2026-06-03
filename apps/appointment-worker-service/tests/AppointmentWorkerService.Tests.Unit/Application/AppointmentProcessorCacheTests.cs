@@ -63,7 +63,7 @@ public class AppointmentProcessorCacheTests
         var message = new AppointmentMessage(
             TenantId: "tenant-1",
             VehicleId: "vehicle-1",
-            CustomerId: "customer-1",
+            UserId: "user-1",
             ServiceTypeId: "service-1",
             ServiceBayId: "bay-1",
             TechnicianId: "tech-1",
@@ -121,7 +121,7 @@ public class AppointmentProcessorCacheTests
         var message = new AppointmentMessage(
             TenantId: "tenant-1",
             VehicleId: "vehicle-1",
-            CustomerId: "customer-1",
+            UserId: "user-1",
             ServiceTypeId: "service-1",
             ServiceBayId: "bay-1",
             TechnicianId: "tech-1",

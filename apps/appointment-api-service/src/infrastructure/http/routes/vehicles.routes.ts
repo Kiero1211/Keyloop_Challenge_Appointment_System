@@ -14,7 +14,7 @@ router.post('/', async (req, res, next) => {
   try {
     const tenantId = tenantContext.getStore()!.tenantId as string;
     const data = createVehicleSchema.parse(req.body);
-    const useCase = new CreateVehicleUseCase(container.vehicleRepository, container.customerRepository);
+    const useCase = new CreateVehicleUseCase(container.vehicleRepository, container.userRepository);
     const result = await useCase.execute(tenantId, data);
     res.status(201).json(result);
   } catch (error) {
@@ -25,11 +25,12 @@ router.post('/', async (req, res, next) => {
 router.get('/', async (req, res, next) => {
   try {
     const tenantId = tenantContext.getStore()!.tenantId as string;
-    const customerId = req.query.customerId as string | undefined;
+    const scope = (req.query.scope as 'tenant' | 'mine' | undefined) ?? 'tenant';
+    const userId = req.query.userId as string | undefined;
     const page = req.query.page ? parseInt(req.query.page as string, 10) : 1;
     const pageSize = req.query.pageSize ? parseInt(req.query.pageSize as string, 10) : 20;
     const useCase = new ListVehiclesUseCase(container.vehicleRepository);
-    const results = await useCase.execute(tenantId, customerId, page, pageSize);
+    const results = await useCase.execute(tenantId, scope, userId, page, pageSize);
     res.json(results);
   } catch (error) {
     next(error);

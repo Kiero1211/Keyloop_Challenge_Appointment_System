@@ -1,7 +1,7 @@
 import { z } from 'zod';
 
 export const createAppointmentCrudSchema = z.object({
-  customerId: z.string().uuid('customerId must be a UUID'),
+  userId: z.string().uuid('userId must be a UUID'),
   vehicleId: z.string().uuid('vehicleId must be a UUID'),
   serviceTypeId: z.string().uuid('serviceTypeId must be a UUID'),
   technicianId: z.string().uuid('technicianId must be a UUID'),

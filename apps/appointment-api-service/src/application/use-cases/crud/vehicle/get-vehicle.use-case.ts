@@ -1,5 +1,6 @@
 import { IVehicleRepository } from '@/application/ports/repositories/vehicle.repository.port';
 import { Vehicle } from '@/domain/entities/vehicle.entity';
+import { tenantContext } from '@/domain/context/tenant-context';
 import { NotFoundException } from '@/domain/exceptions';
 
 export class GetVehicleUseCase {
@@ -13,6 +14,12 @@ export class GetVehicleUseCase {
     if (!vehicle) {
       throw new NotFoundException('Vehicle not found');
     }
+
+    const context = tenantContext.getStore();
+    if (context?.role === 'TenantUser' && vehicle.userId !== context.userId) {
+      throw new NotFoundException('Vehicle not found');
+    }
+
     return vehicle;
   }
 }

@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import type { ChangeEvent } from 'react';
-import { useAuth } from '../useAuth';
-import { apiFetch, switchTenantApi } from '../api';
+import { useAuth } from '@/useAuth';
+import { getAllTenants, switchTenantApi } from '@/api';
 
 interface Tenant {
   id: string;
@@ -14,14 +14,10 @@ export function TenantSelector() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Assuming GET /api/tenant/ returns a list of tenants 
-    // or maybe another endpoint like /api/tenants.
-    // If we get an error, we just fallback or show empty list.
-    apiFetch('/api/v1/auth/tenants')
+    getAllTenants(1)
       .then((data: any) => {
-        // Handle if response is array or an object wrapping array
-        const list = Array.isArray(data) ? data : data.items || data.tenants || [];
-        setTenants(list.map((t: any) => ({ id: t.tenantId, name: t.tenantName })) || []);
+        const list = Array.isArray(data) ? data : data.items || data.data || [];
+        setTenants(list.map((t: any) => ({ id: t.id, name: t.name })) || []);
       })
       .catch((err) => {
         console.error('Failed to fetch tenants:', err);

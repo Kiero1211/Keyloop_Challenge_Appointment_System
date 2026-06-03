@@ -1,9 +1,9 @@
 import { useState } from 'react';
-import { AuthProvider, useAuth } from './useAuth';
-import { Login } from './components/Login';
-import { Register } from './components/Register';
-import { TenantSelector } from './components/TenantSelector';
-import { Dashboard } from './components/Dashboard';
+import { AuthProvider, useAuth } from '@/useAuth';
+import { Login } from '@/components/Login';
+import { Register } from '@/components/Register';
+import { TenantSelector } from '@/components/TenantSelector';
+import { Dashboard } from '@/components/Dashboard';
 
 function Main() {
   const { status, tenant_id, logout } = useAuth();
