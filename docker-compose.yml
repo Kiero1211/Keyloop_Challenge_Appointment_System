@@ -1,10 +1,13 @@
-version: '3.8'
-
 services:
   redis:
     image: redis:7-alpine
     ports:
       - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
 
   postgres:
     image: postgres:15-alpine
@@ -36,8 +39,10 @@ services:
       - JWT_ACCESS_EXPIRES_IN=1h
       - JWT_REFRESH_EXPIRES_IN=7d
     depends_on:
-      - redis
-      - postgres
+      redis:
+        condition: service_healthy
+      postgres:
+        condition: service_healthy
 
   appointment-worker-service:
     build:
@@ -46,7 +51,10 @@ services:
       - REDIS_CONNECTION=redis:6379
       - DB_CONNECTION=Host=postgres;Database=appointments;Username=postgres;Password=postgres
     depends_on:
-      - redis
+      redis:
+        condition: service_healthy
+      postgres:
+        condition: service_healthy
 
   api-client-ui:
     build:
