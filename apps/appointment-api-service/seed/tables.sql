@@ -23,8 +23,6 @@ CREATE TABLE IF NOT EXISTS "appointments" (
 	"end_time" timestamp with time zone NOT NULL,
 	"status" text DEFAULT 'Scheduled' NOT NULL,
 	"notes" text,
-	"actual_start_time" timestamp with time zone,
-	"actual_end_time" timestamp with time zone,
 	"deleted_at" timestamp with time zone,
 	"created_at" timestamp with time zone DEFAULT now() NOT NULL,
 	"updated_at" timestamp with time zone DEFAULT now() NOT NULL,

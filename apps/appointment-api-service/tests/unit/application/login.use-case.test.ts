@@ -36,9 +36,23 @@ describe('LoginUseCase', () => {
   });
 
   it('should fail with 401 on wrong password', async () => {
-    mockUserRepo.findByEmail.mockResolvedValue({ id: 'u1', passwordHash: 'hash', isActive: true } as any);
+    mockUserRepo.findByEmail.mockResolvedValue({ id: 'u1', passwordHash: '$2b$10$abcdefghijklmnopqrstuvABCDEFGHIJKLMNO1234567890123456', isActive: true } as any);
     (bcrypt.compare as jest.Mock).mockResolvedValue(false);
 
     await expect(useCase.execute({ email: 'test@example.com', password: 'wrong' })).rejects.toThrow(UnauthorizedException);
+  });
+
+  it('should accept plain-text seeded passwords temporarily', async () => {
+    mockUserRepo.findByEmail.mockResolvedValue({ id: 'u1', passwordHash: 'password123', isActive: true, role: 'TenantUser', isSuperAdmin: false, firstName: 'Seed', lastName: 'User', email: 'seed@example.com', permissions: [] } as any);
+    mockUserTenantRepo.findByUserId.mockResolvedValue([{ tenantId: 't1', role: 'TenantUser' } as any]);
+    mockJwtService.generateAccessToken.mockReturnValue('access');
+    mockJwtService.generateRefreshToken.mockReturnValue('refresh');
+    mockRefreshTokenRepo.create.mockResolvedValue({} as any);
+
+    const result = await useCase.execute({ email: 'seed@example.com', password: 'password123' });
+
+    expect(result.accessToken).toBe('access');
+    expect(result.refreshToken).toBe('refresh');
+    expect(bcrypt.compare).not.toHaveBeenCalled();
   });
 });

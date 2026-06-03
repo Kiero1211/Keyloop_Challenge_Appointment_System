@@ -3,15 +3,16 @@
 -- 1. Create a Tenant
 INSERT INTO "tenants" ("id", "name", "is_active", "created_at", "updated_at")
 VALUES 
-  ('11111111-1111-1111-1111-111111111111', 'Keyloop Dealership', true, now(), now())
+  ('11111111-1111-1111-1111-111111111111', 'Keyloop Dealership', true, now(), now()),
+  ('11111111-1111-1111-1111-111111111112', 'Keyloop Dealership 2', true, now(), now())
 ON CONFLICT ("name") DO NOTHING;
 
 -- 2. Create Users
 INSERT INTO "users" ("id", "email", "password_hash", "first_name", "last_name", "role", "permissions", "is_active", "is_super_admin", "last_active_tenant_id", "created_at", "updated_at")
 VALUES 
-  ('22222222-2222-2222-2222-222222222222', 'admin@keyloop.test', 'fakehash_for_testing', 'Admin', 'User', 'Admin', '{}'::text[], true, true, '11111111-1111-1111-1111-111111111111', now(), now()),
-  ('33333333-3333-3333-3333-333333333333', 'manager@keyloop.test', 'fakehash_for_testing', 'Manager', 'User', 'TenantManager', '{}'::text[], true, false, '11111111-1111-1111-1111-111111111111', now(), now()),
-  ('44444444-4444-4444-4444-444444444444', 'staff@keyloop.test', 'fakehash_for_testing', 'Staff', 'User', 'TenantUser', '{}'::text[], true, false, '11111111-1111-1111-1111-111111111111', now(), now())
+  ('22222222-2222-2222-2222-222222222222', 'admin@gmail.com', 'password123', 'Admin', 'User', 'Admin', '{}'::text[], true, true, '11111111-1111-1111-1111-111111111111', now(), now()),
+  ('33333333-3333-3333-3333-333333333333', 'manager@gmail.com', 'password123', 'Manager', 'User', 'TenantManager', '{}'::text[], true, false, '11111111-1111-1111-1111-111111111111', now(), now()),
+  ('44444444-4444-4444-4444-444444444444', 'user@gmail.com', 'password123', 'Staff', 'User', 'TenantUser', '{}'::text[], true, false, '11111111-1111-1111-1111-111111111111', now(), now())
 ON CONFLICT ("email") DO NOTHING;
 
 -- 3. Associate Users with Tenant
@@ -19,7 +20,8 @@ INSERT INTO "user_tenants" ("id", "user_id", "tenant_id", "role", "permissions",
 VALUES 
   (gen_random_uuid(), '22222222-2222-2222-2222-222222222222', '11111111-1111-1111-1111-111111111111', 'Admin', '{}'::text[], true, now(), now()),
   (gen_random_uuid(), '33333333-3333-3333-3333-333333333333', '11111111-1111-1111-1111-111111111111', 'TenantManager', '{}'::text[], true, now(), now()),
-  (gen_random_uuid(), '44444444-4444-4444-4444-444444444444', '11111111-1111-1111-1111-111111111111', 'TenantUser', '{}'::text[], true, now(), now())
+  (gen_random_uuid(), '44444444-4444-4444-4444-444444444444', '11111111-1111-1111-1111-111111111111', 'TenantUser', '{}'::text[], true, now(), now()),
+  (gen_random_uuid(), '33333333-3333-3333-3333-333333333333', '11111111-1111-1111-1111-111111111112', 'TenantUser', '{}'::text[], true, now(), now())
 ON CONFLICT ("user_id", "tenant_id") DO NOTHING;
 
 -- 4. Create Vehicles
