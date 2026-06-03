@@ -1,11 +1,19 @@
 import { useState, useEffect } from 'react';
 import type { EntityType } from '@/types';
-import { getTechnicians, getServiceBays, getActiveAppointments, getAuditLogs, getAllTenants, getCustomers, getVehicles, getServiceTypes, createEntity, updateEntity, deleteEntity, assignUserToTenant, promoteUserToManager, getTenantUsers } from '@/api';
+import { getTechnicians, getServiceBays, getAppointments, getActiveAppointments, getAuditLogs, getAllTenants, getCustomers, getVehicles, getServiceTypes, createEntity, updateEntity, deleteEntity, assignUserToTenant, promoteUserToManager, getTenantUsers } from '@/api';
 import { DataTable } from '@/components/DataTable';
 import { CrudModal } from '@/components/CrudModal';
 import { AppointmentModal } from '@/components/AppointmentModal';
 import { entitySchemas } from '@/formSchemas';
 import { useAuth } from '@/useAuth';
+
+function mergeActiveAppointments(base: any[], active: any[]) {
+  const activeById = new Map(active.map(item => [item.id, item]));
+  const merged = base.map(item => activeById.get(item.id) ? { ...item, ...activeById.get(item.id) } : item);
+  const baseIds = new Set(base.map(item => item.id));
+  const extras = active.filter(item => !baseIds.has(item.id));
+  return [...extras, ...merged];
+}
 
 export function Dashboard() {
   const { isSuperAdmin, tenant_id, setTenant, role } = useAuth();
@@ -79,8 +87,7 @@ export function Dashboard() {
         if (!active) return;
 
         const list = Array.isArray(res) ? res : res.data || [];
-        setData(list);
-        setTotalPages(1);
+        setData(prev => mergeActiveAppointments(prev, list));
       } catch (err: any) {
         if (active) {
           setError(err);
@@ -112,7 +119,7 @@ export function Dashboard() {
         fetcher = getServiceBays;
         break;
       case 'Appointments':
-        fetcher = async () => getActiveAppointments();
+        fetcher = getAppointments;
         break;
       case 'AuditLogs':
         fetcher = getAuditLogs;

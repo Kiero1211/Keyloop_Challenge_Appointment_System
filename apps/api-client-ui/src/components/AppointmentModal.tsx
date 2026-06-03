@@ -5,7 +5,6 @@ import {
   getServiceTypes, 
   getTechnicians, 
   getServiceBays, 
-  holdAppointmentResource,
   getOccupiedSlots
 } from '@/api';
 import { OccupiedSlotsPanel } from '@/components/OccupiedSlotsPanel';
@@ -44,9 +43,6 @@ export function AppointmentModal({ isOpen, onClose, onSubmit }: AppointmentModal
   
   const [technicianId, setTechnicianId] = useState('');
   const [serviceBayId, setServiceBayId] = useState('');
-  
-  const [technicianHolId, setTechnicianHolId] = useState('');
-  const [serviceBayHoldId, setServiceBayHoldId] = useState('');
 
   // Fetch options when modal opens
   useEffect(() => {
@@ -81,43 +77,17 @@ export function AppointmentModal({ isOpen, onClose, onSubmit }: AppointmentModal
       setAutoAssigned(false);
       setTechnicianId('');
       setServiceBayId('');
-      setTechnicianHolId('');
-      setServiceBayHoldId('');
       setAvailableTechnicians([]);
       setAvailableServiceBays([]);
     }
   }, [isOpen]);
 
-  const handleTechnicianChange = async (newTechId: string) => {
+  const handleTechnicianChange = (newTechId: string) => {
     setTechnicianId(newTechId);
-    if (newTechId && !autoAssigned) {
-      try {
-        const res = await holdAppointmentResource({ technicianId: newTechId });
-        setTechnicianHolId(res.holdId);
-      } catch (err) {
-        alert("Failed to hold technician slot. It may be occupied.");
-        setTechnicianId('');
-        setTechnicianHolId('');
-      }
-    } else {
-      setTechnicianHolId('');
-    }
   };
 
-  const handleServiceBayChange = async (newBayId: string) => {
+  const handleServiceBayChange = (newBayId: string) => {
     setServiceBayId(newBayId);
-    if (newBayId && !autoAssigned) {
-      try {
-        const res = await holdAppointmentResource({ serviceBayId: newBayId });
-        setServiceBayHoldId(res.holdId);
-      } catch (err) {
-        alert("Failed to hold service bay slot. It may be occupied.");
-        setServiceBayId('');
-        setServiceBayHoldId('');
-      }
-    } else {
-      setServiceBayHoldId('');
-    }
   };
 
   useEffect(() => {
@@ -178,12 +148,10 @@ export function AppointmentModal({ isOpen, onClose, onSubmit }: AppointmentModal
 
         if (technicianId && !filteredTechnicians.some(tech => tech.id === technicianId)) {
           setTechnicianId('');
-          setTechnicianHolId('');
         }
 
         if (serviceBayId && !filteredServiceBays.some(bay => bay.id === serviceBayId)) {
           setServiceBayId('');
-          setServiceBayHoldId('');
         }
       } catch (error) {
         console.error('Failed to refresh resource availability', error);
@@ -210,15 +178,10 @@ export function AppointmentModal({ isOpen, onClose, onSubmit }: AppointmentModal
       vehicleId,
       serviceTypeId,
       desiredStartTime: new Date(desiredStartTime).toISOString(),
-      autoAssigned
+      autoAssigned,
+      technicianId: autoAssigned ? undefined : technicianId,
+      serviceBayId: autoAssigned ? undefined : serviceBayId,
     };
-
-    if (!autoAssigned) {
-      if (technicianHolId) payload.technicianHolId = technicianHolId;
-      if (serviceBayHoldId) payload.serviceBayHoldId = serviceBayHoldId;
-      if (technicianId) payload.technicianId = technicianId;
-      if (serviceBayId) payload.serviceBayId = serviceBayId;
-    }
 
     try {
       await onSubmit(payload);
@@ -297,8 +260,6 @@ export function AppointmentModal({ isOpen, onClose, onSubmit }: AppointmentModal
                   if (e.target.checked) {
                     setTechnicianId('');
                     setServiceBayId('');
-                    setTechnicianHolId('');
-                    setServiceBayHoldId('');
                   }
                 }} 
               />
@@ -309,12 +270,12 @@ export function AppointmentModal({ isOpen, onClose, onSubmit }: AppointmentModal
 
             <div style={{ display: 'flex', flexDirection: 'column' }}>
               <label style={{ fontWeight: 'bold', color: autoAssigned ? '#aaa' : '#000' }}>Technician</label>
-              <select 
-                value={technicianId} 
-                onChange={e => handleTechnicianChange(e.target.value)} 
-                required={!autoAssigned}
-                disabled={autoAssigned}
-                style={{ padding: '8px' }}
+                <select
+                  value={technicianId}
+                  onChange={e => handleTechnicianChange(e.target.value)}
+                  required={!autoAssigned}
+                  disabled={autoAssigned}
+                  style={{ padding: '8px' }}
               >
                 <option value="" disabled>-- Select Technician --</option>
                 {availableTechnicians.map(t => <option key={t.id} value={t.id}>{t.firstName} {t.lastName}</option>)}
@@ -323,12 +284,12 @@ export function AppointmentModal({ isOpen, onClose, onSubmit }: AppointmentModal
 
             <div style={{ display: 'flex', flexDirection: 'column' }}>
               <label style={{ fontWeight: 'bold', color: autoAssigned ? '#aaa' : '#000' }}>Service Bay</label>
-              <select 
-                value={serviceBayId} 
-                onChange={e => handleServiceBayChange(e.target.value)} 
-                required={!autoAssigned}
-                disabled={autoAssigned}
-                style={{ padding: '8px' }}
+                <select
+                  value={serviceBayId}
+                  onChange={e => handleServiceBayChange(e.target.value)}
+                  required={!autoAssigned}
+                  disabled={autoAssigned}
+                  style={{ padding: '8px' }}
               >
                 <option value="" disabled>-- Select Service Bay --</option>
                 {availableServiceBays.map(sb => <option key={sb.id} value={sb.id}>{sb.name}</option>)}

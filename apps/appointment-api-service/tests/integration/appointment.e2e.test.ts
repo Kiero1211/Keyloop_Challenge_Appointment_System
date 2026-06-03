@@ -69,23 +69,8 @@ describe("Appointment API E2E", () => {
   });
 
   describe("POST /api/v1/appointments", () => {
-    let holdId = "";
-
-    it("should accept a valid appointment with a valid hold and return 202", async () => {
-      // First create a hold
-      const holdPayload = {
-        technicianId: tech1.id,
-        serviceBayId: bay1.id,
-      };
-      const holdResponse = await request(app)
-        .post("/api/v1/appointments/hold")
-        .set("Authorization", `Bearer ${token}`)
-        .set("x-tenant-id", tenantId)
-        .send(holdPayload);
-
+    it("should accept a valid appointment request and return 202", async () => {
       const payload = {
-        technicianHolId: holdResponse.body.holdId,
-        serviceBayHoldId: holdResponse.body.holdId,
         customerId: customer.id,
         vehicleId: vehicle.id,
         serviceTypeId: serviceType.id,
@@ -93,7 +78,6 @@ describe("Appointment API E2E", () => {
         serviceBayId: bay1.id,
         desiredStartTime: new Date(Date.now() + 86400000).toISOString(), // Tomorrow
       };
-      holdId = holdResponse.body.holdId;
 
       const response = await request(app)
         .post("/api/v1/appointments")
@@ -104,18 +88,6 @@ describe("Appointment API E2E", () => {
       console.log("response.body", response.body);
       expect(response.status).toBe(202);
       expect(response.body).toHaveProperty("commandId");
-
-      // Verify bay hold was deleted
-      const keys = await redisClient.keys(
-        `tenant:${tenantId}:hold:bay:${holdPayload.serviceBayId}`,
-      );
-      expect(keys.length).toBe(0);
-
-      // Verify technician hold was deleted
-      const holdKeys = await redisClient.keys(
-        `tenant:${tenantId}:hold:technician:${holdPayload.technicianId}`,
-      );
-      expect(holdKeys.length).toBe(0);
     });
 
     it("should reject requests with missing tenant ID (400)", async () => {
@@ -131,15 +103,11 @@ describe("Appointment API E2E", () => {
       expect(response.body.message).toContain("x-tenant-id");
     });
 
-    it("should reject booking (409 Conflict) if hold is missing or expired", async () => {
+    it("should reject booking with missing required fields", async () => {
       const payload = {
-        technicianHolId: holdId,
-        serviceBayHoldId: holdId,
         customerId: customer.id,
         vehicleId: vehicle.id,
         serviceTypeId: serviceType.id,
-        technicianId: tech1.id,
-        serviceBayId: bay1.id,
         desiredStartTime: new Date(Date.now() + 86400000).toISOString(),
       };
 
@@ -149,23 +117,11 @@ describe("Appointment API E2E", () => {
         .set("x-tenant-id", tenantId)
         .send(payload);
 
-      console.log("response.body 409 test", response.body);
-      expect(response.status).toBe(409);
-      expect(response.body.message).toBe(
-        "The booking session has expired. Please re-create the booking session.",
-      );
+      expect(response.status).toBe(400);
     });
 
     it("should allow booking same vehicle twice without idempotency conflict", async () => {
-      const hold1Response = await request(app)
-        .post("/api/v1/appointments/hold")
-        .set("Authorization", `Bearer ${token}`)
-        .set("x-tenant-id", tenantId)
-        .send({ technicianId: tech1.id, serviceBayId: bay1.id });
-
       const payload1 = {
-        technicianHolId: hold1Response.body.holdId,
-        serviceBayHoldId: hold1Response.body.holdId,
         customerId: customer.id,
         vehicleId: vehicle.id,
         serviceTypeId: serviceType.id,
@@ -186,15 +142,7 @@ describe("Appointment API E2E", () => {
         })
         .expect(202);
 
-      const hold2Response = await request(app)
-        .post("/api/v1/appointments/hold")
-        .set("Authorization", `Bearer ${token}`)
-        .set("x-tenant-id", tenantId)
-        .send({ technicianId: tech2.id, serviceBayId: bay2.id });
-
       const payload2 = {
-        technicianHolId: hold2Response.body.holdId,
-        serviceBayHoldId: hold2Response.body.holdId,
         customerId: customer.id,
         vehicleId: vehicle.id,
         serviceTypeId: serviceType.id,

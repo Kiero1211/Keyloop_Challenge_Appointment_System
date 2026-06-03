@@ -3,7 +3,7 @@ import { ICacheProvider } from '@/application/ports/cache-provider.port';
 import { IMessagePublisher } from '@/application/ports/message-publisher.port';
 import { IServiceTypeRepository } from '@/application/ports/repositories/service-type.repository.port';
 import { tenantContext } from '@/domain/context/tenant-context';
-import { DomainValidationException, ConflictException } from '@/domain/exceptions';
+import { DomainValidationException } from '@/domain/exceptions';
 import { activeAppointmentsSetKey, appointmentHashKey } from '@/domain/cache-keys';
 
 jest.mock('@/domain/context/tenant-context', () => ({
@@ -65,8 +65,6 @@ describe('CreateAppointmentUseCase', () => {
 
   it('should successfully create an appointment when valid', async () => {
     serviceTypeRepository.findById.mockResolvedValue({ id: 'st1', estimatedDurationMinutes: 60 } as any);
-    cacheProvider.get.mockResolvedValueOnce(JSON.stringify({ holdId: 'h1', technicianId: 't1' }));
-    cacheProvider.get.mockResolvedValueOnce(JSON.stringify({ holdId: 'h2', serviceBayId: 'b1' }));
 
     const input = {
       customerId: 'c1',
@@ -75,9 +73,7 @@ describe('CreateAppointmentUseCase', () => {
       technicianId: 't1',
       serviceBayId: 'b1',
       desiredStartTime: new Date(Date.now() + 86400000).toISOString(),
-      autoAssigned: false,
-      technicianHolId: 'h1',
-      serviceBayHoldId: 'h2'
+      autoAssigned: false
     };
 
     const result = await useCase.execute(input);
@@ -108,7 +104,7 @@ describe('CreateAppointmentUseCase', () => {
       activeAppointmentsSetKey('tenant-123'),
       [result.commandId]
     );
-    expect(cacheProvider.deleteMultiple).toHaveBeenCalled();
+    expect(cacheProvider.deleteMultiple).not.toHaveBeenCalled();
   });
 
   it('should throw DomainValidationException if tenant context is missing', async () => {

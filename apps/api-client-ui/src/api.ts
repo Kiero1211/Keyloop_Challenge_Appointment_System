@@ -157,13 +157,6 @@ export async function getTenantUsers(tenantId: string) {
   return apiFetch(`/api/v1/tenants/${tenantId}/users`);
 }
 
-export async function holdAppointmentResource(payload: { technicianId?: string, serviceBayId?: string }) {
-  return apiFetch('/api/v1/appointments/hold', {
-    method: 'POST',
-    body: JSON.stringify(payload),
-  });
-}
-
 export async function getOccupiedSlots(resourceType: 'technicians' | 'service-bays', id: string, date?: string) {
   const query = date ? `?date=${encodeURIComponent(date)}` : '';
   return apiFetch(`/api/v1/${resourceType}/${id}/occupied${query}`);

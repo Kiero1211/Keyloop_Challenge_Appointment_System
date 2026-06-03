@@ -428,21 +428,9 @@ components:
       type: object
       required: [customerId, vehicleId, serviceTypeId, desiredStartTime]
       properties:
-        holdId:
-          type: string
-          format: uuid
-          description: Optional hold ID to claim a temporary slot hold
-        technicianHoldId:
-          type: string
-          format: uuid
-          description: Optional technician hold ID
-        serviceBayHoldId:
-          type: string
-          format: uuid
-          description: Optional service bay hold ID
         autoAssigned:
           type: boolean
-          description: Indicates if the appointment was auto-assigned
+          description: Indicates if the appointment should be auto-assigned
         customerId:
           type: string
           format: uuid
