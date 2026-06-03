@@ -43,6 +43,12 @@ services:
         condition: service_healthy
       postgres:
         condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q -O - http://localhost:3000/health | grep -q '\"status\":\"ok\"'"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
 
   appointment-worker-service:
     build:
@@ -54,6 +60,8 @@ services:
       redis:
         condition: service_healthy
       postgres:
+        condition: service_healthy
+      appointment-api-service:
         condition: service_healthy
 
   api-client-ui:
