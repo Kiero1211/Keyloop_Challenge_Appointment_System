@@ -100,7 +100,7 @@ export function Dashboard() {
     };
 
     void loadActiveAppointments();
-    const interval = window.setInterval(loadActiveAppointments, 4000);
+    const interval = window.setInterval(loadActiveAppointments, 2500);
 
     return () => {
       active = false;
