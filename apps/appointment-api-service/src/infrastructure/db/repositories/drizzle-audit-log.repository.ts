@@ -2,8 +2,9 @@ import { PostgresJsDatabase } from 'drizzle-orm/postgres-js';
 import { auditLogs } from '@/infrastructure/db/schema';
 import { eq, and, gte, lte, count } from 'drizzle-orm';
 import { GetAuditLogsQuery } from '@/application/queries/audit-logs.query';
+import { IAuditLogRepository } from '@/application/ports/repositories/audit-log.repository.port';
 
-export class DrizzleAuditLogRepository {
+export class DrizzleAuditLogRepository implements IAuditLogRepository {
   constructor(private readonly db: PostgresJsDatabase<any>) {}
 
   async getLogs(tenantId: string | undefined, query: GetAuditLogsQuery) {

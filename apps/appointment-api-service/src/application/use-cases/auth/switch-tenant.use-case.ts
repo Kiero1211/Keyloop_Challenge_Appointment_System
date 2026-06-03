@@ -1,7 +1,7 @@
 import { IUserTenantRepository } from '@/application/ports/repositories/user-tenant.repository.port';
 import { IRefreshTokenRepository } from '@/application/ports/repositories/refresh-token.repository.port';
 import { IUserRepository } from '@/application/ports/repositories/user.repository.port';
-import { JwtService } from '@/infrastructure/auth/jwt.service';
+import { ITokenService } from '@/application/ports/token-service.port';
 import { UnauthorizedException } from '@/domain/exceptions';
 
 export class SwitchTenantUseCase {
@@ -9,7 +9,7 @@ export class SwitchTenantUseCase {
     private userTenantRepository: IUserTenantRepository,
     private refreshTokenRepository: IRefreshTokenRepository,
     private userRepository: IUserRepository,
-    private jwtService: JwtService
+    private jwtService: ITokenService
   ) {}
 
   async execute(userId: string, targetTenantId: string, refreshToken: string): Promise<{ accessToken: string; refreshToken: string; tenantId: string }> {

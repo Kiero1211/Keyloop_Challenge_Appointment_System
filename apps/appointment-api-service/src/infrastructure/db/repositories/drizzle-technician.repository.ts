@@ -1,6 +1,6 @@
-import { eq, and, isNull } from 'drizzle-orm';
+import { eq, and, isNull, count, lt, gt, ne, notExists } from 'drizzle-orm';
 import { db } from '@/infrastructure/db/client';
-import { technicians } from '@/infrastructure/db/schema';
+import { appointments, technicians } from '@/infrastructure/db/schema';
 import { Technician } from '@/domain/entities/technician.entity';
 import { ITechnicianRepository } from '@/application/ports/repositories/technician.repository.port';
 
@@ -30,8 +30,6 @@ export class DrizzleTechnicianRepository implements ITechnicianRepository {
   }
 
   async findAll(tenantId?: string, page: number = 1, pageSize: number = 20): Promise<{ data: Technician[]; total: number; page: number; pageSize: number }> {
-    const { count } = await import('drizzle-orm');
-    
     const conditions = [isNull(technicians.deletedAt)];
     if (tenantId) {
       conditions.push(eq(technicians.tenantId, tenantId));
@@ -71,9 +69,6 @@ export class DrizzleTechnicianRepository implements ITechnicianRepository {
   }
 
   async findAvailable(tenantId: string, startTime: Date, endTime: Date): Promise<Technician[]> {
-    const { appointments } = await import('@/infrastructure/db/schema');
-    const { lt, gt, ne, notExists } = await import('drizzle-orm');
-
     const overlappingAppointments = db.select()
       .from(appointments)
       .where(

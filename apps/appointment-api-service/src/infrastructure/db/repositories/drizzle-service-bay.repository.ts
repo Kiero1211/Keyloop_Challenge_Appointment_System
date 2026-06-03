@@ -1,6 +1,6 @@
-import { eq, and, isNull } from 'drizzle-orm';
+import { eq, and, isNull, count, lt, gt, ne, notExists } from 'drizzle-orm';
 import { db } from '@/infrastructure/db/client';
-import { serviceBays } from '@/infrastructure/db/schema';
+import { appointments, serviceBays } from '@/infrastructure/db/schema';
 import { ServiceBay } from '@/domain/entities/service-bay.entity';
 import { IServiceBayRepository } from '@/application/ports/repositories/service-bay.repository.port';
 
@@ -28,8 +28,6 @@ export class DrizzleServiceBayRepository implements IServiceBayRepository {
   }
 
   async findAll(tenantId?: string, page: number = 1, pageSize: number = 20): Promise<{ data: ServiceBay[]; total: number; page: number; pageSize: number }> {
-    const { count } = await import('drizzle-orm');
-    
     const conditions = [isNull(serviceBays.deletedAt)];
     if (tenantId) {
       conditions.push(eq(serviceBays.tenantId, tenantId));
@@ -69,9 +67,6 @@ export class DrizzleServiceBayRepository implements IServiceBayRepository {
   }
 
   async findAvailable(tenantId: string, startTime: Date, endTime: Date): Promise<ServiceBay[]> {
-    const { appointments } = await import('@/infrastructure/db/schema');
-    const { lt, gt, ne, notExists } = await import('drizzle-orm');
-
     const overlappingAppointments = db.select()
       .from(appointments)
       .where(
